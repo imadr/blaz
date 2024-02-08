@@ -1,16 +1,21 @@
+#include "my_math.h"
 #include "platform.h"
 #include "utils_WIN32.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <windowsx.h>
 
 #ifndef HID_USAGE_PAGE_GENERIC
 #define HID_USAGE_PAGE_GENERIC ((unsigned short)0x01)
 #endif
+#include "types.h"
 #ifndef HID_USAGE_GENERIC_MOUSE
 #define HID_USAGE_GENERIC_MOUSE ((unsigned short)0x02)
 #endif
+#include <map>
+#include <basetsd.h>
+#include <libloaderapi.h>
+#include "error.h"
 
 struct Window_WIN32 {
     HWND window_handle;
@@ -19,7 +24,7 @@ struct Window_WIN32 {
 
 static Window_WIN32* m_win32;
 
-std::map<int, str> win32_keycodes = {{VK_BACK, "KEY_BACKSPACE"},
+std::map<u64, str> win32_keycodes = {{VK_BACK, "KEY_BACKSPACE"},
                                      {VK_TAB, "KEY_TAB"},
                                      {VK_CLEAR, "KEY_CLEAR"},
                                      {VK_RETURN, "KEY_RETURN"},
@@ -188,7 +193,7 @@ Error Window::init() {
 
     ShowWindow(m_win32->window_handle, 5);
 
-    RAWINPUTDEVICE raw_input_device[1];
+    RAWINPUTDEVICE raw_input_device[1]{};
     raw_input_device[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
     raw_input_device[0].usUsage = HID_USAGE_GENERIC_MOUSE;
     raw_input_device[0].dwFlags = RIDEV_INPUTSINK;

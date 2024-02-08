@@ -5,11 +5,12 @@
 #include <windows.h>
 #include <windowsx.h>
 
-#include <codecvt>
 #include <locale>
 
 #include "filesystem.h"
 #include "utils_win32.h"
+
+#define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 
 namespace blaz {
 
@@ -68,8 +69,7 @@ Error FileWatcher::init(str path, std::function<void(str)> callback) {
                         file_information->FileName,
                         file_information->FileNameLength / sizeof(file_information->FileName[0])};
 
-                    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-                    std::string file_name = converter.to_bytes(file_name_wstr);
+                    std::string file_name = wide_to_narrow_str(file_name_wstr);
 
                     callback(file_name);
                 } break;
@@ -89,8 +89,7 @@ void FileWatcher::stop() {
 }
 
 pair<Error, str> read_whole_file(str path) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-    std::wstring path_wstr = converter.from_bytes(path);
+    std::wstring path_wstr = narrow_to_wide_str(path);
     HANDLE file_handle = CreateFileW(path_wstr.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
                                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 

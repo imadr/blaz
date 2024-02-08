@@ -1,23 +1,33 @@
 #include "game.h"
 
+#include "cfgreader.h"
+#include "error.h"
+#include "logger.h"
+#include "types.h"
+
 namespace blaz {
 
-pair<Error, Level> Game::load_level_from_cfg(CfgNode cfg) {
-    return std::make_pair(Error(), Level());
-}
-
-Error Game::load_level(str path) {
-    pair<Error, CfgNode> cfg = read_cfg_file(path);
+Error Game::load_game(str path) {
+    pair<Error, Cfg> cfg = read_cfg_file(path);
     if (cfg.first) {
         return cfg.first;
     }
+    Cfg game_cfg = cfg.second;
 
-    pair<Error, Level> level = load_level_from_cfg(cfg.second);
-    if (level.first) {
-        return level.first;
-    }
+    Cfg pipelines = game_cfg["pipelines"];
+    /*for (Cfg& pipeline : pipelines) {
+        Cfg passes = pipeline["passes"];
+        // for (Cfg& pass : passes) {
+        //     logger.info(pass["name"]);
+        // }
+    }*/
 
-    m_levels.push_back(level.second);
+    return Error();
+}
+
+Error Game::load_level(u32 level) {
+    m_current_level = level;
+    m_renderer.m_current_pipeline = &m_renderer.m_pipelines[m_levels[m_current_level].m_pipeline];
     return Error();
 }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <map>
-#include <variant>
 
 #include "error.h"
 #include "types.h"
@@ -27,12 +26,13 @@ struct CfgNode {
         }
     }
 
-    CfgNode operator[](const std::string& key) {
+    CfgNode operator[](const str& key) {
         if (type == CfgNodeType::MAP) {
             return map_value[key];
         }
     }
 };
+using Cfg = CfgNode;
 
 pair<Error, CfgNode> read_cfg_file(str path);
 

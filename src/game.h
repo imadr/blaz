@@ -1,26 +1,27 @@
 #pragma once
 
-#include "cfgreader.h"
 #include "error.h"
+#include "node.h"
 #include "platform.h"
+#include "renderer.h"
+#include "types.h"
 
 namespace blaz {
 
 struct Level {
-    /*Pipeline m_pipeline;
+    u32 m_pipeline;
     Scene m_scene;
-    vec<Mesh> m_meshes;
-    vec<Shader> m_shaders;
-    vec<Renderable> m_renderables;*/
+    Renderable m_renderables[100];
 };
 
 struct Game {
     Window m_window;
-    //Renderer m_renderer;
-    vec<Level> m_levels;
+    Renderer m_renderer;
+    Level m_levels[10];
+    u32 m_current_level = 0;
 
-    Error load_level(str path);
-    pair<Error, Level> load_level_from_cfg(CfgNode cfg);
+    Error load_game(str path);
+    Error load_level(u32 level);
 };
 
 }  // namespace blaz
