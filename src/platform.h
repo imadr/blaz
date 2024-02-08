@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <map>
-#include <string>
 
 #include "error.h"
 #include "my_math.h"

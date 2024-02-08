@@ -27,3 +27,8 @@ using vec = std::vector<T>;
 
 template <class T1, class T2>
 using pair = std::pair<T1, T2>;
+
+template <typename T>
+bool contains(vec<T> v, T e) {
+    return std::find(v.begin(), v.end(), e) != v.end();
+}

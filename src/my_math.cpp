@@ -15,10 +15,6 @@ Vec2I operator-(Vec2I a, Vec2I b) {
     return Vec2I(a.x() - b.x(), a.y() - b.y());
 }
 
-Vec2I operator*(f32 s, Vec2I v) {
-    return Vec2I(v.x() * s, v.y() * s);
-}
-
 Vec3 operator+(Vec3 a, Vec3 b) {
     return Vec3(a.x() + b.x(), a.y() + b.y(), a.z() + b.z());
 }
@@ -237,7 +233,7 @@ Mat4 operator*(Mat4 a, Mat4 b) {
 }
 
 f32 rad(f32 deg) {
-    return deg * PI / 180.0f;
+    return deg * (f32)PI / 180.0f;
 }
 
 str Mat4::to_str() {

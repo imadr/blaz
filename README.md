@@ -1,7 +1,13 @@
 # Blaz
 
-## Features
+## Building
 
+- [Install CMake >= 3.12](https://cmake.org/download/)
+- ```mkdir build```
+- ```cd build```
+- ```cmake ..```
+
+## Features
 
 | Graphics API  | Support |
 | ------------- | ------------- |
