@@ -43,7 +43,7 @@ struct Renderable {
     u32 m_node;
 };
 
-enum class PassType { NORMAL, BLITTING, COMPUTE };
+enum class PassType { VERT_FRAG, BLITTING, COMPUTE };
 
 struct Pass {
     str m_name;
@@ -78,6 +78,7 @@ struct Renderer {
     void draw_pass(u32 pass);
 
     Pipeline m_pipelines[10];
+    u32 n_pipelines = 0;
     Shader m_shaders[10];
     Shader m_error_shader;
     Texture m_textures[10];
