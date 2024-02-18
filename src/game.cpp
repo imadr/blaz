@@ -15,12 +15,28 @@ Error Game::load_game(str path) {
     Cfg game_cfg = cfg.second;
 
     Cfg pipelines = game_cfg["pipelines"];
-    /*for (Cfg& pipeline : pipelines) {
-        Cfg passes = pipeline["passes"];
-        // for (Cfg& pass : passes) {
-        //     logger.info(pass["name"]);
-        // }
-    }*/
+    for (auto& pipeline_cfg : pipelines) {
+        Cfg passes_cfg = pipeline_cfg["passes"];
+        for (auto& pass_cfg : passes_cfg) {
+            Pass pass = {
+                .m_name = pass_cfg["name"].str_value,
+                // .m_type = pass_cfg["type"],
+                // .m_clear_flag = pass_cfg["clear_flag"],
+                // .m_clear_color = pass_cfg["clear_color"],
+                // .m_clear_depth = pass_cfg["clear_depth"],
+                // .m_shader = pass_cfg["shader"],
+                // .m_tags = pass_cfg["tags"],
+                // .m_framebuffer = pass_cfg["framebuffer"],
+                // .m_camera = pass_cfg["camera"],
+                // .m_enabled = pass_cfg["enabled"],
+                // .m_use_default_framebuffer = pass_cfg["use_default_framebuffer"],
+                // .m_enable_depth_test = pass_cfg["enable_depth_test"],
+                // .m_enable_face_culling = pass_cfg["enable_face_culling"],
+                // .m_culling_mode = pass_cfg["culling_mode"],
+            };
+            // logger.info(pass["name"].str_value);
+        }
+    }
 
     return Error();
 }

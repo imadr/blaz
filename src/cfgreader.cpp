@@ -53,8 +53,8 @@ const SingleToken single_tokens[] = {
 struct TokenizerState {
     str path;
     str text;
-    u32 text_length;
-    u32 current_index;
+    u64 text_length;
+    u64 current_index;
     vec<Token> tokens;
     u32 column;
     u32 line;
@@ -101,7 +101,7 @@ void advance(TokenizerState* state, u32 steps) {
 }
 
 char peek_char(TokenizerState* state, u32 steps) {
-    steps = std::min(steps, state->text_length - state->current_index - 1);
+    steps = std::min((u64)steps, state->text_length - state->current_index - 1);
     return state->text[state->current_index + steps];
 }
 
@@ -159,7 +159,7 @@ str fill(TokenizerState* state, bool (*condition)(char)) {
 TokenizerState tokenize(str text, str path) {
     TokenizerState state = {.path = path,
                             .text = text,
-                            .text_length = (u32)text.length(),
+                            .text_length = text.length(),
                             .current_index = 0,
                             .tokens = vec<Token>(),
                             .column = 1,
@@ -239,14 +239,14 @@ TokenizerState tokenize(str text, str path) {
 }
 
 struct ParserState {
-    u32 current_token;
+    u64 current_token;
     vec<Token> tokens;
     CfgNode root_node;
     str path;
 };
 
 void advance(ParserState* state, u32 steps) {
-    steps = std::min(steps, (u32)state->tokens.size() - state->current_token - 1);
+    steps = std::min((u64)steps, state->tokens.size() - state->current_token - 1);
     state->current_token += steps;
 }
 
@@ -259,7 +259,7 @@ bool end_of_tokens(ParserState* state) {
 }
 
 Token peek_token(ParserState* state, u32 steps) {
-    steps = std::min(steps, (u32)state->tokens.size() - state->current_token - 1);
+    steps = std::min((u64)steps, state->tokens.size() - state->current_token - 1);
     return state->tokens[state->current_token + steps];
 }
 
