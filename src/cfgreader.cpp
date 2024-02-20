@@ -20,7 +20,9 @@ enum class TokenType {
     STR_LITERAL,
     FLOAT_LITERAL,
     BOOL_LITERAL,
-    IMPORT
+    IMPORT,
+    VEC4,
+    VEC3
 };
 
 struct Token {
@@ -88,8 +90,8 @@ bool end_of_file(TokenizerState* state) {
     return state->current_index == state->text_length - 1;
 }
 
-void advance(TokenizerState* state, u32 steps) {
-    for (u32 i = 0; i < steps; i++) {
+void advance(TokenizerState* state, u64 steps) {
+    for (u64 i = 0; i < steps; i++) {
         if (end_of_file(state)) return;
         state->current_index++;
         state->column++;
@@ -100,7 +102,7 @@ void advance(TokenizerState* state, u32 steps) {
     }
 }
 
-char peek_char(TokenizerState* state, u32 steps) {
+char peek_char(TokenizerState* state, u64 steps) {
     steps = std::min((u64)steps, state->text_length - state->current_index - 1);
     return state->text[state->current_index + steps];
 }
@@ -178,7 +180,7 @@ TokenizerState tokenize(str text, str path) {
         if (check_single_token(&state)) continue;
 
         if (is_alphabet(current_char(&state))) {
-            str s = fill(&state, [](char c) { return is_alphabet(c); });
+            str s = fill(&state, [](char c) { return is_alphabet(c) || is_digit(c); });
             if (s == "true") {
                 add_token(&state, {.type = TokenType::BOOL_LITERAL,
                                    .line = state.line,
@@ -189,6 +191,12 @@ TokenizerState tokenize(str text, str path) {
                                    .line = state.line,
                                    .column = state.column,
                                    .bool_value = false});
+            } else if (s == "vec4") {
+                add_token(&state,
+                          {.type = TokenType::VEC4, .line = state.line, .column = state.column});
+            } else if (s == "vec3") {
+                add_token(&state,
+                          {.type = TokenType::VEC3, .line = state.line, .column = state.column});
             } else if (s == "import") {
                 add_token(&state,
                           {.type = TokenType::IMPORT, .line = state.line, .column = state.column});
@@ -245,7 +253,7 @@ struct ParserState {
     str path;
 };
 
-void advance(ParserState* state, u32 steps) {
+void advance(ParserState* state, u64 steps) {
     steps = std::min((u64)steps, state->tokens.size() - state->current_token - 1);
     state->current_token += steps;
 }
@@ -258,7 +266,7 @@ bool end_of_tokens(ParserState* state) {
     return state->current_token == state->tokens.size() - 1;
 }
 
-Token peek_token(ParserState* state, u32 steps) {
+Token peek_token(ParserState* state, u64 steps) {
     steps = std::min((u64)steps, state->tokens.size() - state->current_token - 1);
     return state->tokens[state->current_token + steps];
 }
@@ -287,6 +295,65 @@ CfgNode float_node(ParserState* state) {
         node.type = CfgNodeType::FLOAT;
         node.float_value = token.float_value;
         return node;
+    } else {
+        return CfgNode();  // @error
+    }
+}
+
+CfgNode vec4_node(ParserState* state) {
+    Token token;
+    if (consume_token(state, TokenType::VEC4, &token)) {
+        CfgNode node;
+        node.type = CfgNodeType::VEC4;
+        if (consume_token(state, TokenType::LEFT_PARENTHESIS, NULL)) {
+            Token x, y, z, w;
+            consume_token(state, TokenType::FLOAT_LITERAL, &x);
+            consume_token(state, TokenType::COMMA, NULL);
+            consume_token(state, TokenType::FLOAT_LITERAL, &y);
+            consume_token(state, TokenType::COMMA, NULL);
+            consume_token(state, TokenType::FLOAT_LITERAL, &z);
+            consume_token(state, TokenType::COMMA, NULL);
+            consume_token(state, TokenType::FLOAT_LITERAL, &w);
+            node.vec4_value = Vec4(x.float_value, y.float_value, z.float_value, w.float_value);
+            if (consume_token(state, TokenType::RIGHT_PARENTHESIS, NULL)) {
+                return node;
+            }
+            else {
+                logger.error("vec4_node: missing right parenthesis " + error_at(state));
+                return CfgNode();  // @error
+            }
+        } else {
+            logger.error("vec4_node: missing left parenthesis " + error_at(state));
+            return CfgNode();  // @error
+        }
+    } else {
+        return CfgNode();  // @error
+    }
+}
+
+CfgNode vec3_node(ParserState* state) {
+    Token token;
+    if (consume_token(state, TokenType::VEC3, &token)) {
+        CfgNode node;
+        node.type = CfgNodeType::VEC3;
+        if (consume_token(state, TokenType::LEFT_PARENTHESIS, NULL)) {
+            Token x, y, z;
+            consume_token(state, TokenType::FLOAT_LITERAL, &x);
+            consume_token(state, TokenType::COMMA, NULL);
+            consume_token(state, TokenType::FLOAT_LITERAL, &y);
+            consume_token(state, TokenType::COMMA, NULL);
+            consume_token(state, TokenType::FLOAT_LITERAL, &z);
+            node.vec3_value = Vec3(x.float_value, y.float_value, z.float_value);
+            if (consume_token(state, TokenType::RIGHT_PARENTHESIS, NULL)) {
+                return node;
+            } else {
+                logger.error("vec3_node: missing right parenthesis " + error_at(state));
+                return CfgNode();  // @error
+            }
+        } else {
+            logger.error("vec4_node: missing left parenthesis " + error_at(state));
+            return CfgNode();  // @error
+        }
     } else {
         return CfgNode();  // @error
     }
@@ -324,7 +391,7 @@ CfgNode map_node(ParserState* state) {
         while (!consume_token(state, TokenType::RIGHT_BRACE, NULL) &&
                !consume_token(state, TokenType::TOKEN_EOF, NULL)) {
             if (no_comma) {
-                logger.error("Expected comma " + error_at(state));
+                logger.error("map_node: expected comma " + error_at(state));
                 return CfgNode();  // @error
             }
             Token key;
@@ -350,7 +417,7 @@ CfgNode array_node(ParserState* state) {
         while (!consume_token(state, TokenType::RIGHT_BRACKET, NULL) &&
                !consume_token(state, TokenType::TOKEN_EOF, NULL)) {
             if (no_comma) {
-                logger.error("Expected comma " + error_at(state));
+                logger.error("array_node: expected comma " + error_at(state));
                 return CfgNode();  // @error
             }
 
@@ -379,7 +446,7 @@ CfgNode import_node(ParserState* state) {
                 node.type = CfgNodeType::MAP;
                 node.map_value = import.second.map_value;
                 if (!consume_token(state, TokenType::RIGHT_PARENTHESIS, NULL)) {
-                    logger.error("Expected closing parenthesis " + error_at(state));
+                    logger.error("import_node: expected closing parenthesis " + error_at(state));
                     return CfgNode();
                 }
                 return node;
@@ -401,6 +468,12 @@ CfgNode generic_node(ParserState* state) {
             break;
         case TokenType::FLOAT_LITERAL:
             return float_node(state);
+            break;
+        case TokenType::VEC4:
+            return vec4_node(state);
+            break;
+        case TokenType::VEC3:
+            return vec3_node(state);
             break;
         case TokenType::STR_LITERAL:
             return str_node(state);

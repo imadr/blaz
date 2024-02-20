@@ -9,12 +9,19 @@
 #include "texture.h"
 #include "types.h"
 
+#include <unordered_map>
+
 namespace blaz {
 
 enum Clear {
     NONE = 0,
     COLOR = 1 << 0,
     DEPTH = 1 << 1,
+};
+static std::unordered_map<str, Clear> ClearStr = {
+    {"NONE", Clear::NONE},
+    {"COLOR", Clear::COLOR},
+    {"DEPTH", Clear::DEPTH},
 };
 
 enum class CullingMode {
@@ -44,6 +51,11 @@ struct Renderable {
 };
 
 enum class PassType { VERT_FRAG, BLITTING, COMPUTE };
+static std::unordered_map<str, PassType> PassTypeStr = {
+    { "VERT_FRAG", PassType::VERT_FRAG },
+    { "BLITTING", PassType::BLITTING },
+    { "COMPUTE", PassType::COMPUTE },
+};
 
 struct Pass {
     str m_name;

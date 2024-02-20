@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.h"
+#include "my_math.h"
 
 namespace blaz {
 
@@ -24,7 +25,11 @@ struct RGB {
 
     RGB() : values{0, 0, 0} {
     }
+
     RGB(f32 r, f32 g, f32 b) : values{r, g, b} {
+    }
+
+    RGB(Vec3 v) : values{v.x(), v.y(), v.z()} {
     }
 
     f32 operator[](u32 i) {
@@ -66,7 +71,11 @@ struct RGBA {
 
     RGBA() : values{0, 0, 0, 0} {
     }
+
     RGBA(f32 r, f32 g, f32 b, f32 a) : values{r, g, b, a} {
+    }
+
+    RGBA(Vec4 v) : values{v.x(), v.y(), v.z(), v.w()} {
     }
 
     f32 operator[](u32 i) {
