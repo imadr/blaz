@@ -124,6 +124,79 @@ Vec3 operator*(f32 s, Vec3 v);
 Vec3 operator-(Vec3 a, Vec3 b);
 Vec3 operator+(Vec3 a, Vec3 b);
 
+struct Vec4 {
+    f32 v[4];
+    f32 &operator[](int i) {
+        return v[i];
+    }
+    f32 &x() {
+        return v[0];
+    }
+    f32 &y() {
+        return v[1];
+    }
+    f32 &z() {
+        return v[2];
+    }
+    f32 &w() {
+        return v[3];
+    }
+
+    Vec4() : v{0, 0, 0, 0} {
+    }
+    Vec4(f32 x, f32 y, f32 z, f32 w) : v{x, y, z, w} {
+    }
+
+    Vec4 operator=(Vec4 other) {
+        v[0] = other.v[0];
+        v[1] = other.v[1];
+        v[2] = other.v[2];
+        v[3] = other.v[3];
+        return *this;
+    }
+
+    Vec4(const Vec4 &other) {
+        v[0] = other.v[0];
+        v[1] = other.v[1];
+        v[2] = other.v[2];
+        v[3] = other.v[3];
+    }
+
+    Vec4 operator-() {
+        return Vec4(-v[0], -v[1], -v[2], -v[3]);
+    }
+
+    Vec4 operator+=(Vec4 other) {
+        v[0] += other.v[0];
+        v[1] += other.v[1];
+        v[2] += other.v[2];
+        v[3] += other.v[3];
+        return *this;
+    }
+
+    Vec4 operator-=(Vec4 other) {
+        v[0] -= other.v[0];
+        v[1] -= other.v[1];
+        v[2] -= other.v[2];
+        v[3] -= other.v[3];
+        return *this;
+    }
+
+    f32 length();
+    Vec4 normalize();
+    str to_str();
+};
+
+Vec4 Vec4_lerp(Vec4 a, Vec4 b, f32 t);
+Vec4 Vec4_cross(Vec4 a, Vec4 b);
+f32 Vec4_dot(Vec4 a, Vec4 b);
+Vec4 operator/(Vec4 v, f32 s);
+Vec4 operator*(Vec4 a, Vec4 b);
+Vec4 operator*(Vec4 v, f32 s);
+Vec4 operator*(f32 s, Vec4 v);
+Vec4 operator-(Vec4 a, Vec4 b);
+Vec4 operator+(Vec4 a, Vec4 b);
+
 struct Vec2 {
     f32 v[2];
     f32 &operator[](int i) {
@@ -202,6 +275,9 @@ struct Quat {
     Quat() : v{0, 0, 0, 1} {
     }
     Quat(f32 x, f32 y, f32 z, f32 w) : v{x, y, z, w} {
+    }
+
+    Quat(Vec4 v): v{v.x(), v.y(), v.z(), v.w()} {
     }
 
     Quat operator=(Quat other) {

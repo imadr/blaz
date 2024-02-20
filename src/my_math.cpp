@@ -60,6 +60,46 @@ Vec3 Vec3::normalize() {
     return Vec3(x() / l, y() / l, z() / l);
 }
 
+Vec4 operator+(Vec4 a, Vec4 b) {
+    return Vec4(a.x() + b.x(), a.y() + b.y(), a.z() + b.z(), a.w() + b.w());
+}
+
+Vec4 operator-(Vec4 a, Vec4 b) {
+    return Vec4(a.x() - b.x(), a.y() - b.y(), a.z() - b.z(), a.w() - b.w());
+}
+
+Vec4 operator*(f32 s, Vec4 v) {
+    return Vec4(v.x() * s, v.y() * s, v.z() * s, v.w() * s);
+}
+
+Vec4 operator*(Vec4 a, Vec4 b) {
+    return Vec4(a.x() * b.x(), a.y() * b.y(), a.z() * b.z(), a.w() * b.w());
+}
+
+Vec4 operator*(Vec4 v, f32 s) {
+    return s * v;
+}
+
+Vec4 operator/(Vec4 v, f32 s) {
+    return (1 / s) * v;
+}
+
+f32 vec4_dot(Vec4 a, Vec4 b) {
+    return a.x() * b.x() + a.y() * b.y() + a.z() * b.z() + a.w() * b.w();
+}
+
+Vec4 vec4_lerp(Vec4 a, Vec4 b, f32 t) {
+    t = t < 0 ? 0 : t;
+    t = t > 1 ? 1 : t;
+    return b * t + a * (1 - t);
+}
+
+Vec4 Vec4::normalize() {
+    f32 l = length();
+    if (l == 0) return Vec4(0, 0, 0, 0);
+    return Vec4(x() / l, y() / l, z() / l, w() / l);
+}
+
 Vec2 operator+(Vec2 a, Vec2 b) {
     return Vec2(a.x() + b.x(), a.y() + b.y());
 }
@@ -263,6 +303,16 @@ str Vec3::to_str() {
     stream << std::fixed << std::setprecision(4) << v[0] << " ";
     stream << std::fixed << std::setprecision(4) << v[1] << " ";
     stream << std::fixed << std::setprecision(4) << v[2];
+    str s = stream.str();
+    return s;
+}
+
+str Vec4::to_str() {
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(4) << v[0] << " ";
+    stream << std::fixed << std::setprecision(4) << v[1] << " ";
+    stream << std::fixed << std::setprecision(4) << v[2] << " ";
+    stream << std::fixed << std::setprecision(4) << v[3];
     str s = stream.str();
     return s;
 }
