@@ -1,5 +1,6 @@
 #include "game.h"
 
+#include "camera.h"
 #include "cfgreader.h"
 #include "error.h"
 #include "filesystem.h"
@@ -15,17 +16,16 @@ Error Game::load_game(str path) {
     }
     Cfg game_cfg = cfg.second;
 
-    Cfg shaders = game_cfg["shaders"];
-    for (auto& shader_cfg : shaders) {
+    for (auto& shader_cfg : game_cfg["shaders"]) {
         Shader shader;
         shader.m_vertex_shader_path = shader_cfg["vertex_shader_path"].str_value;
         shader.m_fragment_shader_path = shader_cfg["fragment_shader_path"].str_value;
         shader.m_should_reload = true;
         m_renderer.m_shaders.push_back(shader);
+        m_renderer.m_shaders_ids[shader.m_name] = (u32)m_renderer.m_shaders.size() - 1;
     }
 
-    Cfg meshes = game_cfg["meshes"];
-    for (auto& mesh_cfg : meshes) {
+    for (auto& mesh_cfg : game_cfg["meshes"]) {
         Mesh mesh;
         mesh.m_name = mesh_cfg["name"].str_value;
         mesh.m_vertices = mesh_cfg["vertices"].buffer_f32_value;
@@ -35,10 +35,10 @@ Error Game::load_game(str path) {
                 std::make_pair(attrib[0].str_value, (u32)attrib[1].float_value));
         }
         m_renderer.m_meshes.push_back(mesh);
+        m_renderer.m_meshes_ids[mesh.m_name] = (u32)m_renderer.m_meshes.size() - 1;
     }
 
-    Cfg levels = game_cfg["levels"];
-    for (auto& level_cfg : levels) {
+    for (auto& level_cfg : game_cfg["levels"]) {
         Level level;
         level.m_name = level_cfg["name"].str_value;
         for (auto& node_cfg : level_cfg["nodes"]) {
@@ -48,50 +48,104 @@ Error Game::load_game(str path) {
             node.m_rotation = node_cfg["rotation"].vec4_value;
             node.m_scale = node_cfg["scale"].vec3_value;
             level.m_scene.m_nodes.push_back(node);
+            level.m_scene.m_nodes_ids[node.m_name] = (u32)level.m_scene.m_nodes.size() - 1;
         }
-        for (auto& renderables_cfg : level_cfg["renderables"]) {
+
+        for (auto& renderable_cfg : level_cfg["renderables"]) {
             Renderable renderable;
-            // node.m_name = node_cfg["name"].str_value;
-            // node.m_position = node_cfg["position"].vec3_value;
-            // node.m_rotation = node_cfg["rotation"].vec4_value;
-            // node.m_scale = node_cfg["scale"].vec3_value;
-            // level.m_scene.m_nodes.push_back(node);
+            renderable.m_name = renderable_cfg["name"].str_value;
+            for (auto tag : renderable_cfg["tags"]) {
+                renderable.m_tags.push_back(tag.str_value);
+            }
+            renderable.m_mesh = m_renderer.m_meshes_ids[renderable_cfg["mesh"].str_value];
+            renderable.m_node = level.m_scene.m_nodes_ids[renderable_cfg["node"].str_value];
+
+            level.m_renderables.push_back(renderable);
+            u32 id = (u32)level.m_renderables.size() - 1;
+            for (auto tag : renderable_cfg["tags"]) {
+                level.m_tagged_renderables[tag.str_value].push_back(id);
+            }
         }
+
+        for (auto& camera_cfg : level_cfg["cameras"]) {
+            Camera camera;
+            camera.m_name = camera_cfg["name"].str_value;
+            camera.m_node = level.m_scene.m_nodes_ids[camera_cfg["node"].str_value];
+            level.m_scene.m_cameras.push_back(camera);
+            level.m_scene.m_cameras_ids[camera.m_name] =
+                (u32)level.m_scene.m_cameras_ids.size() - 1;
+        }
+
         m_levels.push_back(level);
+        for (auto& node : m_levels.back().m_scene.m_nodes) {
+            node.m_scene = &m_levels.back().m_scene;
+        }
     }
 
-    // Cfg pipelines = game_cfg["pipelines"];
-    // for (auto& pipeline_cfg : pipelines) {
-    //     Cfg passes_cfg = pipeline_cfg["passes"];
-    //     for (auto& pass_cfg : passes_cfg) {
-    //         Pass pass;
+    for (auto& pipeline_cfg : game_cfg["pipelines"]) {
+        Pipeline pipeline;
+        pipeline.m_name = pipeline_cfg["name"].str_value;
+        Cfg passes_cfg = pipeline_cfg["passes"];
+        for (auto& pass_cfg : passes_cfg) {
+            Pass pass;
 
-    //         if (pass_cfg["name"]) pass.m_name = pass_cfg["name"].str_value;
+            pass.m_name = pass_cfg["name"].str_value;
 
-    //         vec<CfgNode> clears = pass_cfg["clear"].array_value;
-    //         u32 clear_flag = 0;
-    //         for (auto& clear : clears) clear_flag |= ClearStr[clear.str_value];
-    //         pass.m_clear_flag = clear_flag;
+            vec<CfgNode> clears = pass_cfg["clear"].array_value;
+            u32 clear_flag = 0;
+            for (auto& clear : clears) {
+                clear_flag |= ClearStr[clear.str_value];
+            }
+            pass.m_clear_flag = clear_flag;
 
-    //         pass.m_type = PassTypeStr[pass_cfg["type"].str_value];
+            pass.m_type = PassTypeStr[pass_cfg["type"].str_value];
 
-    //         if(pass_cfg["clear_color"]) pass.m_clear_color =
-    //         pass_cfg["clear_color"].vec4_value; if(pass_cfg["clear_depth"])
-    //         pass.m_clear_depth = pass_cfg["clear_depth"].float_value;
+            if (pass_cfg["clear_color"]) {
+                pass.m_clear_color = pass_cfg["clear_color"].vec4_value;
+            }
+            if (pass_cfg["clear_depth"]) {
+                pass.m_clear_depth = pass_cfg["clear_depth"].float_value;
+            }
 
-    //             // .m_shader = pass_cfg["shader"],
-    //             // .m_tags = pass_cfg["tags"],
-    //             // .m_framebuffer = pass_cfg["framebuffer"],
-    //             // .m_camera = pass_cfg["camera"],
-    //             // .m_enabled = pass_cfg["enabled"],
-    //             // .m_use_default_framebuffer = pass_cfg["use_default_framebuffer"],
-    //             // .m_enable_depth_test = pass_cfg["enable_depth_test"],
-    //             // .m_enable_face_culling = pass_cfg["enable_face_culling"],
-    //             // .m_culling_mode = pass_cfg["culling_mode"],
-    //         //};
-    //         // logger.info(pass["name"].str_value);
-    //     }
-    // }
+            pass.m_shader = m_renderer.m_shaders_ids[pass_cfg["shader"].str_value];
+
+            for (auto tag : pass_cfg["tags"]) {
+                pass.m_tags.push_back(tag.str_value);
+            }
+
+            // .m_framebuffer = pass_cfg["framebuffer"],
+
+            pass.m_camera =
+                m_levels[m_current_level].m_scene.m_cameras_ids[pass_cfg["camera"].str_value];
+            if (pass_cfg["enabled"]) {
+                pass.m_enabled = pass_cfg["enabled"].bool_value;
+            }
+            if (pass_cfg["use_default_framebuffer"]) {
+                pass.m_use_default_framebuffer = pass_cfg["use_default_framebuffer"].bool_value;
+            }
+            if (pass_cfg["enable_depth_test"]) {
+                pass.m_enable_depth_test = pass_cfg["enable_depth_test"].bool_value;
+            }
+            if (pass_cfg["enable_face_culling"]) {
+                pass.m_enable_face_culling = pass_cfg["enable_face_culling"].bool_value;
+            }
+            if (pass_cfg["culling_mode"]) {
+                pass.m_culling_mode = CullingModeStr[pass_cfg["culling_mode"].str_value];
+            }
+
+            pipeline.m_passes.push_back(pass);
+        }
+        m_renderer.m_pipelines.push_back(pipeline);
+        m_renderer.m_pipelines_ids[pipeline.m_name] = (u32)m_renderer.m_pipelines_ids.size() - 1;
+    }
+
+    u32 i = 0;
+    for (auto& level_cfg : game_cfg["levels"]) {
+        m_levels[i].m_pipeline = m_renderer.m_pipelines_ids[level_cfg["pipeline"].str_value];
+        i++;
+    }
+
+    m_renderer.m_current_pipeline = m_levels[m_current_level].m_pipeline;
 
     return Error();
 }

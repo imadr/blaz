@@ -1,7 +1,9 @@
 #include "renderer.h"
 
 #include "filesystem.h"
+#include "game.h"
 #include "types.h"
+#include "logger.h"
 
 namespace blaz {
 
@@ -42,11 +44,11 @@ void Renderer::draw() {
 
         if (pass.m_use_default_framebuffer) {
             bind_default_framebuffer();
-            set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
+            set_viewport(0, 0, m_game->m_window.m_size.width, m_game->m_window.m_size.height);
         } else {
             Framebuffer framebuffer = pipeline.m_framebuffers[pass.m_framebuffer];
             bind_framebuffer(framebuffer);
-            set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
+            set_viewport(0, 0, m_game->m_window.m_size.width, m_game->m_window.m_size.height);
         }
 
         if (pass.m_enable_depth_test) {
@@ -81,7 +83,7 @@ void Renderer::draw() {
         // (m_scene->m_nodes[pass.m_camera->m_node]->m_global_matrix).invert();
         // set_shader_uniform_Mat4(shader, "u_view_mat", view_matrix);
         // set_shader_uniform_Vec2(shader, "u_screen_resolution",
-        //                         Vec2(m_window->m_size.width, m_window->m_size.height));
+        //                         Vec2(m_window.m_size.width, m_window.m_size.height));
         // set_shader_uniform_Vec3(shader, "u_view_position",
         //                         m_scene->m_nodes[pass.m_camera->m_node]->get_global_position());
 
@@ -100,6 +102,14 @@ void Renderer::draw() {
         //         draw_vertex_array(mesh);
         //     }
         // }
+
+        Level* current_level = &m_game->m_levels[m_game->m_current_level];        
+        
+        for (const str& tag : pass.m_tags) {
+            logger.info(tag);
+        }
+        
+        //current_level->m_renderables
 
 #ifdef DEBUG_RENDERER
         debug_marker_end();
