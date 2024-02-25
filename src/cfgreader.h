@@ -1,16 +1,15 @@
 #pragma once
 
 #include <map>
+#include <variant>
 
 #include "error.h"
-#include "types.h"
 #include "my_math.h"
-
-#include <variant>
+#include "types.h"
 
 namespace blaz {
 
-enum class CfgNodeType { MAP, ARRAY, STR, FLOAT, VEC4, VEC3, BOOL, NONE };
+enum class CfgNodeType { MAP, ARRAY, STR, FLOAT, VEC4, VEC3, BUFFER_F32, BUFFER_U32, BOOL, NONE };
 
 struct CfgNode {
     std::map<str, CfgNode> map_value;
@@ -20,7 +19,9 @@ struct CfgNode {
     bool bool_value = false;
     Vec4 vec4_value;
     Vec3 vec3_value;
-    
+    vec<f32> buffer_f32_value;
+    vec<u32> buffer_u32_value;
+
     CfgNodeType type = CfgNodeType::NONE;
 
     explicit operator bool() const {
@@ -38,7 +39,7 @@ struct CfgNode {
         if (type == CfgNodeType::MAP && map_value.count(key) > 0) {
             return map_value[key];
         }
-        return CfgNode{ .type = CfgNodeType::NONE };
+        return CfgNode{.type = CfgNodeType::NONE};
     }
 
     struct VectorIterator {

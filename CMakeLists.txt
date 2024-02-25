@@ -27,10 +27,6 @@ set(COMMON_SOURCES
     src/renderer.h
     src/texture.cpp
     src/texture.h
-    src/mesh.cpp
-    src/mesh.h
-    src/shader.cpp
-    src/shader.h
     src/camera.cpp
     src/camera.h
     src/node.cpp

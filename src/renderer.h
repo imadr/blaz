@@ -1,15 +1,13 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "camera.h"
 #include "color.h"
 #include "error.h"
-#include "mesh.h"
 #include "platform.h"
-#include "shader.h"
 #include "texture.h"
 #include "types.h"
-
-#include <unordered_map>
 
 namespace blaz {
 
@@ -37,6 +35,26 @@ struct Framebuffer {
     TextureParams m_texture_params;
 };
 
+struct Shader {
+    str m_name;
+    str m_vertex_shader_source;
+    str m_fragment_shader_source;
+    str m_vertex_shader_path;
+    str m_fragment_shader_path;
+    void* m_api_data = NULL;
+
+    bool m_should_reload = false;
+    bool m_is_error = false;
+};
+
+struct Mesh {
+    str m_name;
+    vec<f32> m_vertices;
+    vec<u32> m_indices;
+    vec<pair<str, u32>> m_attribs;
+    void* m_api_data = NULL;
+};
+
 struct Material {
     //     str m_shader;
     //     //@note add some uniforms values here and textures
@@ -51,10 +69,11 @@ struct Renderable {
 };
 
 enum class PassType { VERT_FRAG, BLITTING, COMPUTE };
+
 static std::unordered_map<str, PassType> PassTypeStr = {
-    { "VERT_FRAG", PassType::VERT_FRAG },
-    { "BLITTING", PassType::BLITTING },
-    { "COMPUTE", PassType::COMPUTE },
+    {"VERT_FRAG", PassType::VERT_FRAG},
+    {"BLITTING", PassType::BLITTING},
+    {"COMPUTE", PassType::COMPUTE},
 };
 
 struct Pass {
@@ -76,8 +95,8 @@ struct Pass {
 };
 
 struct Pipeline {
-    vec<u32> m_passes;
-    vec<u32> m_framebuffers;
+    vec<Pass> m_passes;
+    vec<Framebuffer> m_framebuffers;
 };
 
 struct Game;
@@ -89,52 +108,28 @@ struct Renderer {
     void draw();
     void draw_pass(u32 pass);
 
-    Pipeline m_pipelines[10];
-    u32 n_pipelines = 0;
-    Shader m_shaders[10];
+    vec<Pipeline> m_pipelines;
+    u32 m_current_pipeline;
+    vec<Shader> m_shaders;
     Shader m_error_shader;
-    Texture m_textures[10];
-    Material m_materials[10];
-    Mesh m_meshes[10];
-    Framebuffer m_framebuffers[10];
-    Pass m_passes[10];
-    Camera m_cameras[10];
-
-    Pipeline* m_current_pipeline = NULL;
-
-    // Error compile_shader(u32 shader);
-
-    // Error set_shader_uniform_Mat4(Shader* shader, str uniform_name, Mat4 value);
-    // Error set_shader_uniform_i32(Shader* shader, str uniform_name, i32 value);
-    // Error set_shader_uniform_Vec2(Shader* shader, str uniform_name, Vec2 value);
-    // Error set_shader_uniform_Vec3(Shader* shader, str uniform_name, Vec3 value);
-
-    // Error upload_mesh(Mesh* mesh);
-    // Error reupload_mesh_buffers(Mesh* mesh);
-    // // Error delete_mesh(Mesh* mesh); @note add this
-
-    // Error create_texture(Texture* texture);
-    // Error upload_texture_data(Texture* texture);
-    // Error delete_texture(Texture* texture);
-
-    // Error create_framebuffer(Framebuffer* framebuffer);
-    // Error delete_framebuffer(Framebuffer* framebuffer);
+    vec<Mesh> m_meshes;
 
     void clear(u32 clear_flag, RGBA clear_color, float clear_depth);
     void present();
 
+    Error reload_shader(Shader* shader);
+    Error compile_shader(Shader* shader);
     void bind_shader(Shader& shader);
+    Error reload_mesh(Mesh* mesh);
     void debug_marker_start(str name);
     void debug_marker_end();
     void bind_default_framebuffer();
     void set_viewport(u32 x, u32 y, u32 width, u32 height);
-    void bind_framebuffer(u32 framebuffer);
+    void bind_framebuffer(Framebuffer& framebuffer);
     void set_depth_test(bool enabled);
     void set_face_culling(bool enabled);
     void set_face_culling_mode(CullingMode mode);
-    // void bind_textures(Pass* pass, Shader* shader);
-    // void draw_vertex_array(Mesh* mesh);
-    // void draw_pass(Pass* pass);
+    void draw_vertex_array(Mesh* mesh);
 };
 
 }  // namespace blaz

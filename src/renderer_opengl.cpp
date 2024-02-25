@@ -6,7 +6,6 @@
 #include "opengl.h"
 #include "platform.h"
 #include "renderer.h"
-#include "shader.h"
 #include "texture.h"
 #include "types.h"
 
@@ -25,7 +24,7 @@ struct Shader_Uniform_OPENGL {
 
 struct Shader_OPENGL {
     GLuint m_program = 0;
-    // std::map<str, Shader_Uniform_OPENGL> m_uniforms;
+    std::map<str, Shader_Uniform_OPENGL> m_uniforms;
 };
 
 struct Texture_OPENGL {
@@ -92,84 +91,84 @@ void Renderer::present() {
     gl->swap_buffers(m_window);
 }
 
-// Error Renderer::compile_shader(Shader* shader) {
-//     GLuint vertex_shader;
-//     vertex_shader = gl->glCreateShader(GL_VERTEX_SHADER);
-//     const char* c_str = shader->m_vertex_shader_source.c_str();
-//     gl->glShaderSource(vertex_shader, 1, &c_str, NULL);
-//     gl->glCompileShader(vertex_shader);
+Error Renderer::compile_shader(Shader* shader) {
+    GLuint vertex_shader;
+    vertex_shader = gl->glCreateShader(GL_VERTEX_SHADER);
 
-//     int success;
-//     char info[512];
-//     gl->glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-//     if (!success) {
-//         gl->glGetShaderInfoLog(vertex_shader, 512, NULL, info);
-//         return Error("Renderer::compile_shader: Failed to compile vertex shader \"" +
-//                      shader->m_name + "\" : " + str(info));
-//     }
+    const char* c_str = shader->m_vertex_shader_source.c_str();
+    gl->glShaderSource(vertex_shader, 1, &c_str, NULL);
+    gl->glCompileShader(vertex_shader);
 
-//     GLuint fragment_shader;
-//     fragment_shader = gl->glCreateShader(GL_FRAGMENT_SHADER);
-//     c_str = shader->m_fragment_shader_source.c_str();
-//     gl->glShaderSource(fragment_shader, 1, &c_str, NULL);
-//     gl->glCompileShader(fragment_shader);
-//     gl->glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-//     if (!success) {
-//         gl->glGetShaderInfoLog(fragment_shader, 512, NULL, info);
-//         return Error("Renderer::compile_shader: Failed to compile fragment shader \"" +
-//                      shader->m_name + "\" : " + str(info));
-//     }
+    int success;
+    char info[512];
+    gl->glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        gl->glGetShaderInfoLog(vertex_shader, 512, NULL, info);
+        gl->glDeleteShader(vertex_shader);
+        return Error("Renderer::compile_shader: Failed to compile vertex shader \"" +
+                     shader->m_name + "\" : " + str(info));
+    }
 
-//     GLuint shader_program;
-//     shader_program = gl->glCreateProgram();
-//     gl->glAttachShader(shader_program, vertex_shader);
-//     gl->glAttachShader(shader_program, fragment_shader);
-//     gl->glLinkProgram(shader_program);
-//     gl->glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
-//     if (!success) {
-//         gl->glGetProgramInfoLog(shader_program, 512, NULL, info);
-//         return Error("Renderer::compile_shader: Failed to link shader program \"" +
-//         shader->m_name +
-//                      "\" : " + str(info));
-//     }
+    GLuint fragment_shader;
+    fragment_shader = gl->glCreateShader(GL_FRAGMENT_SHADER);
+    c_str = shader->m_fragment_shader_source.c_str();
+    gl->glShaderSource(fragment_shader, 1, &c_str, NULL);
+    gl->glCompileShader(fragment_shader);
+    gl->glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        gl->glGetShaderInfoLog(fragment_shader, 512, NULL, info);
+        gl->glDeleteShader(fragment_shader);
+        return Error("Renderer::compile_shader: Failed to compile fragment shader \"" +
+                     shader->m_name + "\" : " + str(info));
+    }
 
-//     gl->glDeleteShader(vertex_shader);
-//     gl->glDeleteShader(fragment_shader);
+    GLuint shader_program;
+    shader_program = gl->glCreateProgram();
+    gl->glAttachShader(shader_program, vertex_shader);
+    gl->glAttachShader(shader_program, fragment_shader);
+    gl->glLinkProgram(shader_program);
+    gl->glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+    if (!success) {
+        gl->glGetProgramInfoLog(shader_program, 512, NULL, info);
+        return Error("Renderer::compile_shader: Failed to link shader program \"" + shader->m_name +
+                     "\" : " + str(info));
+    }
 
-//     Shader_OPENGL* api_shader = new Shader_OPENGL;
-//     api_shader->m_program = shader_program;
+    gl->glDeleteShader(vertex_shader);
+    gl->glDeleteShader(fragment_shader);
 
-//     GLint n_uniforms, max_len;
-//     gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
-//     gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
-//     GLchar* uniform_name = (GLchar*)malloc(max_len);
+    Shader_OPENGL* api_shader = new Shader_OPENGL;
+    api_shader->m_program = shader_program;
 
-//     gl->glUseProgram(shader_program);
+    GLint n_uniforms, max_len;
+    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
+    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
+    GLchar* uniform_name = (GLchar*)malloc(max_len);
 
-//     u32 texture_unit_counter = 0;
-//     if (uniform_name != NULL) {
-//         for (i32 i = 0; i < n_uniforms; i++) {
-//             Shader_Uniform_OPENGL uniform;
-//             gl->glGetActiveUniform(shader_program, i, max_len, NULL, &uniform.m_size,
-//                                    &uniform.m_type, uniform_name);
-//             uniform.m_location = gl->glGetUniformLocation(shader_program, uniform_name);
+    gl->glUseProgram(shader_program);
 
-//             // @note other stuff like GL_SAMPLER_2D_SHADOW
-//             // also this looks ugly, investigate an alternative
-//             if (uniform.m_type == GL_SAMPLER_2D) {
-//                 gl->glUniform1i(uniform.m_location, texture_unit_counter);
-//                 uniform.m_texture_unit = texture_unit_counter;
-//                 texture_unit_counter++;
-//             }
-//             api_shader->m_uniforms[str(uniform_name)] = uniform;
-//         }
-//     }
-//     free(uniform_name);
+    u32 texture_unit_counter = 0;
+    if (uniform_name != NULL) {
+        for (i32 i = 0; i < n_uniforms; i++) {
+            Shader_Uniform_OPENGL uniform;
+            gl->glGetActiveUniform(shader_program, i, max_len, NULL, &uniform.m_size,
+                                   &uniform.m_type, uniform_name);
+            uniform.m_location = gl->glGetUniformLocation(shader_program, uniform_name);
 
-//     shader->m_api_data = api_shader;
+            if (uniform.m_type == GL_SAMPLER_2D) {
+                gl->glUniform1i(uniform.m_location, texture_unit_counter);
+                uniform.m_texture_unit = texture_unit_counter;
+                texture_unit_counter++;
+            }
+            api_shader->m_uniforms[str(uniform_name)] = uniform;
+        }
+    }
+    free(uniform_name);
 
-//     return Error();
-// }
+    shader->m_api_data = api_shader;
+
+    return Error();
+}
 
 // Error Renderer::upload_mesh(Mesh* mesh) {
 //     u32 vbo, vao, ebo;
@@ -345,9 +344,8 @@ void Renderer::set_viewport(u32 x, u32 y, u32 width, u32 height) {
     gl->glViewport(x, y, width, height);
 }
 
-void Renderer::bind_framebuffer(u32 framebuffer) {
-    gl->glBindFramebuffer(GL_FRAMEBUFFER,
-                          ((Framebuffer_OPENGL*)m_framebuffers[framebuffer].m_api_data)->m_fbo);
+void Renderer::bind_framebuffer(Framebuffer& framebuffer) {
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, ((Framebuffer_OPENGL*)framebuffer.m_api_data)->m_fbo);
 }
 
 void Renderer::set_depth_test(bool enabled) {
@@ -392,9 +390,9 @@ void Renderer::set_face_culling_mode(CullingMode mode) {
 //     }
 // }
 
-// void Renderer::draw_vertex_array(Mesh* mesh) {
-//     gl->glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
-//     gl->glDrawElements(GL_TRIANGLES, mesh->m_indices.size(), GL_UNSIGNED_INT, 0);
-// }
+void Renderer::draw_vertex_array(Mesh* mesh) {
+    gl->glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
+    gl->glDrawElements(GL_TRIANGLES, (GLsizei)mesh->m_indices.size(), GL_UNSIGNED_INT, 0);
+}
 
 }  // namespace blaz

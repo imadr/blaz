@@ -25,6 +25,7 @@ int main() {
     }
 
     while (game.m_window.event_loop()) {
+        logger.error(game.m_renderer.reload_shader(&game.m_renderer.m_shaders[0]));
         game.m_renderer.draw();
     }
 

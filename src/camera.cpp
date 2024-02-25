@@ -2,7 +2,6 @@
 
 #include <algorithm>
 
-#include "mesh.h"
 #include "renderer.h"
 
 namespace blaz {

@@ -9,15 +9,17 @@
 namespace blaz {
 
 struct Level {
+    str m_name;
     u32 m_pipeline;
     Scene m_scene;
-    Renderable m_renderables[100];
+    vec<Renderable> m_renderables;
+    std::unordered_map<str, vec<u32>> m_tagged_renderables;
 };
 
 struct Game {
     Window m_window;
     Renderer m_renderer;
-    Level m_levels[10];
+    vec<Level> m_levels;
     u32 m_current_level = 0;
 
     Error load_game(str path);
