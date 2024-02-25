@@ -8,6 +8,7 @@ namespace blaz {
 struct Scene;
 
 struct Node {
+    str m_name;
     Scene* m_scene = NULL;
     u32 m_parent = 0;
     vec<u32> m_children;
@@ -34,7 +35,7 @@ struct Node {
 };
 
 struct Scene {
-    Node m_nodes[100];
+    vec<Node> m_nodes;
 };
 
 }  // namespace blaz

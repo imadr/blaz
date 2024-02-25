@@ -22,7 +22,9 @@ enum class TokenType {
     BOOL_LITERAL,
     IMPORT,
     VEC4,
-    VEC3
+    VEC3,
+    BUFFER_F32,
+    BUFFER_U32
 };
 
 struct Token {
@@ -197,6 +199,14 @@ TokenizerState tokenize(str text, str path) {
             } else if (s == "vec3") {
                 add_token(&state,
                           {.type = TokenType::VEC3, .line = state.line, .column = state.column});
+            } else if (s == "buffer_f32") {
+                add_token(
+                    &state,
+                    {.type = TokenType::BUFFER_F32, .line = state.line, .column = state.column});
+            } else if (s == "buffer_u32") {
+                add_token(
+                    &state,
+                    {.type = TokenType::BUFFER_U32, .line = state.line, .column = state.column});
             } else if (s == "import") {
                 add_token(&state,
                           {.type = TokenType::IMPORT, .line = state.line, .column = state.column});
@@ -317,8 +327,7 @@ CfgNode vec4_node(ParserState* state) {
             node.vec4_value = Vec4(x.float_value, y.float_value, z.float_value, w.float_value);
             if (consume_token(state, TokenType::RIGHT_PARENTHESIS, NULL)) {
                 return node;
-            }
-            else {
+            } else {
                 logger.error("vec4_node: missing right parenthesis " + error_at(state));
                 return CfgNode();  // @error
             }
@@ -351,7 +360,59 @@ CfgNode vec3_node(ParserState* state) {
                 return CfgNode();  // @error
             }
         } else {
-            logger.error("vec4_node: missing left parenthesis " + error_at(state));
+            logger.error("vec3_node: missing left parenthesis " + error_at(state));
+            return CfgNode();  // @error
+        }
+    } else {
+        return CfgNode();  // @error
+    }
+}
+
+CfgNode buffer_f32_node(ParserState* state) {
+    Token token;
+    if (consume_token(state, TokenType::BUFFER_F32, &token)) {
+        CfgNode node;
+        node.type = CfgNodeType::BUFFER_F32;
+        if (consume_token(state, TokenType::LEFT_PARENTHESIS, NULL)) {
+            Token f32_node;
+            while (consume_token(state, TokenType::FLOAT_LITERAL, &f32_node)) {
+                node.buffer_f32_value.push_back(f32_node.float_value);
+                consume_token(state, TokenType::COMMA, NULL);
+            }
+            if (consume_token(state, TokenType::RIGHT_PARENTHESIS, NULL)) {
+                return node;
+            } else {
+                logger.error("buffer_f32_node: missing right parenthesis " + error_at(state));
+                return CfgNode();  // @error
+            }
+        } else {
+            logger.error("buffer_f32_node: missing left parenthesis " + error_at(state));
+            return CfgNode();  // @error
+        }
+    } else {
+        return CfgNode();  // @error
+    }
+}
+
+CfgNode buffer_u32_node(ParserState* state) {
+    Token token;
+    if (consume_token(state, TokenType::BUFFER_U32, &token)) {
+        CfgNode node;
+        node.type = CfgNodeType::BUFFER_U32;
+        if (consume_token(state, TokenType::LEFT_PARENTHESIS, NULL)) {
+            Token u32_node;
+            while (consume_token(state, TokenType::FLOAT_LITERAL, &u32_node)) {
+                node.buffer_u32_value.push_back((u32)u32_node.float_value);
+                consume_token(state, TokenType::COMMA, NULL);
+            }
+            if (consume_token(state, TokenType::RIGHT_PARENTHESIS, NULL)) {
+                return node;
+            } else {
+                logger.error("buffer_u32_node: missing right parenthesis " + error_at(state));
+                return CfgNode();  // @error
+            }
+        } else {
+            logger.error("buffer_u32_node: missing left parenthesis " + error_at(state));
             return CfgNode();  // @error
         }
     } else {
@@ -474,6 +535,12 @@ CfgNode generic_node(ParserState* state) {
             break;
         case TokenType::VEC3:
             return vec3_node(state);
+            break;
+        case TokenType::BUFFER_F32:
+            return buffer_f32_node(state);
+            break;
+        case TokenType::BUFFER_U32:
+            return buffer_u32_node(state);
             break;
         case TokenType::STR_LITERAL:
             return str_node(state);
