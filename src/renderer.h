@@ -11,11 +11,14 @@
 
 namespace blaz {
 
+struct Game;
+
 enum Clear {
     NONE = 0,
     COLOR = 1 << 0,
     DEPTH = 1 << 1,
 };
+
 static std::unordered_map<str, Clear> ClearStr = {
     {"NONE", Clear::NONE},
     {"COLOR", Clear::COLOR},
@@ -25,6 +28,11 @@ static std::unordered_map<str, Clear> ClearStr = {
 enum class CullingMode {
     BACK,
     FRONT,
+};
+
+static std::unordered_map<str, CullingMode> CullingModeStr = {
+    {"BACK", CullingMode::BACK},
+    {"FRONT", CullingMode::FRONT},
 };
 
 struct Framebuffer {
@@ -95,6 +103,7 @@ struct Pass {
 };
 
 struct Pipeline {
+    str m_name;
     vec<Pass> m_passes;
     vec<Framebuffer> m_framebuffers;
 };
@@ -102,16 +111,19 @@ struct Pipeline {
 struct Game;
 
 struct Renderer {
-    Window* m_window;
+    Game* m_game;
 
-    Error init(Window* window);
+    Error init(Game* game);
     void draw();
     void draw_pass(u32 pass);
 
     vec<Pipeline> m_pipelines;
     u32 m_current_pipeline;
+    std::unordered_map<str, u32> m_pipelines_ids;
     vec<Shader> m_shaders;
+    std::unordered_map<str, u32> m_shaders_ids;
     Shader m_error_shader;
+    std::unordered_map<str, u32> m_meshes_ids;
     vec<Mesh> m_meshes;
 
     void clear(u32 clear_flag, RGBA clear_color, float clear_depth);

@@ -10,8 +10,8 @@ namespace blaz {
 
 struct Level {
     str m_name;
-    u32 m_pipeline;
     Scene m_scene;
+    u32 m_pipeline;
     vec<Renderable> m_renderables;
     std::unordered_map<str, vec<u32>> m_tagged_renderables;
 };

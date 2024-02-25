@@ -18,14 +18,13 @@ int main() {
         return 1;
     }
 
-    err = game.m_renderer.init(&game.m_window);
+    err = game.m_renderer.init(&game);
     if (err) {
         logger.error(err);
         return 1;
     }
 
     while (game.m_window.event_loop()) {
-        logger.error(game.m_renderer.reload_shader(&game.m_renderer.m_shaders[0]));
         game.m_renderer.draw();
     }
 

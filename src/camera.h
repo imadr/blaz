@@ -27,7 +27,8 @@ enum class Projection { PERSPECTIVE, ORTHOGRAPHIC };
 struct Camera {
     // static Camera* main;
 
-    // str m_name;
+    str m_name;
+    u32 m_node;
 
     // Scene* m_scene = NULL;
 

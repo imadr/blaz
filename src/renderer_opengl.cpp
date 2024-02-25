@@ -8,6 +8,7 @@
 #include "renderer.h"
 #include "texture.h"
 #include "types.h"
+#include "game.h"
 
 namespace blaz {
 
@@ -57,14 +58,14 @@ static std::unordered_map<TextureFilteringMode, GLenum> opengl_texture_filtering
 
 Opengl* gl;
 
-Error Renderer::init(Window* window) {
-    m_window = window;
+Error Renderer::init(Game* game) {
+    m_game = game;
     gl = new Opengl();
     bool debug = false;
 #ifdef DEBUG_RENDERER
     debug = true;
 #endif
-    Error err = gl->init(m_window, debug);
+    Error err = gl->init(&m_game->m_window, debug);
     if (err) {
         return Error("Renderer::init ->\n" + err.message());
     }
@@ -88,7 +89,7 @@ void Renderer::clear(u32 clear_flag, RGBA clear_color, float clear_depth) {
 }
 
 void Renderer::present() {
-    gl->swap_buffers(m_window);
+    gl->swap_buffers(&m_game->m_window);
 }
 
 Error Renderer::compile_shader(Shader* shader) {

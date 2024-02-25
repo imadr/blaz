@@ -76,6 +76,10 @@ bool is_digit(char c) {
     return (c >= 48 && c <= 57);
 }
 
+bool is_underscore(char c) {
+    return c == '_';
+}
+
 bool is_whitespace_or_newline(char c) {
     return (c == 9) || (c == 10) || (c == 13) || (c == 32);
 }
@@ -182,7 +186,8 @@ TokenizerState tokenize(str text, str path) {
         if (check_single_token(&state)) continue;
 
         if (is_alphabet(current_char(&state))) {
-            str s = fill(&state, [](char c) { return is_alphabet(c) || is_digit(c); });
+            str s = fill(&state,
+                         [](char c) { return is_alphabet(c) || is_digit(c) || is_underscore(c); });
             if (s == "true") {
                 add_token(&state, {.type = TokenType::BOOL_LITERAL,
                                    .line = state.line,
