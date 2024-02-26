@@ -2,10 +2,26 @@
 
 #include "filesystem.h"
 #include "game.h"
-#include "types.h"
 #include "logger.h"
+#include "types.h"
 
 namespace blaz {
+
+Error Renderer::init(Game* game) {
+    m_game = game;
+
+    Error err = init_api();
+
+    if (err) {
+        return err;
+    }
+
+    for (auto& mesh : m_meshes) {
+        upload_mesh(&mesh);
+    }
+
+    return Error();
+}
 
 Error Renderer::reload_shader(Shader* shader) {
     pair<Error, str> err = read_whole_file(shader->m_vertex_shader_path);
@@ -103,18 +119,20 @@ void Renderer::draw() {
         //     }
         // }
 
-        Level* current_level = &m_game->m_levels[m_game->m_current_level];        
-        
-        for (const str& tag : pass.m_tags) {
-            logger.info(tag);
+        Level* current_level = &m_game->m_levels[m_game->m_current_level];
+
+        for (const str tag : pass.m_tags) {
+            for (const u32 id : current_level->m_tagged_renderables[tag]) {
+                draw_vertex_array(&m_meshes[current_level->m_renderables[id].m_mesh]);
+            }
         }
-        
-        //current_level->m_renderables
 
 #ifdef DEBUG_RENDERER
         debug_marker_end();
 #endif
     }
+
+    present();
 }
 
 }  // namespace blaz
