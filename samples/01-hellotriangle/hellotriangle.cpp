@@ -12,7 +12,7 @@ int main() {
         logger.error(err);
     }
 
-    err = game.m_window.init();
+    err = game.m_window.init("01-hellotriangle");
     if (err) {
         logger.error(err);
         return 1;

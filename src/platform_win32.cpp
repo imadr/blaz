@@ -154,7 +154,7 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
     return DefWindowProc(window_handle, message, w_param, l_param);
 }
 
-Error Window::init() {
+Error Window::init(const str& title) {
     m_win32 = new Window_WIN32();
     m_os_data = m_win32;
 
@@ -178,7 +178,7 @@ Error Window::init() {
     u32 adjusted_width = window_rect.right - window_rect.left;
     u32 adjusted_height = window_rect.bottom - window_rect.top;
     m_win32->window_handle =
-        CreateWindowEx(0, window_class_name, "", windowed_style,
+        CreateWindowEx(0, window_class_name, title.c_str(), windowed_style,
                        GetSystemMetrics(SM_CXSCREEN) / 2 - adjusted_width / 2,
                        GetSystemMetrics(SM_CYSCREEN) / 2 - adjusted_height / 2, adjusted_width,
                        adjusted_height, NULL, NULL, window_class.hInstance, this);
