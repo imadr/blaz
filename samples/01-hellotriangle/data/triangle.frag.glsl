@@ -1,9 +1,9 @@
 #version 330 core
 
-in vec3 v_position;
+in vec3 v_color;
 
 out vec4 o_color;
 
 void main() {
-    o_color = vec4(v_position.xyz, 1);
+    o_color = vec4(v_color.xyz, 1);
 }

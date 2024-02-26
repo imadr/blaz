@@ -61,6 +61,8 @@ struct Mesh {
     vec<u32> m_indices;
     vec<pair<str, u32>> m_attribs;
     void* m_api_data = NULL;
+
+    bool m_should_reload = false;
 };
 
 struct Material {
@@ -114,6 +116,7 @@ struct Renderer {
     Game* m_game;
 
     Error init(Game* game);
+    Error init_api();
     void draw();
     void draw_pass(u32 pass);
 
@@ -132,7 +135,7 @@ struct Renderer {
     Error reload_shader(Shader* shader);
     Error compile_shader(Shader* shader);
     void bind_shader(Shader& shader);
-    Error reload_mesh(Mesh* mesh);
+    Error upload_mesh(Mesh* mesh);
     void debug_marker_start(str name);
     void debug_marker_end();
     void bind_default_framebuffer();

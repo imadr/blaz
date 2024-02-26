@@ -3,12 +3,12 @@
 
 #include "color.h"
 #include "error.h"
+#include "game.h"
 #include "opengl.h"
 #include "platform.h"
 #include "renderer.h"
 #include "texture.h"
 #include "types.h"
-#include "game.h"
 
 namespace blaz {
 
@@ -58,8 +58,7 @@ static std::unordered_map<TextureFilteringMode, GLenum> opengl_texture_filtering
 
 Opengl* gl;
 
-Error Renderer::init(Game* game) {
-    m_game = game;
+Error Renderer::init_api() {
     gl = new Opengl();
     bool debug = false;
 #ifdef DEBUG_RENDERER
@@ -171,41 +170,41 @@ Error Renderer::compile_shader(Shader* shader) {
     return Error();
 }
 
-// Error Renderer::upload_mesh(Mesh* mesh) {
-//     u32 vbo, vao, ebo;
-//     gl->glGenVertexArrays(1, &vao);
-//     gl->glGenBuffers(1, &vbo);
-//     gl->glGenBuffers(1, &ebo);
-//     gl->glBindVertexArray(vao);
+Error Renderer::upload_mesh(Mesh* mesh) {
+    u32 vbo, vao, ebo;
+    gl->glGenVertexArrays(1, &vao);
+    gl->glGenBuffers(1, &vbo);
+    gl->glGenBuffers(1, &ebo);
+    gl->glBindVertexArray(vao);
 
-//     gl->glBindBuffer(GL_ARRAY_BUFFER, vbo);
-//     gl->glBufferData(GL_ARRAY_BUFFER, mesh->m_vertices.size() * sizeof(f32),
-//                      mesh->m_vertices.data(), GL_STATIC_DRAW);
-//     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-//     gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->m_indices.size() * sizeof(u32),
-//                      mesh->m_indices.data(), GL_STATIC_DRAW);
+    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    gl->glBufferData(GL_ARRAY_BUFFER, mesh->m_vertices.size() * sizeof(f32),
+                     mesh->m_vertices.data(), GL_STATIC_DRAW);
+    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->m_indices.size() * sizeof(u32),
+                     mesh->m_indices.data(), GL_STATIC_DRAW);
 
-//     u32 attribs_stride = 0;
-//     for (i32 i = 0; i < mesh->m_attribs.size(); i++) {
-//         attribs_stride += mesh->m_attribs[i].second;
-//     }
-//     u32 attribs_offset = 0;
-//     for (i32 i = 0; i < mesh->m_attribs.size(); i++) {
-//         gl->glEnableVertexAttribArray(i);
-//         gl->glVertexAttribPointer(i, mesh->m_attribs[i].second, GL_FLOAT, GL_FALSE,
-//                                   attribs_stride * sizeof(f32),
-//                                   (void*)(attribs_offset * sizeof(f32)));
-//         attribs_offset += mesh->m_attribs[i].second;
-//     }
+    u32 attribs_stride = 0;
+    for (i32 i = 0; i < mesh->m_attribs.size(); i++) {
+        attribs_stride += mesh->m_attribs[i].second;
+    }
+    u32 attribs_offset = 0;
+    for (i32 i = 0; i < mesh->m_attribs.size(); i++) {
+        gl->glEnableVertexAttribArray(i);
+        gl->glVertexAttribPointer(i, mesh->m_attribs[i].second, GL_FLOAT, GL_FALSE,
+                                  attribs_stride * sizeof(f32),
+                                  (void*)(attribs_offset * sizeof(f32)));
+        attribs_offset += mesh->m_attribs[i].second;
+    }
 
-//     Mesh_OPENGL* api_mesh = new Mesh_OPENGL;
-//     api_mesh->m_vbo = vbo;
-//     api_mesh->m_ebo = ebo;
-//     api_mesh->m_vao = vao;
-//     mesh->m_api_data = api_mesh;
+    Mesh_OPENGL* api_mesh = new Mesh_OPENGL;
+    api_mesh->m_vbo = vbo;
+    api_mesh->m_ebo = ebo;
+    api_mesh->m_vao = vao;
+    mesh->m_api_data = api_mesh;
 
-//     return Error();
-// }
+    return Error();
+}
 
 // Error Renderer::reupload_mesh_buffers(Mesh* mesh) {
 //     Mesh_OPENGL* api_mesh = ((Mesh_OPENGL*)mesh->m_api_data);
