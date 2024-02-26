@@ -14,7 +14,7 @@ enum class KeyState { RELEASED, PRESSED };
 enum class ButtonState { RELEASED, PRESSED };
 
 struct Window {
-    Error init();
+    Error init(const str& title);
     void close();
     bool event_loop();
 
