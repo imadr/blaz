@@ -26,15 +26,19 @@ Error Renderer::init(Game* game) {
 Error Renderer::reload_shader(Shader* shader) {
     pair<Error, str> err = read_whole_file(shader->m_vertex_shader_path);
     if (err.first) {
+        shader->m_is_error = true;
         return err.first;
     }
     shader->m_vertex_shader_source = err.second;
 
     err = read_whole_file(shader->m_fragment_shader_path);
     if (err.first) {
+        shader->m_is_error = true;
         return err.first;
     }
     shader->m_fragment_shader_source = err.second;
+
+    shader->m_should_reload = false;
 
     return compile_shader(shader);
 }
@@ -82,14 +86,14 @@ void Renderer::draw() {
 
         clear(pass.m_clear_flag, pass.m_clear_color, pass.m_clear_depth);
 
-        Shader pass_shader = m_shaders[pass.m_shader];
+        Shader* pass_shader = &m_shaders[pass.m_shader];
 
-        if (pass_shader.m_should_reload) {
-            reload_shader(&pass_shader);
+        if (pass_shader->m_should_reload) {
+            reload_shader(pass_shader);
         }
 
-        if (pass_shader.m_is_error) {
-            pass_shader = m_error_shader;
+        if (pass_shader->m_is_error) {
+            //pass_shader = m_error_shader;
         }
 
         bind_shader(pass_shader);

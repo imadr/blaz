@@ -17,6 +17,7 @@ struct Window {
     Error init(const str& title);
     void close();
     bool event_loop();
+    void screenshot(str filename);
 
     struct Size {
         u32 width;
