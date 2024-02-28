@@ -24,8 +24,13 @@ int main() {
         return 1;
     }
 
+    bool done_screenshot = false;
     while (game.m_window.event_loop()) {
         game.m_renderer.draw();
+        if (!done_screenshot) {
+            game.m_window.screenshot("../tests/01-hellotriangle.bmp");
+            done_screenshot = true;
+        }
     }
 
     game.m_window.close();

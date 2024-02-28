@@ -12,9 +12,11 @@
 #ifndef HID_USAGE_GENERIC_MOUSE
 #define HID_USAGE_GENERIC_MOUSE ((unsigned short)0x02)
 #endif
-#include <map>
 #include <basetsd.h>
 #include <libloaderapi.h>
+
+#include <map>
+
 #include "error.h"
 
 struct Window_WIN32 {
@@ -219,6 +221,53 @@ bool Window::event_loop() {
 }
 
 void Window::close() {
+}
+
+void Window::screenshot(str filename) {
+    RECT rect;
+    GetClientRect(m_win32->window_handle, &rect);
+    int width = rect.right - rect.left;
+    int height = rect.bottom - rect.top;
+
+    HDC screen_device_context = GetDC(NULL);
+    HDC device_context = CreateCompatibleDC(screen_device_context);
+
+    HBITMAP bitemap_handle = CreateCompatibleBitmap(screen_device_context, width, height);
+    SelectObject(device_context, bitemap_handle);
+
+    PrintWindow(m_win32->window_handle, device_context, PW_CLIENTONLY);
+
+    BITMAPINFOHEADER bitmap_info;
+    bitmap_info.biSize = sizeof(BITMAPINFOHEADER);
+    bitmap_info.biWidth = width;
+    bitmap_info.biHeight = -height;
+    bitmap_info.biPlanes = 1;
+    bitmap_info.biBitCount = 24;
+    bitmap_info.biCompression = BI_RGB;
+    bitmap_info.biSizeImage = 0;
+
+    BITMAPFILEHEADER bitmap_header;
+    bitmap_header.bfType = 0x4D42;
+    bitmap_header.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + width * height * 3;
+    bitmap_header.bfReserved1 = 0;
+    bitmap_header.bfReserved2 = 0;
+    bitmap_header.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+
+    HANDLE file =
+        CreateFileA(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+
+    WriteFile(file, &bitmap_header, sizeof(BITMAPFILEHEADER), 0, 0);
+    WriteFile(file, &bitmap_info, sizeof(BITMAPINFOHEADER), 0, 0);
+    BYTE* bits = new BYTE[width * height * 3];
+    GetDIBits(device_context, bitemap_handle, 0, height, bits, (BITMAPINFO*)&bitmap_info,
+              DIB_RGB_COLORS);
+    WriteFile(file, bits, width * height * 3, 0, 0);
+
+    CloseHandle(file);
+    delete[] bits;
+    DeleteObject(bitemap_handle);
+    DeleteDC(device_context);
+    ReleaseDC(NULL, screen_device_context);
 }
 
 }  // namespace blaz

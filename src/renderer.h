@@ -134,7 +134,7 @@ struct Renderer {
 
     Error reload_shader(Shader* shader);
     Error compile_shader(Shader* shader);
-    void bind_shader(Shader& shader);
+    void bind_shader(Shader* shader);
     Error upload_mesh(Mesh* mesh);
     void debug_marker_start(str name);
     void debug_marker_end();

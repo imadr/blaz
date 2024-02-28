@@ -254,8 +254,8 @@ Error Renderer::upload_mesh(Mesh* mesh) {
 //     return Error();
 // }
 
-void Renderer::bind_shader(Shader& shader) {
-    gl->glUseProgram(((Shader_OPENGL*)shader.m_api_data)->m_program);
+void Renderer::bind_shader(Shader* shader) {
+    gl->glUseProgram(((Shader_OPENGL*)shader->m_api_data)->m_program);
 }
 
 // Error Renderer::create_texture(Texture* texture) {
