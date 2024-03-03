@@ -35,6 +35,8 @@ set(COMMON_SOURCES
     src/camera.h
     src/node.cpp
     src/node.h
+    src/mesh.cpp
+    src/mesh.h
 )
 
 if (GRAPHICS_API STREQUAL "OpenGL")
@@ -77,6 +79,8 @@ add_library(blaz
     ${PLATFORM_SOURCES})
 
 target_include_directories(blaz PUBLIC src)
+
+set_target_properties(blaz PROPERTIES UNITY_BUILD ON)
 
 if (WIN32)
     target_link_libraries(blaz gdi32 user32)

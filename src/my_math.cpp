@@ -94,6 +94,7 @@ Vec4 vec4_lerp(Vec4 a, Vec4 b, f32 t) {
     return b * t + a * (1 - t);
 }
 
+
 Vec4 Vec4::normalize() {
     f32 l = length();
     if (l == 0) return Vec4(0, 0, 0, 0);
@@ -336,6 +337,10 @@ Vec3 rotate_vector(Vec3 v, Quat q) {
 
 f32 Vec3::length() {
     return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
+f32 Vec4::length() {
+    return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3]);
 }
 
 f32 Vec2::length() {
