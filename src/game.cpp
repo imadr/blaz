@@ -60,10 +60,10 @@ Error Game::load_game(str path) {
             renderable.m_mesh = m_renderer.m_meshes_ids[renderable_cfg["mesh"].str_value];
             renderable.m_node = level.m_scene.m_nodes_ids[renderable_cfg["node"].str_value];
 
-            level.m_renderables.push_back(renderable);
-            u32 id = (u32)level.m_renderables.size() - 1;
+            m_renderer.m_renderables.push_back(renderable);
+            u32 id = (u32)m_renderer.m_renderables.size() - 1;
             for (auto tag : renderable_cfg["tags"]) {
-                level.m_tagged_renderables[tag.str_value].push_back(id);
+                m_renderer.m_tagged_renderables[tag.str_value].push_back(id);
             }
         }
 
@@ -141,7 +141,7 @@ Error Game::load_game(str path) {
 
     u32 i = 0;
     for (auto& level_cfg : game_cfg["levels"]) {
-        m_levels[i].m_pipeline = m_renderer.m_pipelines_ids[level_cfg["pipeline"].str_value];
+        m_renderer.m_current_pipeline = m_renderer.m_pipelines_ids[level_cfg["pipeline"].str_value];
         i++;
     }
 
