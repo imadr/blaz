@@ -29,12 +29,12 @@
 #define ERROR_INVALID_VERSION_ARB 0x2095
 #define ERROR_INVALID_PROFILE_ARB 0x2096
 
-struct Window_WIN32 {
+struct Window_WIN32_Opengl {
     HWND window_handle;
     HDC device_context;
 };
 
-static Window_WIN32* m_win32;
+static Window_WIN32_Opengl* m_win32_opengl;
 
 namespace blaz {
 
@@ -45,15 +45,15 @@ typedef BOOL(APIENTRY* wglChoosePixelFormatARB_TYPE)(HDC, const int*, const FLOA
 typedef BOOL(APIENTRY* wglSwapIntervalEXT_TYPE)(int);
 
 void Opengl::swap_buffers(blaz::Window* window) {
-    SwapBuffers(m_win32->device_context);
+    SwapBuffers(m_win32_opengl->device_context);
 }
 
 Error Opengl::init(blaz::Window* window, bool debug_context) {
-    m_win32 = (Window_WIN32*)window->m_os_data;
+    m_win32_opengl = (Window_WIN32_Opengl*)window->m_os_data;
 
     HGLRC m_context_win32;
 
-    if (m_win32->device_context == NULL) {
+    if (m_win32_opengl->device_context == NULL) {
         return Error("Opengl::init: A window is needed for opengl context creation");
     }
 
@@ -175,16 +175,16 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
 
     i32 pixel_format;
     u32 num_formats;
-    wglChoosePixelFormatARB(m_win32->device_context, pixel_format_attributes, NULL, 1,
+    wglChoosePixelFormatARB(m_win32_opengl->device_context, pixel_format_attributes, NULL, 1,
                             &pixel_format, &num_formats);
 
     PIXELFORMATDESCRIPTOR good_pixel_format;
-    if (!DescribePixelFormat(m_win32->device_context, pixel_format, sizeof(PIXELFORMATDESCRIPTOR),
+    if (!DescribePixelFormat(m_win32_opengl->device_context, pixel_format, sizeof(PIXELFORMATDESCRIPTOR),
                              &good_pixel_format)) {
         return Error("DescribePixelFormat: " + win32_get_last_error());
     }
 
-    if (!SetPixelFormat(m_win32->device_context, pixel_format, &good_pixel_format)) {
+    if (!SetPixelFormat(m_win32_opengl->device_context, pixel_format, &good_pixel_format)) {
         return Error("SetPixelFormat: " + win32_get_last_error());
     }
 
@@ -201,7 +201,7 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
                                 WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
                                 0};
 
-    m_context_win32 = wglCreateContextAttribsARB(m_win32->device_context, 0, context_attributes);
+    m_context_win32 = wglCreateContextAttribsARB(m_win32_opengl->device_context, 0, context_attributes);
 
     if (m_context_win32 == NULL) {
         str error_message;
@@ -220,7 +220,7 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
         return Error("wglMakeCurrent: " + error_message);
     }
 
-    if (!wglMakeCurrent(m_win32->device_context, m_context_win32)) {
+    if (!wglMakeCurrent(m_win32_opengl->device_context, m_context_win32)) {
         return Error("wglMakeCurrent: " + win32_get_last_error());
     }
 

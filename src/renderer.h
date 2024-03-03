@@ -51,7 +51,7 @@ struct Shader {
     str m_fragment_shader_path;
     void* m_api_data = NULL;
 
-    bool m_should_reload = false;
+    bool m_should_reload = true;
     bool m_is_error = false;
 };
 
@@ -62,7 +62,7 @@ struct Mesh {
     vec<pair<str, u32>> m_attribs;
     void* m_api_data = NULL;
 
-    bool m_should_reload = false;
+    bool m_should_reload = true;
 };
 
 struct Material {

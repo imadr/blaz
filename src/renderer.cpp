@@ -89,11 +89,14 @@ void Renderer::draw() {
         Shader* pass_shader = &m_shaders[pass.m_shader];
 
         if (pass_shader->m_should_reload) {
-            reload_shader(pass_shader);
+            Error err = reload_shader(pass_shader);
+            if (err) {
+                logger.error(err);
+            }
         }
 
         if (pass_shader->m_is_error) {
-            //pass_shader = m_error_shader;
+            // pass_shader = m_error_shader;
         }
 
         bind_shader(pass_shader);
