@@ -128,6 +128,8 @@ struct Renderer {
     Shader m_error_shader;
     std::unordered_map<str, u32> m_meshes_ids;
     vec<Mesh> m_meshes;
+    vec<Renderable> m_renderables;
+    std::unordered_map<str, vec<u32>> m_tagged_renderables;
 
     void clear(u32 clear_flag, RGBA clear_color, float clear_depth);
     void present();
