@@ -71,9 +71,9 @@ Error Game::load_game(str path) {
             Camera camera;
             camera.m_name = camera_cfg["name"].str_value;
             camera.m_node = level.m_scene.m_nodes_ids[camera_cfg["node"].str_value];
-            level.m_scene.m_cameras.push_back(camera);
-            level.m_scene.m_cameras_ids[camera.m_name] =
-                (u32)level.m_scene.m_cameras_ids.size() - 1;
+            camera.m_scene = &level.m_scene;
+            m_renderer.m_cameras.push_back(camera);
+            m_renderer.m_cameras_ids[camera.m_name] = (u32)m_renderer.m_cameras_ids.size() - 1;
         }
 
         m_levels.push_back(level);
@@ -115,8 +115,7 @@ Error Game::load_game(str path) {
 
             // .m_framebuffer = pass_cfg["framebuffer"],
 
-            pass.m_camera =
-                m_levels[m_current_level].m_scene.m_cameras_ids[pass_cfg["camera"].str_value];
+            pass.m_camera = m_renderer.m_cameras_ids[pass_cfg["camera"].str_value];
             if (pass_cfg["enabled"]) {
                 pass.m_enabled = pass_cfg["enabled"].bool_value;
             }
@@ -141,11 +140,12 @@ Error Game::load_game(str path) {
 
     u32 i = 0;
     for (auto& level_cfg : game_cfg["levels"]) {
-        m_renderer.m_current_pipeline = m_renderer.m_pipelines_ids[level_cfg["pipeline"].str_value];
+        m_levels[i].m_pipeline = m_renderer.m_pipelines_ids[level_cfg["pipeline"].str_value];
         i++;
     }
 
     m_renderer.m_current_pipeline = m_levels[m_current_level].m_pipeline;
+    m_renderer.m_current_scene = &m_levels[m_current_level].m_scene;
 
     return Error();
 }

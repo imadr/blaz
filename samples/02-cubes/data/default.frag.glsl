@@ -1,9 +1,9 @@
-#version 330 core
+#version 450
 
-in vec2 v_uv;
+layout(location = 0) in vec4 v_position;
 
-out vec4 o_color;
+layout(location = 0) out vec4 o_color;
 
 void main() {
-    o_color = vec4(v_uv.xy, 0, 1);
+    o_color = vec4(v_position.xyz, 1);
 }

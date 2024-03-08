@@ -246,6 +246,15 @@ typedef double GLclampd;
 #define GL_POLYGON_OFFSET_POINT 0x2A01
 #define GL_POLYGON_OFFSET_LINE 0x2A02
 #define GL_POLYGON_OFFSET_FILL 0x8037
+#define GL_UNIFORM_BUFFER 0x8A11
+#define GL_ACTIVE_UNIFORM_BLOCKS 0x8A36
+#define GL_UNIFORM_BLOCK_DATA_SIZE 0x8A40
+#define GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS 0x8A42
+#define GL_UNIFORM_BLOCK_BINDING 0x8A3F
+#define GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES 0x8A43
+#define GL_UNIFORM_SIZE 0x8A38
+#define GL_UNIFORM_TYPE 0x8A37
+#define GL_UNIFORM_OFFSET 0x8A3B
 
 #ifdef OS_WIN32
 
@@ -327,7 +336,18 @@ GL_OLD_FUNCTIONS_LIST
     GL_FUNCTION(void, glUniform3f, GLint location, GLfloat v0, GLfloat v1, GLfloat v2)            \
     GL_FUNCTION(void, glPushDebugGroup, GLenum source, GLuint id, GLsizei length,                 \
                 const char* message)                                                              \
-    GL_FUNCTION(void, glPopDebugGroup)
+    GL_FUNCTION(void, glPopDebugGroup)                                                            \
+    GL_FUNCTION(void, glGetActiveUniformBlockName, GLuint program, GLuint uniformBlockIndex,      \
+                GLsizei bufSize, GLsizei* length, GLchar* uniformBlockName)                       \
+    GL_FUNCTION(void, glGetActiveUniformBlockiv, GLuint program, GLuint uniformBlockIndex,        \
+                GLenum pname, GLint* params)                                                      \
+    GL_FUNCTION(void, glGetActiveUniformsiv, GLuint program, GLsizei uniformCount,                \
+                const GLuint* uniformIndices, GLenum pname, GLint* params)                        \
+    GL_FUNCTION(void, glGetActiveUniformName, GLuint program, GLuint uniformIndex,                \
+                GLsizei bufSize, GLsizei* length, GLchar* uniformName)                            \
+    GL_FUNCTION(void, glBufferSubData, GLenum target, GLintptr offset, GLsizeiptr size,           \
+                const GLvoid* data)                                                               \
+    GL_FUNCTION(void, glBindBufferRange, GLenum, GLuint, GLuint, GLintptr, GLsizeiptr)
 
 #define GL_FUNCTION(return_type, name, ...) typedef return_type name##Type(__VA_ARGS__);
 

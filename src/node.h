@@ -2,9 +2,9 @@
 
 #include <unordered_map>
 
+#include "camera.h"
 #include "my_math.h"
 #include "types.h"
-#include "camera.h"
 
 namespace blaz {
 
@@ -40,8 +40,6 @@ struct Node {
 struct Scene {
     vec<Node> m_nodes;
     std::unordered_map<str, u32> m_nodes_ids;
-    vec<Camera> m_cameras;
-    std::unordered_map<str, u32> m_cameras_ids;
 };
 
 }  // namespace blaz

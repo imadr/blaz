@@ -11,6 +11,7 @@ namespace blaz {
 struct Level {
     str m_name;
     Scene m_scene;
+    u32 m_pipeline;
 };
 
 struct Game {
