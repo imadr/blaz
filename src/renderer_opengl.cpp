@@ -13,19 +13,15 @@
 namespace blaz {
 
 struct Mesh_OPENGL {
-    u32 m_vbo, m_vao, m_ebo;
+    GLuint m_vbo, m_vao, m_ebo;
 };
 
-struct Shader_Uniform_OPENGL {
-    GLint m_size = -1;
-    GLint m_location = -1;
-    GLenum m_type = -1;
-    u32 m_texture_unit = -1;
+struct UniformBuffer_OPENGL {
+    GLuint m_ubo;
 };
 
 struct Shader_OPENGL {
     GLuint m_program = 0;
-    std::map<str, Shader_Uniform_OPENGL> m_uniforms;
 };
 
 struct Texture_OPENGL {
@@ -34,7 +30,7 @@ struct Texture_OPENGL {
 };
 
 struct Framebuffer_OPENGL {
-    u32 m_fbo;
+    GLuint m_fbo;
 };
 
 static std::unordered_map<TextureFormat, std::pair<GLint, GLenum>> opengl_texture_formats = {
@@ -140,31 +136,6 @@ Error Renderer::compile_shader(Shader* shader) {
     Shader_OPENGL* api_shader = new Shader_OPENGL;
     api_shader->m_program = shader_program;
 
-    GLint n_uniforms, max_len;
-    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
-    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
-    GLchar* uniform_name = (GLchar*)malloc(max_len);
-
-    gl->glUseProgram(shader_program);
-
-    u32 texture_unit_counter = 0;
-    if (uniform_name != NULL) {
-        for (i32 i = 0; i < n_uniforms; i++) {
-            Shader_Uniform_OPENGL uniform;
-            gl->glGetActiveUniform(shader_program, i, max_len, NULL, &uniform.m_size,
-                                   &uniform.m_type, uniform_name);
-            uniform.m_location = gl->glGetUniformLocation(shader_program, uniform_name);
-
-            if (uniform.m_type == GL_SAMPLER_2D) {
-                gl->glUniform1i(uniform.m_location, texture_unit_counter);
-                uniform.m_texture_unit = texture_unit_counter;
-                texture_unit_counter++;
-            }
-            api_shader->m_uniforms[str(uniform_name)] = uniform;
-        }
-    }
-    free(uniform_name);
-
     shader->m_api_data = api_shader;
 
     return Error();
@@ -227,6 +198,30 @@ Error Renderer::upload_mesh(Mesh* mesh) {
 
 //     return Error();
 // }
+
+Error Renderer::init_uniform_buffer(UniformBuffer* uniform_buffer) {
+    GLuint ubo;
+    gl->glGenBuffers(1, &ubo);
+    gl->glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    gl->glBufferData(GL_UNIFORM_BUFFER, uniform_buffer->m_size, NULL, GL_STATIC_DRAW);
+    gl->glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    gl->glBindBufferRange(GL_UNIFORM_BUFFER, uniform_buffer->m_binding_point, ubo, 0,
+                          uniform_buffer->m_size);
+
+    UniformBuffer_OPENGL* api_uniform_buffer = new UniformBuffer_OPENGL;
+    api_uniform_buffer->m_ubo = ubo;
+    uniform_buffer->m_api_data = api_uniform_buffer;
+    return Error();
+}
+
+Error Renderer::set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform,
+                                        UniformValue value) {
+    gl->glBindBuffer(GL_UNIFORM_BUFFER, ((UniformBuffer_OPENGL*)uniform_buffer->m_api_data)->m_ubo);
+    gl->glBufferSubData(GL_UNIFORM_BUFFER, uniform_buffer->m_uniforms[uniform].m_offset,
+                        uniform_buffer->m_uniforms[uniform].m_size, &value);
+    gl->glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    return Error();
+}
 
 // Error Renderer::set_shader_uniform_Mat4(Shader* shader, str uniform_name, Mat4 value) {
 //     Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
@@ -344,8 +339,8 @@ void Renderer::set_viewport(u32 x, u32 y, u32 width, u32 height) {
     gl->glViewport(x, y, width, height);
 }
 
-void Renderer::bind_framebuffer(Framebuffer& framebuffer) {
-    gl->glBindFramebuffer(GL_FRAMEBUFFER, ((Framebuffer_OPENGL*)framebuffer.m_api_data)->m_fbo);
+void Renderer::bind_framebuffer(Framebuffer* framebuffer) {
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, ((Framebuffer_OPENGL*)framebuffer->m_api_data)->m_fbo);
 }
 
 void Renderer::set_depth_test(bool enabled) {

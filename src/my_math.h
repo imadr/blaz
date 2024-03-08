@@ -14,6 +14,11 @@ struct Vec2I {
     i32 &operator[](int i) {
         return v[i];
     }
+
+    void *ptr(Vec2I &v) {
+        return v.v;
+    }
+
     i32 &x() {
         return v[0];
     }
@@ -63,6 +68,11 @@ struct Vec3 {
     f32 &operator[](int i) {
         return v[i];
     }
+
+    void *ptr(Vec3 &v) {
+        return v.v;
+    }
+
     f32 &x() {
         return v[0];
     }
@@ -129,6 +139,11 @@ struct Vec4 {
     f32 &operator[](int i) {
         return v[i];
     }
+
+    void *ptr(Vec4 &v) {
+        return v.v;
+    }
+
     f32 &x() {
         return v[0];
     }
@@ -202,6 +217,11 @@ struct Vec2 {
     f32 &operator[](int i) {
         return v[i];
     }
+
+    void *ptr(Vec2 &v) {
+        return v.v;
+    }
+
     f32 &x() {
         return v[0];
     }
@@ -259,6 +279,11 @@ struct Quat {
     f32 &operator[](int i) {
         return v[i];
     }
+
+    void *ptr(Quat &q) {
+        return q.v;
+    }
+
     f32 &x() {
         return v[0];
     }
@@ -277,7 +302,7 @@ struct Quat {
     Quat(f32 x, f32 y, f32 z, f32 w) : v{x, y, z, w} {
     }
 
-    Quat(Vec4 v): v{v.x(), v.y(), v.z(), v.w()} {
+    Quat(Vec4 v) : v{v.x(), v.y(), v.z(), v.w()} {
     }
 
     Quat operator=(Quat other) {
@@ -312,6 +337,10 @@ struct Mat4 {
     f32 m[16];
     f32 &operator[](int i) {
         return m[i];
+    }
+
+    void *ptr(Mat4 &mat) {
+        return mat.m;
     }
 
     Mat4() : m{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1} {

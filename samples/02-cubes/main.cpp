@@ -19,28 +19,13 @@ int main() {
         return 1;
     }
 
-    //     game.m_renderer.add_mesh(
-    // Mesh{
-    //     .m_name = "cube"
-    //     vec<f32> m_vertices;
-    //     vec<u32> m_indices;
-    //     vec<pair<str, u32>> m_attribs;
-    //     void* m_api_data = NULL;
-
-    //     bool m_should_reload = false;
-    // };
-    //         )
-    Mesh cube = make_cube();
-    game.m_renderer.m_meshes.push_back(cube);
-    game.m_renderer.m_meshes_ids["cube"] = 0;
-
-    game.m_levels[game.m_current_level].m_renderables.push_back(Renderable{
+    game.m_renderer.add_mesh(make_cube());
+    game.m_renderer.add_renderable(Renderable{
         .m_name = "cube",
         .m_tags = {"default"},
         .m_mesh = 0,
         .m_node = 0,
     });
-    game.m_levels[game.m_current_level].m_tagged_renderables["default"] = {0};
 
     err = game.m_renderer.init(&game);
     if (err) {
@@ -49,6 +34,7 @@ int main() {
     }
 
     while (game.m_window.event_loop()) {
+
         game.m_renderer.draw();
     }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <variant>
 
 #include "camera.h"
 #include "color.h"
@@ -50,9 +51,23 @@ struct Shader {
     str m_vertex_shader_path;
     str m_fragment_shader_path;
     void* m_api_data = NULL;
-
     bool m_should_reload = true;
     bool m_is_error = false;
+};
+
+struct Uniform {
+    str m_name;
+    u32 m_offset;
+    u32 m_size;
+};
+
+struct UniformBuffer {
+    str m_name;
+    u32 m_size;
+    u32 m_binding_point;
+    std::unordered_map<str, Uniform> m_uniforms;
+    bool m_should_reload = true;
+    void* m_api_data = NULL;
 };
 
 struct Mesh {
@@ -61,7 +76,6 @@ struct Mesh {
     vec<u32> m_indices;
     vec<pair<str, u32>> m_attribs;
     void* m_api_data = NULL;
-
     bool m_should_reload = true;
 };
 
@@ -101,7 +115,6 @@ struct Pass {
     bool m_enable_depth_test = true;
     bool m_enable_face_culling = true;
     CullingMode m_culling_mode = CullingMode::BACK;
-    // std::unordered_map<str, str> m_textures_bindings;
 };
 
 struct Pipeline {
@@ -112,8 +125,11 @@ struct Pipeline {
 
 struct Game;
 
+using UniformValue = std::variant<Mat4, Vec4, Vec3, f32, bool>;
+
 struct Renderer {
     Game* m_game;
+    Scene* m_current_scene;
 
     Error init(Game* game);
     Error init_api();
@@ -126,8 +142,13 @@ struct Renderer {
     vec<Shader> m_shaders;
     std::unordered_map<str, u32> m_shaders_ids;
     Shader m_error_shader;
-    std::unordered_map<str, u32> m_meshes_ids;
     vec<Mesh> m_meshes;
+    std::unordered_map<str, u32> m_meshes_ids;
+    vec<Camera> m_cameras;
+    std::unordered_map<str, u32> m_cameras_ids;
+    vec<UniformBuffer> m_uniform_buffers;
+    std::unordered_map<str, u32> m_uniform_buffers_ids;
+
     vec<Renderable> m_renderables;
     std::unordered_map<str, vec<u32>> m_tagged_renderables;
 
@@ -142,11 +163,16 @@ struct Renderer {
     void debug_marker_end();
     void bind_default_framebuffer();
     void set_viewport(u32 x, u32 y, u32 width, u32 height);
-    void bind_framebuffer(Framebuffer& framebuffer);
+    void bind_framebuffer(Framebuffer* framebuffer);
     void set_depth_test(bool enabled);
     void set_face_culling(bool enabled);
     void set_face_culling_mode(CullingMode mode);
     void draw_vertex_array(Mesh* mesh);
+    Error set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform, UniformValue value);
+    Error init_uniform_buffer(UniformBuffer* uniform_buffer);
+
+    void add_mesh(Mesh mesh);
+    void add_renderable(Renderable renderable);
 };
 
 }  // namespace blaz
