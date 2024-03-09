@@ -1,4 +1,4 @@
-# Blaz
+# 🔥 blaz
 
 ## Building
 
