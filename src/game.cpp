@@ -18,6 +18,7 @@ Error Game::load_game(str path) {
 
     for (auto& shader_cfg : game_cfg["shaders"]) {
         Shader shader;
+        shader.m_name = shader_cfg["name"].str_value;
         shader.m_vertex_shader_path = shader_cfg["vertex_shader_path"].str_value;
         shader.m_fragment_shader_path = shader_cfg["fragment_shader_path"].str_value;
         shader.m_should_reload = true;
@@ -71,12 +72,14 @@ Error Game::load_game(str path) {
             Camera camera;
             camera.m_name = camera_cfg["name"].str_value;
             camera.m_node = level.m_scene.m_nodes_ids[camera_cfg["node"].str_value];
-            camera.m_scene = &level.m_scene;
             m_renderer.m_cameras.push_back(camera);
-            m_renderer.m_cameras_ids[camera.m_name] = (u32)m_renderer.m_cameras_ids.size() - 1;
+            m_renderer.m_cameras_ids[camera.m_name] = (u32)m_renderer.m_cameras.size() - 1;
         }
 
         m_levels.push_back(level);
+        for (auto& camera : m_renderer.m_cameras) {
+            camera.m_scene = &m_levels.back().m_scene;
+        }
         for (auto& node : m_levels.back().m_scene.m_nodes) {
             node.m_scene = &m_levels.back().m_scene;
         }
@@ -113,8 +116,6 @@ Error Game::load_game(str path) {
                 pass.m_tags.push_back(tag.str_value);
             }
 
-            // .m_framebuffer = pass_cfg["framebuffer"],
-
             pass.m_camera = m_renderer.m_cameras_ids[pass_cfg["camera"].str_value];
             if (pass_cfg["enabled"]) {
                 pass.m_enabled = pass_cfg["enabled"].bool_value;
@@ -135,7 +136,7 @@ Error Game::load_game(str path) {
             pipeline.m_passes.push_back(pass);
         }
         m_renderer.m_pipelines.push_back(pipeline);
-        m_renderer.m_pipelines_ids[pipeline.m_name] = (u32)m_renderer.m_pipelines_ids.size() - 1;
+        m_renderer.m_pipelines_ids[pipeline.m_name] = (u32)m_renderer.m_pipelines.size() - 1;
     }
 
     u32 i = 0;
