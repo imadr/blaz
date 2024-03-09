@@ -21,7 +21,7 @@ Error Renderer::init(Game* game) {
     }
 
     m_uniform_buffers.push_back(UniformBuffer{
-        .m_name = "u_mat", .m_size = 92, .m_binding_point = 0,
+        .m_name = "u_mat", .m_size = 192, .m_binding_point = 0,
         .m_uniforms =
             {
                 {

@@ -42,9 +42,9 @@ struct Camera {
 
     Projection m_projection = Projection::PERSPECTIVE;
 
-    Mat4 m_projection_matrix;
+    Mat4 m_projection_matrix = Mat4();
     bool m_dirty_projection_matrix = true;
-    Mat4 m_view_matrix;
+    Mat4 m_view_matrix = Mat4();
     bool m_dirty_view_matrix = true;
 
     void update_projection_matrix();

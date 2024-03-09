@@ -120,6 +120,7 @@ Error Renderer::compile_shader(Shader* shader) {
 
     GLuint shader_program;
     shader_program = gl->glCreateProgram();
+
     gl->glAttachShader(shader_program, vertex_shader);
     gl->glAttachShader(shader_program, fragment_shader);
     gl->glLinkProgram(shader_program);
@@ -137,6 +138,11 @@ Error Renderer::compile_shader(Shader* shader) {
     api_shader->m_program = shader_program;
 
     shader->m_api_data = api_shader;
+
+#ifdef DEBUG_RENDERER
+    gl->glObjectLabel(GL_PROGRAM, shader_program, (GLsizei)shader->m_name.size(),
+                      shader->m_name.c_str());
+#endif
 
     return Error();
 }
@@ -174,6 +180,10 @@ Error Renderer::upload_mesh(Mesh* mesh) {
     api_mesh->m_vao = vao;
     mesh->m_api_data = api_mesh;
 
+#ifdef DEBUG_RENDERER
+    gl->glObjectLabel(GL_VERTEX_ARRAY, vao, (GLsizei)mesh->m_name.size(), mesh->m_name.c_str());
+#endif
+
     return Error();
 }
 
@@ -204,13 +214,18 @@ Error Renderer::init_uniform_buffer(UniformBuffer* uniform_buffer) {
     gl->glGenBuffers(1, &ubo);
     gl->glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     gl->glBufferData(GL_UNIFORM_BUFFER, uniform_buffer->m_size, NULL, GL_STATIC_DRAW);
-    gl->glBindBuffer(GL_UNIFORM_BUFFER, 0);
     gl->glBindBufferRange(GL_UNIFORM_BUFFER, uniform_buffer->m_binding_point, ubo, 0,
                           uniform_buffer->m_size);
 
     UniformBuffer_OPENGL* api_uniform_buffer = new UniformBuffer_OPENGL;
     api_uniform_buffer->m_ubo = ubo;
     uniform_buffer->m_api_data = api_uniform_buffer;
+
+#ifdef DEBUG_RENDERER
+    gl->glObjectLabel(GL_BUFFER, ubo, (GLsizei)uniform_buffer->m_name.size(),
+                      uniform_buffer->m_name.c_str());
+#endif
+
     return Error();
 }
 
