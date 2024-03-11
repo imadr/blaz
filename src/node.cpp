@@ -1,34 +1,54 @@
 #include "node.h"
+#include "logger.h"
 
 namespace blaz {
 
-void Node::update_global_matrix(Mat4 parent_global_matrix) {
-    m_global_matrix = m_local_matrix * parent_global_matrix;
+void Scene::init_scene(){
+    Node root_node = Node{.m_name = "root_node"};
+    root_node.m_scene = this;
+    root_node.is_root_node = true;
+    m_nodes.push_back(root_node);
+    m_nodes_ids["root_node"] = 0;
 }
 
-void Node::update_local_matrix() {
+void Scene::add_node(Node node, str parent){
+    node.m_scene = this;
+    if(m_nodes_ids.contains(parent)){
+        u32 parent_id = m_nodes_ids[parent];
+        node.m_parent = parent_id;
+        m_nodes.push_back(node);
+        u32 node_id = (u32)m_nodes.size() - 1;
+        m_nodes_ids[node.m_name] = node_id;
+        m_nodes[node.m_parent].m_children.push_back(node_id);
+
+    } else {
+        logger.error("Parent node \"%s\" not found", parent);
+    }
+}
+
+void Node::update_matrix() {
     m_local_matrix = scale_3d(m_scale) * rotate_3d(m_rotation) * translate_3d(m_position);
-    if (m_parent > -1) {
+    if (!is_root_node) {
         m_global_matrix = m_local_matrix * m_scene->m_nodes[m_parent].m_global_matrix;
     }
     for (u32 child : m_children) {
-        m_scene->m_nodes[child].update_global_matrix(m_global_matrix);
+        m_scene->m_nodes[child].update_matrix();
     }
 }
 
 void Node::set_local_position(Vec3 position) {
     m_position = position;
-    update_local_matrix();
+    update_matrix();
 }
 
 void Node::set_local_rotation(Quat rotation) {
     m_rotation = rotation;
-    update_local_matrix();
+    update_matrix();
 }
 
 void Node::set_local_scale(Vec3 scale) {
     m_scale = scale;
-    update_local_matrix();
+    update_matrix();
 }
 
 Vec3 Node::get_global_position() {
@@ -37,17 +57,17 @@ Vec3 Node::get_global_position() {
 
 void Node::translate(Vec3 translation) {
     m_position += translation;
-    update_local_matrix();
+    update_matrix();
 }
 
 void Node::rotate(Quat rotation) {
     m_rotation = rotation * m_rotation;
-    update_local_matrix();
+    update_matrix();
 }
 
 void Node::scale(Vec3 scaling) {
     m_scale += scaling;
-    update_local_matrix();
+    update_matrix();
 }
 
 Vec3 Node::right() {

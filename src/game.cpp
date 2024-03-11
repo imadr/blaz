@@ -41,6 +41,7 @@ Error Game::load_game(str path) {
 
     for (auto& level_cfg : game_cfg["levels"]) {
         Level level;
+        level.m_scene.init_scene();
         level.m_name = level_cfg["name"].str_value;
         for (auto& node_cfg : level_cfg["nodes"]) {
             Node node;
@@ -48,9 +49,9 @@ Error Game::load_game(str path) {
             node.m_position = node_cfg["position"].vec3_value;
             node.m_rotation = node_cfg["rotation"].vec4_value;
             node.m_scale = node_cfg["scale"].vec3_value;
-            level.m_scene.m_nodes.push_back(node);
-            level.m_scene.m_nodes_ids[node.m_name] = (u32)level.m_scene.m_nodes.size() - 1;
+            level.m_scene.add_node(node, node_cfg["parent"].str_value);
         }
+        level.m_scene.m_nodes[0].update_matrix();
 
         for (auto& renderable_cfg : level_cfg["renderables"]) {
             Renderable renderable;
@@ -79,9 +80,6 @@ Error Game::load_game(str path) {
         m_levels.push_back(level);
         for (auto& camera : m_renderer.m_cameras) {
             camera.m_scene = &m_levels.back().m_scene;
-        }
-        for (auto& node : m_levels.back().m_scene.m_nodes) {
-            node.m_scene = &m_levels.back().m_scene;
         }
     }
 

@@ -35,6 +35,7 @@ struct Camera {
     f32 m_z_near = 0.1f;
     f32 m_z_far = 2000;
     f32 m_aspect_ratio = 1;
+    bool m_keep_screen_aspect_ratio = true;
     f32 m_left = -1.0;
     f32 m_right = 1.0;
     f32 m_bottom = -1.0;
