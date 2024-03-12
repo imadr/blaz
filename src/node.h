@@ -25,9 +25,9 @@ struct Node {
     Mat4 m_local_matrix = Mat4();
 
     void update_matrix();
-    void set_local_position(Vec3 position);
-    void set_local_rotation(Quat rotation);
-    void set_local_scale(Vec3 scale);
+    void set_position(Vec3 position);
+    void set_rotation(Quat rotation);
+    void set_scale(Vec3 scale);
     Vec3 get_global_position();
     void translate(Vec3 translation);
     void rotate(Quat rotation);

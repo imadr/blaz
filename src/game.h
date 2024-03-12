@@ -18,7 +18,8 @@ struct Game {
     Window m_window;
     Renderer m_renderer;
     vec<Level> m_levels;
-    u32 m_current_level = 0;
+    u32 m_current_level_id = 0;
+    Level* m_current_level;
 
     Error load_game(str path);
     Error load_level(u32 level);
