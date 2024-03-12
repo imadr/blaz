@@ -94,7 +94,6 @@ Vec4 vec4_lerp(Vec4 a, Vec4 b, f32 t) {
     return b * t + a * (1 - t);
 }
 
-
 Vec4 Vec4::normalize() {
     f32 l = length();
     if (l == 0) return Vec4(0, 0, 0, 0);
@@ -184,6 +183,7 @@ Quat Quat::from_euler(Vec3 euler) {
 }
 
 Quat Quat::from_axis_angle(Vec3 axis, f32 angle) {
+    axis = axis.normalize();
     f32 s = sin(angle / 2);
     return Quat(axis.x() * s, axis.y() * s, axis.z() * s, cos(angle / 2));
 }
