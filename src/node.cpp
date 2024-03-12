@@ -15,6 +15,7 @@ void Scene::init_scene() {
 void Scene::add_node(Node node, str parent) {
     node.m_scene = this;
     if (m_nodes_ids.contains(parent)) {
+        node.update_matrix();
         u32 parent_id = m_nodes_ids[parent];
         node.m_parent = parent_id;
         m_nodes.push_back(node);

@@ -20,7 +20,8 @@ int main() {
     }
 
     game.m_renderer.add_mesh(make_cube());
-    game.m_current_level->m_scene.add_node(Node{.m_name = "cube"}, "root_node");
+    f32 rotation = 1;
+    game.m_current_level->m_scene.add_node(Node{.m_name = "cube", .m_rotation = Quat::from_axis_angle(Vec3(1, 1, 0), rotation)}, "root_node");
     game.m_renderer.add_renderable(Renderable{
         .m_name = "cube",
         .m_tags = {"default"},
@@ -34,14 +35,13 @@ int main() {
         return 1;
     }
 
-    f32 rotation = 0;
 
     bool done_screenshot = false;
     while (game.m_window.event_loop()) {
         rotation += 0.01;
         game.m_current_level->m_scene.m_nodes[2].set_rotation(
-            //Quat::from_axis_angle(Vec3(0, 1, 1), rotation));
-            Quat::from_euler(Vec3(rotation*2, rotation, rotation/2)));
+            Quat::from_axis_angle(Vec3(1, 1, 0), rotation));
+
         game.m_renderer.draw();
         if (!done_screenshot) {
             game.m_window.screenshot("../tests/02-cubes.bmp");
