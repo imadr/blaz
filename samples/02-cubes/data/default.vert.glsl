@@ -11,9 +11,11 @@ layout(std140, binding = 0) uniform u_mat {
 };
 
 layout(location = 0) out vec4 v_position;
+layout(location = 1) out vec3 v_normal;
 
 void main() {
     vec3 world_position = vec3(u_model_mat * vec4(a_position, 1.0));
     v_position = u_projection_mat * u_view_mat * vec4(world_position, 1.0);
+    v_normal = a_normal;
     gl_Position = v_position;
 }

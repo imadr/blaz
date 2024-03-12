@@ -1,9 +1,10 @@
 #include "node.h"
+
 #include "logger.h"
 
 namespace blaz {
 
-void Scene::init_scene(){
+void Scene::init_scene() {
     Node root_node = Node{.m_name = "root_node"};
     root_node.m_scene = this;
     root_node.is_root_node = true;
@@ -11,9 +12,9 @@ void Scene::init_scene(){
     m_nodes_ids["root_node"] = 0;
 }
 
-void Scene::add_node(Node node, str parent){
+void Scene::add_node(Node node, str parent) {
     node.m_scene = this;
-    if(m_nodes_ids.contains(parent)){
+    if (m_nodes_ids.contains(parent)) {
         u32 parent_id = m_nodes_ids[parent];
         node.m_parent = parent_id;
         m_nodes.push_back(node);
@@ -36,17 +37,17 @@ void Node::update_matrix() {
     }
 }
 
-void Node::set_local_position(Vec3 position) {
+void Node::set_position(Vec3 position) {
     m_position = position;
     update_matrix();
 }
 
-void Node::set_local_rotation(Quat rotation) {
+void Node::set_rotation(Quat rotation) {
     m_rotation = rotation;
     update_matrix();
 }
 
-void Node::set_local_scale(Vec3 scale) {
+void Node::set_scale(Vec3 scale) {
     m_scale = scale;
     update_matrix();
 }

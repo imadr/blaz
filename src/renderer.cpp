@@ -12,6 +12,12 @@ Error Renderer::init(Game* game) {
 
     Error err = init_api();
 
+    game->m_window.m_resize_callback = [this](Window* window) {
+        for (auto& camera : m_cameras) {
+            camera.set_aspect_ratio((f32)window->m_size.width / window->m_size.height);
+        }
+    };
+
     if (err) {
         return err;
     }
@@ -21,7 +27,9 @@ Error Renderer::init(Game* game) {
     }
 
     m_uniform_buffers.push_back(UniformBuffer{
-        .m_name = "u_mat", .m_size = 192, .m_binding_point = 0,
+        .m_name = "u_mat",
+        .m_size = 192,
+        .m_binding_point = 0,
         .m_uniforms =
             {
                 {
