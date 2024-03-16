@@ -23,7 +23,7 @@ Error Game::load_game(str path) {
         shader.m_fragment_shader_path = shader_cfg["fragment_shader_path"].str_value;
         shader.m_should_reload = true;
         m_renderer.m_shaders.push_back(shader);
-        m_renderer.m_shaders_ids[shader.m_name] = (u32)m_renderer.m_shaders.size() - 1;
+        m_renderer.m_shaders_ids[shader.m_name] = u32(m_renderer.m_shaders.size()) - 1;
     }
 
     for (auto& mesh_cfg : game_cfg["meshes"]) {
@@ -33,10 +33,10 @@ Error Game::load_game(str path) {
         mesh.m_indices = mesh_cfg["indices"].buffer_u32_value;
         for (auto& attrib : mesh_cfg["attribs"]) {
             mesh.m_attribs.push_back(
-                std::make_pair(attrib[0].str_value, (u32)attrib[1].float_value));
+                std::make_pair(attrib[0].str_value, u32(attrib[1].float_value)));
         }
         m_renderer.m_meshes.push_back(mesh);
-        m_renderer.m_meshes_ids[mesh.m_name] = (u32)m_renderer.m_meshes.size() - 1;
+        m_renderer.m_meshes_ids[mesh.m_name] = u32(m_renderer.m_meshes.size()) - 1;
     }
 
     for (auto& level_cfg : game_cfg["levels"]) {
@@ -63,7 +63,7 @@ Error Game::load_game(str path) {
             renderable.m_node = level.m_scene.m_nodes_ids[renderable_cfg["node"].str_value];
 
             m_renderer.m_renderables.push_back(renderable);
-            u32 id = (u32)m_renderer.m_renderables.size() - 1;
+            u32 id = u32(m_renderer.m_renderables.size()) - 1;
             for (auto tag : renderable_cfg["tags"]) {
                 m_renderer.m_tagged_renderables[tag.str_value].push_back(id);
             }
@@ -73,9 +73,9 @@ Error Game::load_game(str path) {
             Camera camera;
             camera.m_name = camera_cfg["name"].str_value;
             camera.m_node = level.m_scene.m_nodes_ids[camera_cfg["node"].str_value];
-            camera.set_aspect_ratio((f32)m_window.m_size.width / m_window.m_size.height);
+            camera.set_aspect_ratio(f32(m_window.m_size.width) / f32(m_window.m_size.height));
             m_renderer.m_cameras.push_back(camera);
-            m_renderer.m_cameras_ids[camera.m_name] = (u32)m_renderer.m_cameras.size() - 1;
+            m_renderer.m_cameras_ids[camera.m_name] = u32(m_renderer.m_cameras.size()) - 1;
         }
 
         m_levels.push_back(level);
@@ -135,7 +135,7 @@ Error Game::load_game(str path) {
             pipeline.m_passes.push_back(pass);
         }
         m_renderer.m_pipelines.push_back(pipeline);
-        m_renderer.m_pipelines_ids[pipeline.m_name] = (u32)m_renderer.m_pipelines.size() - 1;
+        m_renderer.m_pipelines_ids[pipeline.m_name] = u32(m_renderer.m_pipelines.size()) - 1;
     }
 
     u32 i = 0;
@@ -147,7 +147,7 @@ Error Game::load_game(str path) {
     m_renderer.m_current_pipeline = m_levels[m_current_level_id].m_pipeline;
     m_renderer.m_current_scene = &m_levels[m_current_level_id].m_scene;
 
-    return load_level((u32)game_cfg["start_level"].float_value);
+    return load_level(u32(game_cfg["start_level"].float_value));
 }
 
 Error Game::load_level(u32 level) {

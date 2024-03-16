@@ -407,7 +407,7 @@ CfgNode buffer_u32_node(ParserState* state) {
         if (consume_token(state, TokenType::LEFT_PARENTHESIS, NULL)) {
             Token u32_node;
             while (consume_token(state, TokenType::FLOAT_LITERAL, &u32_node)) {
-                node.buffer_u32_value.push_back((u32)u32_node.float_value);
+                node.buffer_u32_value.push_back(u32(u32_node.float_value));
                 consume_token(state, TokenType::COMMA, NULL);
             }
             if (consume_token(state, TokenType::RIGHT_PARENTHESIS, NULL)) {

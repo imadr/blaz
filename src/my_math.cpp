@@ -274,7 +274,7 @@ Mat4 operator*(Mat4 a, Mat4 b) {
 }
 
 f32 rad(f32 deg) {
-    return deg * (f32)PI / 180.0f;
+    return deg * f32(PI) / 180.0f;
 }
 
 str Mat4::to_str() {

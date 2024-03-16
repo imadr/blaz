@@ -257,7 +257,7 @@ typedef double GLclampd;
 #define GL_UNIFORM_OFFSET 0x8A3B
 #define GL_BUFFER 0x82E0
 #define GL_VERTEX_ARRAY 0x8074
-#define GL_SHADER 0x8B8D
+#define GL_SHADER 0x82E1
 #define GL_PROGRAM 0x82E2
 
 #ifdef OS_WIN32
@@ -353,6 +353,7 @@ GL_OLD_FUNCTIONS_LIST
                 const GLvoid* data)                                                               \
     GL_FUNCTION(void, glObjectLabel, GLenum identifier, GLuint name, GLsizei length,              \
                 const GLchar* label)                                                              \
+    GL_FUNCTION(void, glDeleteProgram, GLuint program)                                            \
     GL_FUNCTION(void, glBindBufferRange, GLenum, GLuint, GLuint, GLintptr, GLsizeiptr)
 
 #define GL_FUNCTION(return_type, name, ...) typedef return_type name##Type(__VA_ARGS__);

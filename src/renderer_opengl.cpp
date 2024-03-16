@@ -127,9 +127,16 @@ Error Renderer::compile_shader(Shader* shader) {
     gl->glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
     if (!success) {
         gl->glGetProgramInfoLog(shader_program, 512, NULL, info);
+        gl->glDeleteProgram(shader_program);
         return Error("Renderer::compile_shader: Failed to link shader program \"" + shader->m_name +
                      "\" : " + str(info));
     }
+
+#ifdef DEBUG_RENDERER
+    gl->glObjectLabel(GL_PROGRAM, shader_program, -1, shader->m_name.c_str());
+    gl->glObjectLabel(GL_SHADER, vertex_shader, -1, (shader->m_name + "_vertex").c_str());
+    gl->glObjectLabel(GL_SHADER, fragment_shader, -1, (shader->m_name + "_fragment").c_str());
+#endif
 
     gl->glDeleteShader(vertex_shader);
     gl->glDeleteShader(fragment_shader);
@@ -138,11 +145,6 @@ Error Renderer::compile_shader(Shader* shader) {
     api_shader->m_program = shader_program;
 
     shader->m_api_data = api_shader;
-
-#ifdef DEBUG_RENDERER
-    gl->glObjectLabel(GL_PROGRAM, shader_program, (GLsizei)shader->m_name.size(),
-                      shader->m_name.c_str());
-#endif
 
     return Error();
 }
@@ -181,7 +183,9 @@ Error Renderer::upload_mesh(Mesh* mesh) {
     mesh->m_api_data = api_mesh;
 
 #ifdef DEBUG_RENDERER
-    gl->glObjectLabel(GL_VERTEX_ARRAY, vao, (GLsizei)mesh->m_name.size(), mesh->m_name.c_str());
+    gl->glObjectLabel(GL_VERTEX_ARRAY, vao, -1, mesh->m_name.c_str());
+    gl->glObjectLabel(GL_BUFFER, vbo, -1, (mesh->m_name + "_vbo").c_str());
+    gl->glObjectLabel(GL_BUFFER, ebo, -1, (mesh->m_name + "_ebo").c_str());
 #endif
 
     return Error();
@@ -222,8 +226,7 @@ Error Renderer::init_uniform_buffer(UniformBuffer* uniform_buffer) {
     uniform_buffer->m_api_data = api_uniform_buffer;
 
 #ifdef DEBUG_RENDERER
-    gl->glObjectLabel(GL_BUFFER, ubo, (GLsizei)uniform_buffer->m_name.size(),
-                      uniform_buffer->m_name.c_str());
+    gl->glObjectLabel(GL_BUFFER, ubo, -1, uniform_buffer->m_name.c_str());
 #endif
 
     return Error();
@@ -402,7 +405,7 @@ void Renderer::set_face_culling_mode(CullingMode mode) {
 
 void Renderer::draw_vertex_array(Mesh* mesh) {
     gl->glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
-    gl->glDrawElements(GL_TRIANGLES, (GLsizei)mesh->m_indices.size(), GL_UNSIGNED_INT, 0);
+    gl->glDrawElements(GL_TRIANGLES, GLsizei(mesh->m_indices.size()), GL_UNSIGNED_INT, 0);
 }
 
 }  // namespace blaz
