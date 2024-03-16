@@ -19,7 +19,7 @@ void Scene::add_node(Node node, str parent) {
         u32 parent_id = m_nodes_ids[parent];
         node.m_parent = parent_id;
         m_nodes.push_back(node);
-        u32 node_id = (u32)m_nodes.size() - 1;
+        u32 node_id = u32(m_nodes.size()) - 1;
         m_nodes_ids[node.m_name] = node_id;
         m_nodes[node.m_parent].m_children.push_back(node_id);
 

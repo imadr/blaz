@@ -121,7 +121,7 @@ bool Window::event_loop() {
         } else if (event.type == DestroyNotify) {
             return false;
         } else if (event.type == ConfigureNotify) {
-            m_size = {.width = (u32)event.xconfigure.width, .height = (u32)event.xconfigure.height};
+            m_size = {.width = u32(event.xconfigure.width), .height = u32(event.xconfigure.height)};
             if (m_resize_callback != NULL) {
                 m_resize_callback(this);
             }

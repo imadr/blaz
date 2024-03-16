@@ -14,7 +14,7 @@ Error Renderer::init(Game* game) {
 
     game->m_window.m_resize_callback = [this](Window* window) {
         for (auto& camera : m_cameras) {
-            camera.set_aspect_ratio((f32)window->m_size.width / window->m_size.height);
+            camera.set_aspect_ratio(f32(window->m_size.width) / f32(window->m_size.height));
         }
     };
 
@@ -164,12 +164,12 @@ void Renderer::draw() {
 
 void Renderer::add_mesh(Mesh mesh) {
     m_meshes.push_back(mesh);
-    m_meshes_ids[mesh.m_name] = (u32)m_meshes.size() - 1;
+    m_meshes_ids[mesh.m_name] = u32(m_meshes.size()) - 1;
 }
 
 void Renderer::add_renderable(Renderable renderable) {
     m_renderables.push_back(renderable);
-    u32 id = (u32)m_renderables.size() - 1;
+    u32 id = u32(m_renderables.size()) - 1;
     for (auto tag : renderable.m_tags) {
         m_tagged_renderables[tag].push_back(id);
     }
