@@ -19,7 +19,7 @@ int main() {
         return 1;
     }
 
-    game.m_renderer.add_mesh(make_uv_sphere(20, 20));
+    game.m_renderer.add_mesh(make_uv_sphere(64, 64));
 
     game.m_current_level->m_scene.add_node(
         Node{
