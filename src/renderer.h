@@ -55,8 +55,27 @@ struct Shader {
     bool m_is_error = false;
 };
 
+enum UniformType {
+    UNIFORM_MAT4,
+    UNIFORM_VEC4,
+    UNIFORM_VEC3,
+    UNIFORM_FLOAT,
+    UNIFORM_BOOL,
+};
+
+static std::unordered_map<UniformType, u32> UniformTypeAlignment = {
+    {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16},
+    {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},
+};
+
+static std::unordered_map<UniformType, u32> UniformTypeSize = {
+    {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16},
+    {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},
+};
+
 struct Uniform {
     str m_name;
+    UniformType m_type;
     u32 m_offset;
     u32 m_size;
 };
@@ -65,7 +84,8 @@ struct UniformBuffer {
     str m_name;
     u32 m_size;
     u32 m_binding_point;
-    std::unordered_map<str, Uniform> m_uniforms;
+    vec<Uniform> m_uniforms;
+    std::unordered_map<str, u32> m_uniforms_ids;
     bool m_should_reload = true;
     void* m_api_data = NULL;
 };
@@ -168,11 +188,13 @@ struct Renderer {
     void set_face_culling(bool enabled);
     void set_face_culling_mode(CullingMode mode);
     void draw_vertex_array(Mesh* mesh);
-    Error set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform, UniformValue value);
+    Error set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform_name,
+                                  UniformValue value);
     Error init_uniform_buffer(UniformBuffer* uniform_buffer);
 
     void add_mesh(Mesh mesh);
     void add_renderable(Renderable renderable);
+    void add_uniform_buffer(UniformBuffer buffer);
 };
 
 }  // namespace blaz

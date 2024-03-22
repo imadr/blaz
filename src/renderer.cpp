@@ -17,6 +17,7 @@ Error Renderer::init(Game* game) {
             camera.set_aspect_ratio(f32(window->m_size.width) / f32(window->m_size.height));
         }
     };
+    game->m_window.m_resize_callback(&game->m_window);
 
     if (err) {
         return err;
@@ -26,41 +27,40 @@ Error Renderer::init(Game* game) {
         upload_mesh(&mesh);
     }
 
-    m_uniform_buffers.push_back(UniformBuffer{
+    add_uniform_buffer(UniformBuffer{
         .m_name = "u_mat",
-        .m_size = 192,
         .m_binding_point = 0,
         .m_uniforms =
             {
-                {
-                    "u_model_mat",
-                    Uniform{
-                        .m_name = "u_model_mat",
-                        .m_offset = 0,
-                        .m_size = 64,
-                    },
+                Uniform{
+                    .m_name = "u_model_mat",
+                    .m_type = UNIFORM_MAT4,
                 },
-                {
-                    "u_view_mat",
-                    Uniform{
-                        .m_name = "u_view_mat",
-                        .m_offset = 64,
-                        .m_size = 64,
-                    },
+
+                Uniform{
+                    .m_name = "u_view_mat",
+                    .m_type = UNIFORM_MAT4,
                 },
-                {
-                    "u_projection_mat",
-                    Uniform{
-                        .m_name = "u_projection_mat",
-                        .m_offset = 128,
-                        .m_size = 64,
-                    },
+
+                Uniform{
+                    .m_name = "u_projection_mat",
+                    .m_type = UNIFORM_MAT4,
                 },
             },
         .m_should_reload = true,
     });
-    m_uniform_buffers_ids["u_mat"] = 0;
-    init_uniform_buffer(&m_uniform_buffers[0]);
+    add_uniform_buffer(UniformBuffer{
+        .m_name = "u_view",
+        .m_binding_point = 1,
+        .m_uniforms =
+            {
+                Uniform{
+                    .m_name = "u_camera_position",
+                    .m_type = UNIFORM_VEC3,
+                },
+            },
+        .m_should_reload = true,
+    });
 
     return Error();
 }
@@ -144,6 +144,10 @@ void Renderer::draw() {
         set_uniform_buffer_data(mat_buffer, "u_projection_mat", camera.m_projection_matrix);
         set_uniform_buffer_data(mat_buffer, "u_view_mat", camera.m_view_matrix);
 
+        UniformBuffer* view_buffer = &m_uniform_buffers[m_uniform_buffers_ids["u_view"]];
+        set_uniform_buffer_data(view_buffer, "u_camera_position",
+                                camera.m_scene->m_nodes[camera.m_node].m_position);
+
         for (const str tag : pass.m_tags) {
             for (const u32 id : m_tagged_renderables[tag]) {
                 Renderable* renderable = &m_renderables[id];
@@ -160,6 +164,25 @@ void Renderer::draw() {
     }
 
     present();
+}
+
+void Renderer::add_uniform_buffer(UniformBuffer buffer) {
+    u32 aligned_offset = 0;
+    u32 total_size = 0;
+    for (u32 i = 0; i < buffer.m_uniforms.size(); i++) {
+        Uniform& uniform = buffer.m_uniforms[i];
+        buffer.m_uniforms_ids[uniform.m_name] = i;
+        uniform.m_size = UniformTypeSize[uniform.m_type];
+        total_size += uniform.m_size;
+        uniform.m_offset = aligned_offset;
+        aligned_offset += UniformTypeAlignment[uniform.m_type];
+    }
+    buffer.m_size = total_size;
+
+    m_uniform_buffers.push_back(buffer);
+    u32 id = u32(m_uniform_buffers.size()) - 1;
+    m_uniform_buffers_ids[buffer.m_name] = id;
+    init_uniform_buffer(&m_uniform_buffers[id]);
 }
 
 void Renderer::add_mesh(Mesh mesh) {

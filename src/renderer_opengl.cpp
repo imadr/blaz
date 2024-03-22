@@ -232,11 +232,11 @@ Error Renderer::init_uniform_buffer(UniformBuffer* uniform_buffer) {
     return Error();
 }
 
-Error Renderer::set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform,
+Error Renderer::set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform_name,
                                         UniformValue value) {
     gl->glBindBuffer(GL_UNIFORM_BUFFER, ((UniformBuffer_OPENGL*)uniform_buffer->m_api_data)->m_ubo);
-    gl->glBufferSubData(GL_UNIFORM_BUFFER, uniform_buffer->m_uniforms[uniform].m_offset,
-                        uniform_buffer->m_uniforms[uniform].m_size, &value);
+    Uniform& uniform = uniform_buffer->m_uniforms[uniform_buffer->m_uniforms_ids[uniform_name]];
+    gl->glBufferSubData(GL_UNIFORM_BUFFER, uniform.m_offset, uniform.m_size, &value);
     gl->glBindBuffer(GL_UNIFORM_BUFFER, 0);
     return Error();
 }
