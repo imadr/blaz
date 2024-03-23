@@ -9,8 +9,19 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER ${MISC_TARGET_FOLDER})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(GRAPHICS_API "OpenGL")
-add_definitions(-D DEBUG_RENDERER)
+set(GRAPHICS_APIS "OpenGL" "D3D11")
+
+if(NOT GRAPHICS_API)
+    set(GRAPHICS_API "OpenGL" CACHE STRING "Graphics API" FORCE)
+endif()
+
+set_property(CACHE GRAPHICS_API PROPERTY STRINGS ${GRAPHICS_APIS})
+
+option(DEBUG_RENDERER "Debug Renderer" ON)
+
+if(DEBUG_RENDERER)
+    add_definitions(-D DEBUG_RENDERER)
+endif()
 
 set(COMMON_SOURCES
     src/cfgreader.cpp
@@ -43,6 +54,8 @@ set(COMMON_SOURCES
 if (GRAPHICS_API STREQUAL "OpenGL")
     list(APPEND COMMON_SOURCES src/opengl.h)
     list(APPEND COMMON_SOURCES src/renderer_opengl.cpp)
+elseif (GRAPHICS_API STREQUAL "D3D11")
+    list(APPEND COMMON_SOURCES src/renderer_d3d11.cpp)
 endif()
 
 if (WIN32)
@@ -81,7 +94,11 @@ add_library(blaz
 
 target_include_directories(blaz PUBLIC src)
 
-set_target_properties(blaz PROPERTIES UNITY_BUILD ON)
+option(UNITY_BUILD "Unity Build" ON)
+
+if(UNITY_BUILD)
+    set_target_properties(blaz PROPERTIES UNITY_BUILD ON)
+endif()
 
 if (WIN32)
     target_link_libraries(blaz gdi32 user32)

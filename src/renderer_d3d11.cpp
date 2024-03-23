@@ -1,5 +1,3 @@
-#ifdef RENDERER_D3D11
-
 #ifdef _MSC_VER
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "D3DCompiler.lib")
@@ -10,74 +8,125 @@
 #include <windows.h>
 #include <windowsx.h>
 
+#include "game.h"
 #include "renderer.h"
-#include "shader.h"
 
 namespace blaz {
 
-// void resize_callback(Window* window) {
-// }
+struct Window_WIN32 {
+    HWND window_handle;
+    HDC device_context;
+};
 
-// struct Window_WIN32 {
-//     HWND window_handle;
-//     HDC device_context;
-// };
+struct D3D11 {
+    ID3D11RenderTargetView* backbuffer;
+    IDXGISwapChain* swapchain;
+    ID3D11Device* device;
+    ID3D11DeviceContext* device_context;
+};
 
-// struct D3D11 {
-//     ID3D11RenderTargetView* backbuffer;
-//     IDXGISwapChain* swapchain;
-//     ID3D11Device* device;
-//     ID3D11DeviceContext* device_context;
-// };
+D3D11* d3d11;
 
-// static D3D11* m_d3d11;
+Error Renderer::init_api() {
+    Window_WIN32* m_win32 = (Window_WIN32*)m_game->m_window.m_os_data;
+    d3d11 = new D3D11();
 
-// Error Renderer::init(Window* window) {
-//     m_window = window;
-//     Window_WIN32* m_win32 = (Window_WIN32*)window->m_os_data;
-//     m_d3d11 = new D3D11();
+    DXGI_SWAP_CHAIN_DESC swapchain_desc;
 
-//     DXGI_SWAP_CHAIN_DESC swapchain_desc;
+    ZeroMemory(&swapchain_desc, sizeof(DXGI_SWAP_CHAIN_DESC));
 
-//     ZeroMemory(&swapchain_desc, sizeof(DXGI_SWAP_CHAIN_DESC));
+    swapchain_desc.BufferCount = 1;
+    swapchain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapchain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapchain_desc.OutputWindow = m_win32->window_handle;
+    swapchain_desc.SampleDesc.Count = 4;
+    swapchain_desc.Windowed = TRUE;
 
-//     swapchain_desc.BufferCount = 1;
-//     swapchain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-//     swapchain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-//     swapchain_desc.OutputWindow = m_win32->window_handle;
-//     swapchain_desc.SampleDesc.Count = 4;
-//     swapchain_desc.Windowed = TRUE;
+    D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
+                                  D3D11_SDK_VERSION, &swapchain_desc, &d3d11->swapchain,
+                                  &d3d11->device, NULL, &d3d11->device_context);
 
-//     D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL,
-//                                   D3D11_SDK_VERSION, &swapchain_desc, &m_d3d11->swapchain,
-//                                   &m_d3d11->device, NULL, &m_d3d11->device_context);
+    ID3D11Texture2D* backbuffer_pointer;
+    d3d11->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backbuffer_pointer);
+    d3d11->device->CreateRenderTargetView(backbuffer_pointer, NULL, &d3d11->backbuffer);
+    backbuffer_pointer->Release();
+    d3d11->device_context->OMSetRenderTargets(1, &d3d11->backbuffer, NULL);
 
-//     ID3D11Texture2D* backbuffer_pointer;
-//     m_d3d11->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backbuffer_pointer);
-//     m_d3d11->device->CreateRenderTargetView(backbuffer_pointer, NULL, &m_d3d11->backbuffer);
-//     backbuffer_pointer->Release();
-//     m_d3d11->device_context->OMSetRenderTargets(1, &m_d3d11->backbuffer, NULL);
+    bool debug = false;
+#ifdef DEBUG_RENDERER
+    debug = true;
+#endif
+    Error err;
+    if (err) {
+        return Error("Renderer::init ->\n" + err.message());
+    }
 
-//     bool debug = false;
-// #ifdef DEBUG_RENDERER
-//     debug = true;
-// #endif
-//     Error err;
-//     if (err) {
-//         return Error("Renderer::init ->\n" + err.message());
-//     }
+    return Error();
+}
 
-//     window->m_resize_callback = resize_callback;
-//     return Error();
-// }
+void Renderer::clear(u32 clear_flag, RGBA clear_color, float clear_depth) {
+    d3d11->device_context->ClearRenderTargetView(d3d11->backbuffer, clear_color.values);
+}
 
-// void Renderer::clear(u32 clear_flag, RGBA clear_color, float clear_depth) {
-//     m_d3d11->device_context->ClearRenderTargetView(m_d3d11->backbuffer, clear_color.values);
-// }
+void Renderer::present() {
+    d3d11->swapchain->Present(0, 0);
+}
 
-// void Renderer::present() {
-//     m_d3d11->swapchain->Present(0, 0);
-// }
+Error Renderer::compile_shader(Shader* shader) {
+    return Error();
+}
+
+Error Renderer::init_uniform_buffer(UniformBuffer* uniform_buffer) {
+    return Error();
+}
+
+Error Renderer::set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform_name,
+                                        UniformValue value) {
+    return Error();
+}
+
+void Renderer::bind_shader(Shader* shader) {
+}
+
+void Renderer::debug_marker_start(str name) {
+}
+
+void Renderer::debug_marker_end() {
+}
+
+void Renderer::bind_default_framebuffer() {
+}
+
+void Renderer::bind_framebuffer(Framebuffer* framebuffer) {
+}
+
+void Renderer::set_depth_test(bool enabled) {
+}
+
+void Renderer::set_face_culling(bool enabled) {
+}
+
+void Renderer::set_face_culling_mode(CullingMode mode) {
+}
+
+void Renderer::draw_vertex_array(Mesh* mesh) {
+}
+
+Error Renderer::upload_mesh(Mesh* mesh) {
+    return Error();
+}
+
+void Renderer::set_viewport(u32 x, u32 y, u32 width, u32 height) {
+    D3D11_VIEWPORT viewport;
+    ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+    viewport.TopLeftX = (FLOAT)x;
+    viewport.TopLeftY = (FLOAT)y;
+    viewport.Width = (FLOAT)width;
+    viewport.Height = (FLOAT)height;
+    d3d11->device_context->RSSetViewports(1, &viewport);
+}
+
+}  // namespace blaz
 
 // struct Shader_D3D11 {
 //     ID3D11VertexShader* m_vertex_shader;
@@ -128,10 +177,10 @@ namespace blaz {
 //     ID3D11VertexShader* vertex_shader;
 //     ID3D11PixelShader* pixel_shader;
 
-//     m_d3d11->device->CreateVertexShader(vertex_shader_blob->GetBufferPointer(),
+//     d3d11->device->CreateVertexShader(vertex_shader_blob->GetBufferPointer(),
 //                                         vertex_shader_blob->GetBufferSize(), NULL,
 //                                         &vertex_shader);
-//     m_d3d11->device->CreatePixelShader(pixel_shader_blob->GetBufferPointer(),
+//     d3d11->device->CreatePixelShader(pixel_shader_blob->GetBufferPointer(),
 //                                        pixel_shader_blob->GetBufferSize(), NULL, &pixel_shader);
 
 //     api_shader->m_vertex_shader = vertex_shader;
@@ -140,83 +189,3 @@ namespace blaz {
 
 //     return Error();
 // }
-
-// Error Renderer::upload_mesh(Mesh* mesh) {
-//     return Error();
-// }
-
-// Error Renderer::reupload_mesh_buffers(Mesh* mesh) {
-//     return Error();
-// }
-
-// Error Renderer::upload_texture_data(Texture* texture) {
-//     return Error();
-// }
-
-// Error Renderer::set_shader_uniform_Mat4(Shader* shader, str uniform_name, Mat4 value) {
-//     return Error();
-// }
-
-// Error Renderer::set_shader_uniform_i32(Shader* shader, str uniform_name, i32 value) {
-//     return Error();
-// }
-
-// Error Renderer::set_shader_uniform_Vec2(Shader* shader, str uniform_name, Vec2 value) {
-//     return Error();
-// }
-
-// Error Renderer::set_shader_uniform_Vec3(Shader* shader, str uniform_name, Vec3 value) {
-//     return Error();
-// }
-
-// void Renderer::set_current_shader(Shader* shader) {
-// }
-
-// Error Renderer::create_texture(Texture* texture) {
-//     return Error();
-// }
-
-// Error Renderer::create_framebuffer(Framebuffer* framebuffer) {
-//     return Error();
-// }
-
-// void Renderer::debug_marker_start(str name) {
-// }
-
-// void Renderer::debug_marker_end() {
-// }
-
-// void Renderer::bind_default_framebuffer() {
-// }
-
-// void Renderer::set_viewport(f32 x, f32 y, f32 width, f32 height) {
-//     D3D11_VIEWPORT viewport;
-//     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
-//     viewport.TopLeftX = x;
-//     viewport.TopLeftY = y;
-//     viewport.Width = width;
-//     viewport.Height = height;
-//     m_d3d11->device_context->RSSetViewports(1, &viewport);
-// }
-
-// void Renderer::bind_framebuffer(Framebuffer* framebuffer) {
-// }
-
-// void Renderer::set_depth_test(bool enabled) {
-// }
-
-// void Renderer::set_face_culling(bool enabled) {
-// }
-
-// void Renderer::set_face_culling_mode(CullingMode mode) {
-// }
-
-// void Renderer::bind_textures(Pass* pass, Shader* shader) {
-// }
-
-// void Renderer::draw_vertex_array(Mesh* mesh) {
-// }
-
-}  // namespace blaz
-
-#endif
