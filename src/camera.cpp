@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "renderer.h"
+#include "node.h"
 
 namespace blaz {
 
