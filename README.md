@@ -14,10 +14,13 @@
     <img src="samples/tests/01-hellotriangle.bmp" width="300"/><br>
     01-triangle
   </td>
-
   <td>
     <img src="samples/tests/02-cubes.bmp" width="300"/><br>
     02-cubes
+  </td> 
+  <td>
+    <img src="samples/tests/03-pbr.bmp" width="300"/><br>
+    02-pbr
   </td>
 </tr>
 </table>
