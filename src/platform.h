@@ -26,6 +26,7 @@ struct Window {
     Size m_size = {.width = 800, .height = 600};
 
     void* m_os_data = NULL;
+    void* m_d3d11_data = NULL;
 
     std::map<str, KeyState> m_keyboard;
     ButtonState m_left_mouse_button = ButtonState::RELEASED;
