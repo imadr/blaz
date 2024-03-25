@@ -23,6 +23,8 @@ struct D3D11 {
     IDXGISwapChain* swapchain;
     ID3D11Device* device;
     ID3D11DeviceContext* device_context;
+
+    u32 swap_interval;
 };
 
 struct Shader_D3D11 {
@@ -66,6 +68,8 @@ Error Renderer::init_api() {
         return Error("Renderer::init ->\n" + err.message());
     }
 
+    m_game->m_window.m_d3d11_data = d3d11;
+
     return Error();
 }
 
@@ -74,7 +78,7 @@ void Renderer::clear(u32 clear_flag, RGBA clear_color, float clear_depth) {
 }
 
 void Renderer::present() {
-    d3d11->swapchain->Present(0, 0);
+    d3d11->swapchain->Present(d3d11->swap_interval, 0);
 }
 
 static ID3DBlob* TMP__vshader_blob = NULL;
@@ -209,7 +213,8 @@ Error Renderer::upload_mesh(Mesh* mesh) {
     buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-    f32 OurVertices[] = {0.0f, 0.5f, 0.0f, 1.0f, 0.0f,  0.0f, 0.45f, -0.5, 0.0f, 0.0f, 1.0f, 0.0f, -0.45f, -0.5f, 0.0f, 0.0f,  0.0f, 1.0f};
+    f32 OurVertices[] = {0.0f, 0.5f, 0.0f, 1.0f,   0.0f,  0.0f, 0.45f, -0.5, 0.0f,
+                         0.0f, 1.0f, 0.0f, -0.45f, -0.5f, 0.0f, 0.0f,  0.0f, 1.0f};
 
     d3d11->device->CreateBuffer(&buffer_desc, NULL, &vertex_buffer);
 
@@ -245,6 +250,10 @@ void Renderer::set_viewport(u32 x, u32 y, u32 width, u32 height) {
     viewport.Width = (FLOAT)width;
     viewport.Height = (FLOAT)height;
     d3d11->device_context->RSSetViewports(1, &viewport);
+}
+
+void Renderer::set_swap_interval(u32 interval) {
+    d3d11->swap_interval = interval;
 }
 
 }  // namespace blaz

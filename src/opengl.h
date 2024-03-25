@@ -366,6 +366,7 @@ namespace blaz {
 struct Opengl {
     Error init(Window* window, bool debug_context);
     void swap_buffers(Window* window);
+    void set_swap_interval(u32 interval);
 
     void* m_context;
 

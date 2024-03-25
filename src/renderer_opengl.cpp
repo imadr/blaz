@@ -87,6 +87,10 @@ void Renderer::present() {
     gl->swap_buffers(&m_game->m_window);
 }
 
+void Renderer::set_swap_interval(u32 interval) {
+    gl->set_swap_interval(interval);
+}
+
 Error Renderer::compile_shader(Shader* shader) {
     GLuint vertex_shader;
     vertex_shader = gl->glCreateShader(GL_VERTEX_SHADER);

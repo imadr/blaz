@@ -13,6 +13,7 @@
 #define HID_USAGE_GENERIC_MOUSE ((unsigned short)0x02)
 #endif
 #include <basetsd.h>
+#include <d3d11.h>
 #include <libloaderapi.h>
 
 #include <map>
@@ -101,6 +102,15 @@ std::map<u64, str> win32_keycodes = {{VK_BACK, "KEY_BACKSPACE"},
 
 namespace blaz {
 
+struct D3D11 {
+    ID3D11RenderTargetView* backbuffer;
+    IDXGISwapChain* swapchain;
+    ID3D11Device* device;
+    ID3D11DeviceContext* device_context;
+
+    u32 swap_interval;
+};
+
 static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARAM w_param,
                                          LPARAM l_param) {
     if (message == WM_CREATE) {
@@ -118,6 +128,28 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                 if (window->m_resize_callback == NULL) break;
                 window->m_size.width = LOWORD(l_param);
                 window->m_size.height = HIWORD(l_param);
+
+                D3D11* d3d11 = (D3D11*)window->m_d3d11_data;
+                if (d3d11) {
+                    d3d11->device_context->OMSetRenderTargets(0, 0, 0);
+                    d3d11->backbuffer->Release();
+                    HRESULT result =
+                        d3d11->swapchain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+                    ID3D11Texture2D* buffer;
+                    result =
+                        d3d11->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&buffer);
+                    result =
+                        d3d11->device->CreateRenderTargetView(buffer, NULL, &d3d11->backbuffer);
+                    buffer->Release();
+                    d3d11->device_context->OMSetRenderTargets(1, &d3d11->backbuffer, NULL);
+                    D3D11_VIEWPORT viewport;
+                    viewport.Width = window->m_size.width;
+                    viewport.Height = window->m_size.height;
+                    viewport.TopLeftX = 0;
+                    viewport.TopLeftY = 0;
+                    d3d11->device_context->RSSetViewports(1, &viewport);
+                }
+
                 window->m_resize_callback(window);
             } break;
             case WM_KEYDOWN: {

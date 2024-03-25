@@ -44,6 +44,14 @@ typedef BOOL(APIENTRY* wglChoosePixelFormatARB_TYPE)(HDC, const int*, const FLOA
                                                      UINT*);
 typedef BOOL(APIENTRY* wglSwapIntervalEXT_TYPE)(int);
 
+wglSwapIntervalEXT_TYPE wglSwapIntervalEXT;
+
+void Opengl::set_swap_interval(u32 interval) {
+    if (wglSwapIntervalEXT != NULL) {
+        wglSwapIntervalEXT(interval);
+    }
+}
+
 void Opengl::swap_buffers(blaz::Window* window) {
     SwapBuffers(m_win32_opengl->device_context);
 }
@@ -179,8 +187,8 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
                             &pixel_format, &num_formats);
 
     PIXELFORMATDESCRIPTOR good_pixel_format;
-    if (!DescribePixelFormat(m_win32_opengl->device_context, pixel_format, sizeof(PIXELFORMATDESCRIPTOR),
-                             &good_pixel_format)) {
+    if (!DescribePixelFormat(m_win32_opengl->device_context, pixel_format,
+                             sizeof(PIXELFORMATDESCRIPTOR), &good_pixel_format)) {
         return Error("DescribePixelFormat: " + win32_get_last_error());
     }
 
@@ -201,7 +209,8 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
                                 WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
                                 0};
 
-    m_context_win32 = wglCreateContextAttribsARB(m_win32_opengl->device_context, 0, context_attributes);
+    m_context_win32 =
+        wglCreateContextAttribsARB(m_win32_opengl->device_context, 0, context_attributes);
 
     if (m_context_win32 == NULL) {
         str error_message;
@@ -222,6 +231,11 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
 
     if (!wglMakeCurrent(m_win32_opengl->device_context, m_context_win32)) {
         return Error("wglMakeCurrent: " + win32_get_last_error());
+    }
+
+    wglSwapIntervalEXT = (wglSwapIntervalEXT_TYPE)wglGetProcAddress("wglSwapIntervalEXT");
+    if (wglSwapIntervalEXT == NULL) {
+        return Error("wglSwapIntervalEXT unavailable");
     }
 
 #define GL_FUNCTION(return_type, name, ...)               \

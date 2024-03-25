@@ -174,6 +174,7 @@ struct Renderer {
 
     void clear(u32 clear_flag, RGBA clear_color, float clear_depth);
     void present();
+    void set_swap_interval(u32 interval);
 
     Error reload_shader(Shader* shader);
     Error compile_shader(Shader* shader);
