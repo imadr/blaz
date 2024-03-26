@@ -373,19 +373,23 @@ void Renderer::set_depth_test(bool enabled) {
     }
 }
 
-void Renderer::set_face_culling(bool enabled) {
+void Renderer::set_face_culling(bool enabled, CullingMode mode, CullingOrder order) {
     if (enabled) {
         gl->glEnable(GL_CULL_FACE);
     } else {
         gl->glDisable(GL_CULL_FACE);
     }
-}
 
-void Renderer::set_face_culling_mode(CullingMode mode) {
     if (mode == CullingMode::BACK) {
         gl->glCullFace(GL_BACK);
     } else if (mode == CullingMode::FRONT) {
         gl->glCullFace(GL_FRONT);
+    }
+
+    if (order == CullingOrder::CCW) {
+        gl->glFrontFace(GL_CCW);
+    } else if (order == CullingOrder::CW) {
+        gl->glFrontFace(GL_CW);
     }
 }
 

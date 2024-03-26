@@ -36,6 +36,16 @@ static std::unordered_map<str, CullingMode> CullingModeStr = {
     {"FRONT", CullingMode::FRONT},
 };
 
+enum class CullingOrder {
+    CCW,
+    CW,
+};
+
+static std::unordered_map<str, CullingOrder> CullingOrderStr = {
+    {"CCW", CullingOrder::CCW},
+    {"CW", CullingOrder::CW},
+};
+
 struct Framebuffer {
     str m_name;
     u32 m_width;
@@ -135,6 +145,7 @@ struct Pass {
     bool m_enable_depth_test = true;
     bool m_enable_face_culling = true;
     CullingMode m_culling_mode = CullingMode::BACK;
+    CullingOrder m_culling_order = CullingOrder::CCW;
 };
 
 struct Pipeline {
@@ -186,8 +197,7 @@ struct Renderer {
     void set_viewport(u32 x, u32 y, u32 width, u32 height);
     void bind_framebuffer(Framebuffer* framebuffer);
     void set_depth_test(bool enabled);
-    void set_face_culling(bool enabled);
-    void set_face_culling_mode(CullingMode mode);
+    void set_face_culling(bool enabled, CullingMode mode, CullingOrder order);
     void draw_vertex_array(Mesh* mesh);
     Error set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform_name,
                                   UniformValue value);

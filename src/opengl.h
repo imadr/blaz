@@ -290,6 +290,7 @@ typedef double GLclampd;
                 const GLvoid* indices)                                                      \
     GL_FUNCTION(void, glDrawBuffer, GLenum mode)                                            \
     GL_FUNCTION(void, glReadBuffer, GLenum mode)                                            \
+    GL_FUNCTION(void, glFrontFace, GLenum mode)                                             \
     GL_FUNCTION(void, glCullFace, GLenum mode)
 
 #define GL_FUNCTION(return_type, name, ...) typedef return_type name##Type(__VA_ARGS__);
