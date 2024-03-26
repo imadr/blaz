@@ -114,12 +114,8 @@ void Renderer::draw() {
             set_depth_test(false);
         }
 
-        if (pass.m_enable_face_culling) {
-            set_face_culling(true);
-            set_face_culling_mode(pass.m_culling_mode);
-        } else {
-            set_face_culling(false);
-        }
+        set_face_culling(pass.m_enable_face_culling, pass.m_culling_mode,
+                              pass.m_culling_order);
 
         clear(pass.m_clear_flag, pass.m_clear_color, pass.m_clear_depth);
 
