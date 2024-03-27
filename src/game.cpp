@@ -41,10 +41,10 @@ Error Game::load_game(str path) {
 
     for (auto& level_cfg : game_cfg["levels"]) {
         Level new_level;
-        new_level.m_scene.init_scene();
         new_level.m_name = level_cfg["name"].str_value;
         m_levels.push_back(new_level);
         Level* level = &m_levels.back();
+        init_scene(&level->m_scene);
 
         for (auto& node_cfg : level_cfg["nodes"]) {
             Node node;
@@ -76,6 +76,7 @@ Error Game::load_game(str path) {
             Camera camera;
             camera.m_name = camera_cfg["name"].str_value;
             camera.m_node = level->m_scene.m_nodes_ids[camera_cfg["node"].str_value];
+            camera.m_scene = &level->m_scene;
             if (camera_cfg["projection"]) {
                 camera.m_projection = camera_cfg["projection"].str_value == "PERSPECTIVE"
                                           ? Projection::PERSPECTIVE
@@ -85,7 +86,7 @@ Error Game::load_game(str path) {
                 camera.m_fov = rad(camera_cfg["fov"].float_value);
             }
             camera.set_aspect_ratio(f32(m_window.m_size.width) / f32(m_window.m_size.height));
-            m_renderer.add_camera(camera, &level->m_scene);
+            m_renderer.add_camera(camera);
         }
     }
 
