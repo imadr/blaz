@@ -4,25 +4,24 @@
 
 namespace blaz {
 
-void Scene::init_scene() {
+void init_scene(Scene* scene) {
     Node root_node = Node{.m_name = "root_node"};
-    root_node.m_scene = this;
+    root_node.m_scene = scene;
     root_node.is_root_node = true;
-    m_nodes.push_back(root_node);
-    m_nodes_ids["root_node"] = 0;
+    scene->m_nodes.push_back(root_node);
+    scene->m_nodes_ids["root_node"] = 0;
 }
 
-void Scene::add_node(Node node, str parent) {
-    node.m_scene = this;
-    if (m_nodes_ids.contains(parent)) {
+void add_node(Scene* scene, Node node, str parent) {
+    node.m_scene = scene;
+    if (scene->m_nodes_ids.contains(parent)) {
         node.update_matrix();
-        u32 parent_id = m_nodes_ids[parent];
+        u32 parent_id = scene->m_nodes_ids[parent];
         node.m_parent = parent_id;
-        m_nodes.push_back(node);
-        u32 node_id = u32(m_nodes.size()) - 1;
-        m_nodes_ids[node.m_name] = node_id;
-        m_nodes[node.m_parent].m_children.push_back(node_id);
-
+        scene->m_nodes.push_back(node);
+        u32 node_id = u32(scene->m_nodes.size()) - 1;
+        scene->m_nodes_ids[node.m_name] = node_id;
+        scene->m_nodes[node.m_parent].m_children.push_back(node_id);
     } else {
         logger.error("Parent node \"%s\" not found", parent);
     }

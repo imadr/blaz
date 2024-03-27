@@ -40,8 +40,9 @@ struct Node {
 struct Scene {
     vec<Node> m_nodes;
     std::unordered_map<str, u32> m_nodes_ids;
-    void init_scene();
-    void add_node(Node node, str parent);
 };
+
+void init_scene(Scene* scene);
+void add_node(Scene* scene, Node node, str parent);
 
 }  // namespace blaz

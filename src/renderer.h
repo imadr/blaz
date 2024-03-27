@@ -205,6 +205,7 @@ struct Renderer {
 
     void add_mesh(Mesh mesh);
     void add_renderable(Renderable renderable);
+    void add_camera(Camera camera, Scene* scene);
     void add_uniform_buffer(UniformBuffer buffer);
 };
 
