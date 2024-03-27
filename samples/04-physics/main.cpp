@@ -53,7 +53,7 @@ int main() {
         .m_node = game.m_current_level->m_scene.m_nodes_ids["plane"],
     });
 
-    game.m_current_level->m_scene.m_nodes[game.m_renderer.m_cameras[0].m_node].set_rotation(Quat::from_euler(Vec3(0.0, PI/4, 0.0)));
+    game.m_current_level->m_scene.m_nodes[game.m_renderer.m_cameras[0].m_node].set_rotation(Quat::from_euler(Vec3(-PI/8, 0.0, 0.0)));
 
     err = game.m_renderer.init(&game);
     if (err) {
