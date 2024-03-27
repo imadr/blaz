@@ -188,6 +188,12 @@ void Renderer::add_mesh(Mesh mesh) {
     m_meshes_ids[mesh.m_name] = u32(m_meshes.size()) - 1;
 }
 
+void Renderer::add_camera(Camera camera, Scene* scene){
+    m_cameras.push_back(camera);
+    m_cameras_ids[camera.m_name] = u32(m_cameras.size()) - 1;
+    camera.m_scene = scene;
+}
+
 void Renderer::add_renderable(Renderable renderable) {
     m_renderables.push_back(renderable);
     u32 id = u32(m_renderables.size()) - 1;

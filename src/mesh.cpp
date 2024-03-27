@@ -41,6 +41,22 @@ Mesh make_cube() {
         }};
 }
 
+Mesh make_plane() {
+    return Mesh{
+        .m_name = "plane",
+        .m_vertices =
+            {
+                -0.5, 0.0, 0.5,  0.0, 1.0, 0.0, 0.0, 0.0, 0.5,  0.0, 0.5,  0.0, 1.0, 0.0, 1.0, 0.0,
+                0.5,  0.0, -0.5, 0.0, 1.0, 0.0, 1.0, 1.0, -0.5, 0.0, -0.5, 0.0, 1.0, 0.0, 0.0, 1.0,
+            },
+        .m_indices = {0, 1, 2, 2, 3, 0},
+        .m_attribs = {
+            {"position", 3},
+            {"normal", 3},
+            {"uv", 2},
+        }};
+}
+
 Mesh make_uv_sphere(u32 slices, u32 stacks) {
     Mesh mesh = Mesh{.m_name = "sphere",
                      .m_attribs = {
