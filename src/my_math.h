@@ -53,8 +53,8 @@ struct Vec2I {
     }
 
     Vec2I operator-=(Vec2I other) {
-        v[0] += other.v[0];
-        v[1] += other.v[1];
+        v[0] -= other.v[0];
+        v[1] -= other.v[1];
         return *this;
     }
 };
@@ -202,9 +202,9 @@ struct Vec4 {
     str to_str();
 };
 
-Vec4 Vec4_lerp(Vec4 a, Vec4 b, f32 t);
-Vec4 Vec4_cross(Vec4 a, Vec4 b);
-f32 Vec4_dot(Vec4 a, Vec4 b);
+Vec4 vec4_lerp(Vec4 a, Vec4 b, f32 t);
+Vec4 vec4_cross(Vec4 a, Vec4 b);
+f32 vec4_dot(Vec4 a, Vec4 b);
 Vec4 operator/(Vec4 v, f32 s);
 Vec4 operator*(Vec4 a, Vec4 b);
 Vec4 operator*(Vec4 v, f32 s);

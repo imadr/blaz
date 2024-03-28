@@ -26,12 +26,12 @@ int main() {
         for (u32 j = 0; j < 3; j++) {
             str id = "cube_" + std::to_string(i) + "_" + std::to_string(j);
             add_node(&game.m_current_level->m_scene,
-                Node{
-                    .m_name = id,
-                    .m_position = Vec3((-1.0f + f32(i)) * 2.5f, (-1.0f + f32(j)) * 2.5f, 0.0f),
-                    .m_rotation = Quat::from_euler(Vec3(0, 0, 0)),
-                },
-                "root_node");
+                     Node{
+                         .m_name = id,
+                         .m_position = Vec3((-1.0f + f32(i)) * 2.5f, (-1.0f + f32(j)) * 2.5f, 0.0f),
+                         .m_rotation = Quat::from_euler(Vec3(0, 0, 0)),
+                     },
+                     "root_node");
             game.m_renderer.add_renderable(Renderable{
                 .m_name = id,
                 .m_tags = {"default"},
@@ -42,10 +42,12 @@ int main() {
     }
 
     add_node(&game.m_current_level->m_scene,
-        Node{
-            .m_name = "plane",
-        },
-        "root_node");
+             Node{
+                 .m_name = "plane",
+                 .m_position = Vec3(0.0f, -4.0f, 0.0f),
+                 .m_scale = Vec3(20.0f, 1.0f, 20.0f),
+             },
+             "root_node");
     game.m_renderer.add_renderable(Renderable{
         .m_name = "plane",
         .m_tags = {"default"},
@@ -53,7 +55,8 @@ int main() {
         .m_node = game.m_current_level->m_scene.m_nodes_ids["plane"],
     });
 
-    game.m_current_level->m_scene.m_nodes[game.m_renderer.m_cameras[0].m_node].set_rotation(Quat::from_euler(Vec3(-PI/8, 0.0, 0.0)));
+    game.m_current_level->m_scene.m_nodes[game.m_renderer.m_cameras[0].m_node].set_rotation(
+        Quat::from_euler(Vec3(-PI / 8, 0.0, 0.0)));
 
     err = game.m_renderer.init(&game);
     if (err) {
