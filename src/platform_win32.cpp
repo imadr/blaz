@@ -198,6 +198,7 @@ Error Window::init(const str& title) {
     window_class.lpfnWndProc = window_procedure;
     window_class.hInstance = GetModuleHandle(0);
     window_class.lpszClassName = window_class_name;
+    window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
 
     if (!RegisterClass(&window_class)) {
         return Error("RegisterClass: " + win32_get_last_error());
