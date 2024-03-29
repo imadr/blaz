@@ -24,13 +24,13 @@ int main() {
     for (u32 i = 0; i < 3; i++) {
         for (u32 j = 0; j < 3; j++) {
             str id = "sphere_" + std::to_string(i) + "_" + std::to_string(j);
-            game.m_current_level->m_scene.add_node( 
-                Node{
-                    .m_name = id,
-                    .m_position = Vec3((-1.0f + f32(i)) * 2.5f, (-1.0f + f32(j)) * 2.5f, 0.0f),
-                    .m_rotation = Quat::from_euler(Vec3(0, 0, 0)),
-                },
-                "root_node");
+            add_node(&game.m_current_level->m_scene,
+                     Node{
+                         .m_name = id,
+                         .m_position = Vec3((-1.0f + f32(i)) * 2.5f, (-1.0f + f32(j)) * 2.5f, 0.0f),
+                         .m_rotation = Quat::from_euler(Vec3(0, 0, 0)),
+                     },
+                     "root_node");
             game.m_renderer.add_renderable(Renderable{
                 .m_name = id,
                 .m_tags = {"pbr"},
