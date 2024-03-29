@@ -46,6 +46,16 @@ static std::unordered_map<str, CullingOrder> CullingOrderStr = {
     {"CW", CullingOrder::CW},
 };
 
+enum class MeshPrimitive {
+    TRIANGLES,
+    LINES,
+};
+
+static std::unordered_map<str, MeshPrimitive> MeshPrimitiveStr = {
+    {"TRIANGLES", MeshPrimitive::TRIANGLES},
+    {"LINES", MeshPrimitive::LINES},
+};
+
 struct Framebuffer {
     str m_name;
     u32 m_width;
@@ -105,6 +115,7 @@ struct Mesh {
     vec<f32> m_vertices;
     vec<u32> m_indices;
     vec<pair<str, u32>> m_attribs;
+    MeshPrimitive m_primitive;
     void* m_api_data = NULL;
     bool m_should_reload = true;
 };
@@ -159,8 +170,8 @@ struct Game;
 using UniformValue = std::variant<Mat4, Vec4, Vec3, f32, bool>;
 
 struct Renderer {
-    Game* m_game;
-    Scene* m_current_scene;
+    Game* m_game = NULL;
+    Scene* m_current_scene = NULL;
 
     Error init(Game* game);
     Error init_api();
