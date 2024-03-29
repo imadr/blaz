@@ -1,5 +1,6 @@
 # Roadmap
 
+- wireframe rendering
 - d3d11 backend
 - textures
 - materials

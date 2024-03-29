@@ -21,7 +21,7 @@ struct Game {
     Physics m_physics;
     vec<Level> m_levels;
     u32 m_current_level_id = 0;
-    Level* m_current_level;
+    Level* m_current_level = 0;
 
     Error load_game(str path);
     Error load_level(u32 level);

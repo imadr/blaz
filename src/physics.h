@@ -20,7 +20,7 @@ struct Rigidbody {
 };
 
 struct Physics {
-    Scene* m_current_scene;
+    Scene* m_current_scene = NULL;
     vec<Rigidbody> m_rigidbodies;
     std::unordered_map<str, u32> m_rigidbodies_ids;
 

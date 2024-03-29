@@ -34,11 +34,36 @@ Mesh make_cube() {
                 0,  3,  2,  2,  1,  0,  4,  7,  6,  6,  5,  4,  8,  11, 10, 10, 9,  8,
                 12, 15, 14, 14, 13, 12, 16, 19, 18, 18, 17, 16, 20, 23, 22, 22, 21, 20,
             },
-        .m_attribs = {
-            {"position", 3},
-            {"normal", 3},
-            {"uv", 2},
-        }};
+        .m_attribs =
+            {
+                {"position", 3},
+                {"normal", 3},
+                {"uv", 2},
+            },
+        .m_primitive = MeshPrimitive::TRIANGLES,
+    };
+}
+
+Mesh make_cube_wireframe() {
+    return Mesh{
+        .m_name = "cube",
+        .m_vertices =
+            {
+                -0.5, 0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  -0.5, 0.5,  -0.5, -0.5, 0.5,
+                -0.5, 0.5,  -0.5, 0.5,  0.5,  -0.5, 0.5,  -0.5, -0.5, -0.5, -0.5, -0.5,
+                -0.5, 0.5,  0.5,  -0.5, 0.5,  -0.5, 0.5,  0.5,  0.5,  0.5,  0.5,  -0.5,
+                0.5,  -0.5, 0.5,  0.5,  -0.5, -0.5, -0.5, -0.5, 0.5,  -0.5, -0.5, -0.5,
+            },
+        .m_indices =
+            {
+                0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7,
+            },
+        .m_attribs =
+            {
+                {"position", 3},
+            },
+        .m_primitive = MeshPrimitive::LINES,
+    };
 }
 
 Mesh make_plane() {
@@ -50,11 +75,14 @@ Mesh make_plane() {
                 0.5,  0.0, -0.5, 0.0, 1.0, 0.0, 1.0, 1.0, -0.5, 0.0, -0.5, 0.0, 1.0, 0.0, 0.0, 1.0,
             },
         .m_indices = {0, 1, 2, 2, 3, 0},
-        .m_attribs = {
-            {"position", 3},
-            {"normal", 3},
-            {"uv", 2},
-        }};
+        .m_attribs =
+            {
+                {"position", 3},
+                {"normal", 3},
+                {"uv", 2},
+            },
+        .m_primitive = MeshPrimitive::TRIANGLES,
+    };
 }
 
 Mesh make_uv_sphere(u32 slices, u32 stacks) {
@@ -227,6 +255,7 @@ pair<Error, Mesh> load_from_obj_file(str mesh_path) {
                 {"normal", 3},
                 {"uv", 2},
             },
+        .m_primitive = MeshPrimitive::TRIANGLES,
     };
 
     return {Error(), mesh};

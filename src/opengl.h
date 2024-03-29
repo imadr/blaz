@@ -259,6 +259,7 @@ typedef double GLclampd;
 #define GL_VERTEX_ARRAY 0x8074
 #define GL_SHADER 0x82E1
 #define GL_PROGRAM 0x82E2
+#define GL_FRONT_AND_BACK 0x0408
 
 #ifdef OS_WIN32
 
@@ -291,6 +292,7 @@ typedef double GLclampd;
     GL_FUNCTION(void, glDrawBuffer, GLenum mode)                                            \
     GL_FUNCTION(void, glReadBuffer, GLenum mode)                                            \
     GL_FUNCTION(void, glFrontFace, GLenum mode)                                             \
+    GL_FUNCTION(void, glPolygonMode, GLenum face, GLenum mode)                              \
     GL_FUNCTION(void, glCullFace, GLenum mode)
 
 #define GL_FUNCTION(return_type, name, ...) typedef return_type name##Type(__VA_ARGS__);

@@ -52,6 +52,11 @@ static std::unordered_map<TextureFilteringMode, GLenum> opengl_texture_filtering
     {TextureFilteringMode::LINEAR, GL_LINEAR},
 };
 
+static std::unordered_map<MeshPrimitive, GLenum> opengl_mesh_primitive_types = {
+    {MeshPrimitive::TRIANGLES, GL_TRIANGLES},
+    {MeshPrimitive::LINES, GL_LINES},
+};
+
 Opengl* gl;
 
 Error Renderer::init_api() {
@@ -413,7 +418,8 @@ void Renderer::set_face_culling(bool enabled, CullingMode mode, CullingOrder ord
 
 void Renderer::draw_vertex_array(Mesh* mesh) {
     gl->glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
-    gl->glDrawElements(GL_TRIANGLES, GLsizei(mesh->m_indices.size()), GL_UNSIGNED_INT, 0);
+    gl->glDrawElements(opengl_mesh_primitive_types[mesh->m_primitive],
+                       GLsizei(mesh->m_indices.size()), GL_UNSIGNED_INT, 0);
 }
 
 }  // namespace blaz

@@ -31,6 +31,9 @@ Error Game::load_game(str path) {
         mesh.m_name = mesh_cfg["name"].str_value;
         mesh.m_vertices = mesh_cfg["vertices"].buffer_f32_value;
         mesh.m_indices = mesh_cfg["indices"].buffer_u32_value;
+        if (mesh_cfg["primitive"]) {
+            mesh.m_primitive = MeshPrimitiveStr[mesh_cfg["primitive"].str_value];
+        }
         for (auto& attrib : mesh_cfg["attribs"]) {
             mesh.m_attribs.push_back(
                 std::make_pair(attrib[0].str_value, u32(attrib[1].float_value)));
