@@ -152,6 +152,7 @@ Error Game::load_game(str path) {
 
     m_renderer.m_current_pipeline = m_levels[m_current_level_id].m_pipeline;
     m_renderer.m_current_scene = &m_levels[m_current_level_id].m_scene;
+    m_physics.m_current_scene = &m_levels[m_current_level_id].m_scene;
 
     return load_level(u32(game_cfg["start_level"].float_value));
 }

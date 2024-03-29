@@ -25,20 +25,13 @@ int main() {
         return 1;
     }
 
-    // bool done_screenshot = false;
-    u64 last_time = get_timestamp_microsecond();
+    bool done_screenshot = false;
     while (game.m_window.event_loop()) {
-        u64 current_time = get_timestamp_microsecond();
-        f32 delta_time = ((f32)(current_time - last_time) / 1000);
-        last_time = current_time;
         game.m_renderer.draw();
-
-        logger.info("", 1000.0 / delta_time, " fps");
-
-        // if (!done_screenshot) {
-        //     game.m_window.screenshot("../tests/01-hellotriangle.bmp");
-        //     done_screenshot = true;
-        // }
+        if (!done_screenshot) {
+            game.m_window.screenshot("../tests/01-hellotriangle.bmp");
+            done_screenshot = true;
+        }
     }
 
     game.m_window.close();
