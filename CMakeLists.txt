@@ -49,6 +49,8 @@ set(COMMON_SOURCES
     src/node.h
     src/mesh.cpp
     src/mesh.h
+    src/physics.cpp
+    src/physics.h
 )
 
 if (GRAPHICS_API STREQUAL "OpenGL")
