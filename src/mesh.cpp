@@ -86,12 +86,16 @@ Mesh make_plane() {
 }
 
 Mesh make_uv_sphere(u32 slices, u32 stacks) {
-    Mesh mesh = Mesh{.m_name = "sphere",
-                     .m_attribs = {
-                         {"position", 3},
-                         {"normal", 3},
-                         {"uv", 2},
-                     }};
+    Mesh mesh = Mesh{
+        .m_name = "sphere",
+        .m_attribs =
+            {
+                {"position", 3},
+                {"normal", 3},
+                {"uv", 2},
+            },
+        .m_primitive = MeshPrimitive::TRIANGLES,
+    };
 
     mesh.m_vertices = {0, 1, 0, 0, 1, 0, 0, 0};
 
@@ -260,6 +264,34 @@ pair<Error, Mesh> load_from_obj_file(str mesh_path) {
 
     // return {Error(), mesh};
     return {Error("not implemented"), Mesh()};
+}
+
+Mesh make_wireframe_sphere(u32 vertices) {
+    Mesh mesh = Mesh{.m_name = "wireframe_sphere",
+                     .m_attribs =
+                         {
+                             {"position", 3},
+                         },
+                     .m_primitive = MeshPrimitive::LINES};
+
+    for (u32 side = 0; side < 3; side++) {
+        for (u32 i = 0; i < vertices; i++) {
+            f32 phi = f32(PI) * f32(i) / f32(vertices / 2.0);
+
+            f32 x = cos(phi);
+            f32 y = sin(phi);
+            if (side == 0) mesh.m_vertices.insert(mesh.m_vertices.end(), {x, 0, y});
+            if (side == 1) mesh.m_vertices.insert(mesh.m_vertices.end(), {0, x, y});
+            if (side == 2) mesh.m_vertices.insert(mesh.m_vertices.end(), {x, y, 0});
+        }
+        u32 index = side * vertices;
+        for (; index < (side + 1) * vertices - 1; index++) {
+            mesh.m_indices.insert(mesh.m_indices.end(), {index, index + 1});
+        }
+        mesh.m_indices.insert(mesh.m_indices.end(), {index, side * vertices});
+    }
+
+    return mesh;
 }
 
 }  // namespace blaz
