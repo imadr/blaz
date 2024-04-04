@@ -11,7 +11,7 @@ layout(std140, binding = 1) uniform u_view {
     vec3 u_camera_position;
 };
 
-uniform sampler2D u_albedo;
+layout(binding = 2) uniform sampler2D u_tex_albedo;
 
 const float PI = 3.14159265359;
 

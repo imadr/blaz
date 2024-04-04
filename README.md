@@ -20,7 +20,11 @@
   </td> 
   <td>
     <img src="samples/tests/03-pbr.bmp" width="300"/><br>
-    02-pbr
+    03-pbr
+  </td>
+  <td>
+    <img src="samples/tests/04-physics.bmp" width="300"/><br>
+    04-physics
   </td>
 </tr>
 </table>

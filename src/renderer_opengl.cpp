@@ -155,6 +155,46 @@ Error Renderer::compile_shader(Shader* shader) {
 
     shader->m_api_data = api_shader;
 
+
+
+
+    GLint n_uniforms, max_len;
+    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
+    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
+    GLchar* uniform_name = (GLchar*)malloc(max_len);
+
+    gl->glUseProgram(shader_program);
+
+struct Shader_Uniform_OPENGL {
+    GLint m_size = -1;
+    GLint m_location = -1;
+    GLenum m_type = -1;
+    u32 m_texture_unit = -1;
+};
+
+    u32 texture_unit_counter = 0;
+    if (uniform_name != NULL) {
+        for (i32 i = 0; i < n_uniforms; i++) {
+            Shader_Uniform_OPENGL uniform;
+            gl->glGetActiveUniform(shader_program, i, max_len, NULL, &uniform.m_size,
+                                   &uniform.m_type, uniform_name);
+            uniform.m_location = gl->glGetUniformLocation(shader_program, uniform_name);
+
+            
+            if (uniform.m_type == GL_SAMPLER_2D) {
+                gl->glUniform1i(uniform.m_location, texture_unit_counter);
+                uniform.m_texture_unit = texture_unit_counter;
+                texture_unit_counter++;
+            }
+            // api_shader->m_uniforms[str(uniform_name)] = uniform;
+        }
+    }
+
+
+
+
+
+
     return Error();
 }
 
