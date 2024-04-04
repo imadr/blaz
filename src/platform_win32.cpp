@@ -143,8 +143,8 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                     buffer->Release();
                     d3d11->device_context->OMSetRenderTargets(1, &d3d11->backbuffer, NULL);
                     D3D11_VIEWPORT viewport;
-                    viewport.Width = window->m_size.width;
-                    viewport.Height = window->m_size.height;
+                    viewport.Width = FLOAT(window->m_size.width);
+                    viewport.Height = FLOAT(window->m_size.height);
                     viewport.TopLeftX = 0;
                     viewport.TopLeftY = 0;
                     d3d11->device_context->RSSetViewports(1, &viewport);

@@ -5,56 +5,51 @@
 #include <iosfwd>
 #include "types.h"
 #include "error.h"
+#include "renderer.h"
 
 namespace blaz {
 
-//@note remove this file read and use memory instead
-Error Texture::load_data_from_tga_file(str texture_path) {
+pair<Error, Texture> load_data_from_tga_file(str texture_path) {
     std::ifstream texture_file(texture_path, std::ios::binary);
     if (!texture_file.is_open()) {
-        return Error("Can't open file " + texture_path);
+        return std::make_pair(Error("Can't open file " + texture_path), Texture());
     }
 
     u8 header[18];
     texture_file.read((char*)header, 18);
 
-    m_width = header[13] << 8 | header[12];
-    m_height = header[15] << 8 | header[14];
-    m_depth = header[16];
+    Texture texture;
+    texture.m_width = header[13] << 8 | header[12];
+    texture.m_height = header[15] << 8 | header[14];
+    texture.m_depth = header[16];
 
-    if (m_depth == 24) {
-        m_channels = 3;
-    } else if (m_depth == 32) {
-        m_channels = 4;
+    if (texture.m_depth == 24) {
+        texture.m_channels = 3;
+    } else if (texture.m_depth == 32) {
+        texture.m_channels = 4;
     }
 
-    m_data = new vec<u8>;
-    m_data->resize(m_width * m_height * m_channels);
+    texture.m_data.resize(texture.m_width * texture.m_height * texture.m_channels);
 
-    for (u32 i = 0; i < m_width * m_height * m_channels; i += m_channels) {
+    for (u32 i = 0; i < texture.m_width * texture.m_height * texture.m_channels; i += texture.m_channels) {
         u8 b, g, r, a;
         texture_file.read((char*)&b, 1);
         texture_file.read((char*)&g, 1);
         texture_file.read((char*)&r, 1);
-        if (m_channels == 4) {
+        if (texture.m_channels == 4) {
             texture_file.read((char*)&a, 1);
-            (*m_data)[i + 0] = r;
-            (*m_data)[i + 1] = g;
-            (*m_data)[i + 2] = b;
-            (*m_data)[i + 3] = a;
-        } else if (m_channels == 3) {
-            (*m_data)[i + 0] = r;
-            (*m_data)[i + 1] = g;
-            (*m_data)[i + 2] = b;
+            (texture.m_data)[i + 0] = r;
+            (texture.m_data)[i + 1] = g;
+            (texture.m_data)[i + 2] = b;
+            (texture.m_data)[i + 3] = a;
+        } else if (texture.m_channels == 3) {
+            (texture.m_data)[i + 0] = r;
+            (texture.m_data)[i + 1] = g;
+            (texture.m_data)[i + 2] = b;
         }
     }
 
-    return Error();
-}
-
-Error Texture::free_data() {
-    delete m_data;
-    return Error();
+    return std::make_pair(Error(), texture);
 }
 
 }  // namespace blaz

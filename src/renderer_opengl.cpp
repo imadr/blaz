@@ -200,28 +200,6 @@ Error Renderer::upload_mesh(Mesh* mesh) {
     return Error();
 }
 
-// Error Renderer::reupload_mesh_buffers(Mesh* mesh) {
-//     Mesh_OPENGL* api_mesh = ((Mesh_OPENGL*)mesh->m_api_data);
-//     gl->glBindBuffer(GL_ARRAY_BUFFER, api_mesh->m_vbo);
-//     gl->glBufferData(GL_ARRAY_BUFFER, mesh->m_vertices.size() * sizeof(f32),
-//                      mesh->m_vertices.data(), GL_STATIC_DRAW);
-//     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, api_mesh->m_ebo);
-//     gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->m_indices.size() * sizeof(u32),
-//                      mesh->m_indices.data(), GL_STATIC_DRAW);
-//     return Error();
-// }
-
-// Error Renderer::upload_texture_data(Texture* texture) {
-//     u32 format = ((Texture_OPENGL*)texture->m_api_data)->m_format;
-//     gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
-//     gl->glTexImage2D(GL_TEXTURE_2D, 0, format, texture->m_width, texture->m_height, 0, format,
-//                      GL_UNSIGNED_BYTE, texture->m_data->data());
-//     gl->glGenerateMipmap(GL_TEXTURE_2D);
-//     texture->free_data();
-
-//     return Error();
-// }
-
 Error Renderer::init_uniform_buffer(UniformBuffer* uniform_buffer) {
     GLuint ubo;
     gl->glGenBuffers(1, &ubo);
@@ -250,68 +228,62 @@ Error Renderer::set_uniform_buffer_data(UniformBuffer* uniform_buffer, str unifo
     return Error();
 }
 
-// Error Renderer::set_shader_uniform_Mat4(Shader* shader, str uniform_name, Mat4 value) {
-//     Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
-//     gl->glUniformMatrix4fv(shader_opengl->m_uniforms[uniform_name].m_location, 1, GL_FALSE,
-//                            value.m);
-//     return Error();
-// }
-
-// Error Renderer::set_shader_uniform_i32(Shader* shader, str uniform_name, i32 value) {
-//     Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
-//     gl->glUniform1i(shader_opengl->m_uniforms[uniform_name].m_location, value);
-//     return Error();
-// }
-
-// Error Renderer::set_shader_uniform_Vec2(Shader* shader, str uniform_name, Vec2 value) {
-//     Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
-//     gl->glUniform2f(shader_opengl->m_uniforms[uniform_name].m_location, value.x(), value.y());
-//     return Error();
-// }
-
-// Error Renderer::set_shader_uniform_Vec3(Shader* shader, str uniform_name, Vec3 value) {
-//     Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
-//     gl->glUniform3f(shader_opengl->m_uniforms[uniform_name].m_location, value.x(), value.y(),
-//                     value.z());
-//     return Error();
-// }
-
-void Renderer::bind_shader(Shader* shader) {
+void Renderer::set_shader(Shader* shader) {
     gl->glUseProgram(((Shader_OPENGL*)shader->m_api_data)->m_program);
 }
 
-// Error Renderer::create_texture(Texture* texture) {
-//     u32 texture_name;
-//     gl->glGenTextures(1, &texture_name);
-//     gl->glBindTexture(GL_TEXTURE_2D, texture_name);
-//     gl->glTexImage2D(
-//         GL_TEXTURE_2D, 0, opengl_texture_formats[texture->m_texture_params.m_format].first,
-//         texture->m_width, texture->m_height, 0,
-//         opengl_texture_formats[texture->m_texture_params.m_format].second, GL_UNSIGNED_BYTE,
-//         NULL);
-//     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-//                         opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_s]);
-//     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-//                         opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_t]);
-//     if (texture->m_texture_params.m_wrap_mode_s == TextureWrapMode::CLAMP_TO_BORDER ||
-//         texture->m_texture_params.m_wrap_mode_t == TextureWrapMode::CLAMP_TO_BORDER) {
-//         gl->glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
-//                              texture->m_texture_params.m_clamp_to_border_color.values);
-//     }
-//     gl->glTexParameteri(
-//         GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-//         opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_min]);
-//     gl->glTexParameteri(
-//         GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-//         opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_mag]);
-//     gl->glGenerateMipmap(GL_TEXTURE_2D);
+Error Renderer::upload_texture(Texture* texture) {
+    u32 texture_name;
+    gl->glGenTextures(1, &texture_name);
+    gl->glBindTexture(GL_TEXTURE_2D, texture_name);
+    gl->glTexImage2D(
+        GL_TEXTURE_2D, 0, opengl_texture_formats[texture->m_texture_params.m_format].first,
+        texture->m_width, texture->m_height, 0,
+        opengl_texture_formats[texture->m_texture_params.m_format].second, GL_UNSIGNED_BYTE,
+        texture->m_data.data());
 
-//     Texture_OPENGL* api_texture = new Texture_OPENGL;
-//     api_texture->m_texture_name = texture_name;
-//     texture->m_api_data = api_texture;
+    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                        opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_s]);
+    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                        opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_t]);
+    if (texture->m_texture_params.m_wrap_mode_s == TextureWrapMode::CLAMP_TO_BORDER ||
+        texture->m_texture_params.m_wrap_mode_t == TextureWrapMode::CLAMP_TO_BORDER) {
+        gl->glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
+                             texture->m_texture_params.m_clamp_to_border_color.values);
+    }
+    gl->glTexParameteri(
+        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+        opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_min]);
+    gl->glTexParameteri(
+        GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+        opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_mag]);
+    gl->glGenerateMipmap(GL_TEXTURE_2D);
 
-//     return Error();
-// }
+    Texture_OPENGL* api_texture = new Texture_OPENGL;
+    api_texture->m_texture_name = texture_name;
+    texture->m_api_data = api_texture;
+
+    return Error();
+}
+
+void Renderer::set_texture(Pass* pass, Shader* shader) {
+    // Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
+
+    // for (const auto& texture_binding : pass->m_textures_bindings) {
+    //     u32 texture_unit = shader_opengl->m_uniforms[texture_binding.first].m_texture_unit;
+    //     gl->glActiveTexture(GL_TEXTURE0 + texture_unit);
+
+    //     str texture_name = texture_binding.second;
+    //     if (m_texture_manager->m_textures.count(texture_name)) {
+    //         Texture* texture = &m_texture_manager->m_textures[texture_name];
+    //         gl->glBindTexture(GL_TEXTURE_2D,
+    //                           ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
+    //     } else {
+    //         logger.error(Error("Texture with name \"" + texture_name + "\" not found"));
+    //     }
+    // }
+}
+
 
 // Error Renderer::create_framebuffer(Framebuffer* framebuffer) {
 //     u32 fbo;
@@ -358,7 +330,7 @@ void Renderer::debug_marker_end() {
     gl->glPopDebugGroup();
 }
 
-void Renderer::bind_default_framebuffer() {
+void Renderer::set_default_framebuffer() {
     gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -366,7 +338,7 @@ void Renderer::set_viewport(u32 x, u32 y, u32 width, u32 height) {
     gl->glViewport(x, y, width, height);
 }
 
-void Renderer::bind_framebuffer(Framebuffer* framebuffer) {
+void Renderer::set_framebuffer(Framebuffer* framebuffer) {
     gl->glBindFramebuffer(GL_FRAMEBUFFER, ((Framebuffer_OPENGL*)framebuffer->m_api_data)->m_fbo);
 }
 
@@ -398,25 +370,7 @@ void Renderer::set_face_culling(bool enabled, CullingMode mode, CullingOrder ord
     }
 }
 
-// void Renderer::bind_textures(Pass* pass, Shader* shader) {
-//     Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
-
-//     for (const auto& texture_binding : pass->m_textures_bindings) {
-//         u32 texture_unit = shader_opengl->m_uniforms[texture_binding.first].m_texture_unit;
-//         gl->glActiveTexture(GL_TEXTURE0 + texture_unit);
-
-//         str texture_name = texture_binding.second;
-//         if (m_texture_manager->m_textures.count(texture_name)) {
-//             Texture* texture = &m_texture_manager->m_textures[texture_name];
-//             gl->glBindTexture(GL_TEXTURE_2D,
-//                               ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
-//         } else {
-//             logger.error(Error("Texture with name \"" + texture_name + "\" not found"));
-//         }
-//     }
-// }
-
-void Renderer::draw_vertex_array(Mesh* mesh) {
+void Renderer::draw_mesh(Mesh* mesh) {
     gl->glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
     gl->glDrawElements(opengl_mesh_primitive_types[mesh->m_primitive],
                        GLsizei(mesh->m_indices.size()), GL_UNSIGNED_INT, 0);
