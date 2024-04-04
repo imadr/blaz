@@ -3,8 +3,11 @@
 ## Building
 
 - [Install CMake >= 3.12](https://cmake.org/download/)
+- ```git clone https://github.com/imadr/blaz.git```
+- ```cd blaz```
 - ```mkdir build```
-- ```cmake -S . -B build```
+- ```cmake -S . -B build``` or use cmake-gui
+- Open the visual studio project or build with make
 
 ## Samples
 
