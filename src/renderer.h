@@ -56,23 +56,23 @@ static std::unordered_map<str, MeshPrimitive> MeshPrimitiveStr = {
     {"LINES", MeshPrimitive::LINES},
 };
 
-struct Framebuffer {
-    str m_name;
-    u32 m_width;
-    u32 m_height;
-    void* m_api_data = NULL;
-    TextureParams m_texture_params;
+enum class TextureFormat {
+    RGB8,
+    RGBA8,
+    DEPTH32,
+    DEPTH32F,
 };
 
-struct Shader {
-    str m_name;
-    str m_vertex_shader_source;
-    str m_fragment_shader_source;
-    str m_vertex_shader_path;
-    str m_fragment_shader_path;
-    void* m_api_data = NULL;
-    bool m_should_reload = true;
-    bool m_is_error = false;
+enum class TextureWrapMode {
+    REPEAT,
+    MIRRORED_REPEAT,
+    CLAMP_TO_EDGE,
+    CLAMP_TO_BORDER,
+};
+
+enum class TextureFilteringMode {
+    NEAREST,
+    LINEAR,
 };
 
 enum UniformType {
@@ -91,6 +91,34 @@ static std::unordered_map<UniformType, u32> UniformTypeAlignment = {
 static std::unordered_map<UniformType, u32> UniformTypeSize = {
     {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16},
     {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},
+};
+
+struct TextureParams {
+    TextureFormat m_format = TextureFormat::RGBA8;
+    TextureWrapMode m_wrap_mode_s = TextureWrapMode::REPEAT;
+    TextureWrapMode m_wrap_mode_t = TextureWrapMode::REPEAT;
+    RGBA m_clamp_to_border_color = RGBA(0, 0, 0, 0);
+    TextureFilteringMode m_filter_mode_min = TextureFilteringMode::LINEAR;
+    TextureFilteringMode m_filter_mode_mag = TextureFilteringMode::LINEAR;
+};
+
+struct Framebuffer {
+    str m_name;
+    u32 m_width;
+    u32 m_height;
+    TextureParams m_texture_params;
+    void* m_api_data = NULL;
+};
+
+struct Shader {
+    str m_name;
+    str m_vertex_shader_source;
+    str m_fragment_shader_source;
+    str m_vertex_shader_path;
+    str m_fragment_shader_path;
+    void* m_api_data = NULL;
+    bool m_should_reload = true;
+    bool m_is_error = false;
 };
 
 struct Uniform {
@@ -118,6 +146,17 @@ struct Mesh {
     MeshPrimitive m_primitive;
     void* m_api_data = NULL;
     bool m_should_reload = true;
+};
+
+struct Texture {
+    str m_name;
+    vec<u8> m_data;
+    u32 m_width = 0;
+    u32 m_height = 0;
+    u8 m_depth = 0;
+    u8 m_channels = 0;
+    TextureParams m_texture_params;
+    void* m_api_data = NULL;
 };
 
 struct Material {
@@ -186,6 +225,8 @@ struct Renderer {
     Shader m_error_shader;
     vec<Mesh> m_meshes;
     std::unordered_map<str, u32> m_meshes_ids;
+    vec<Texture> m_textures;
+    std::unordered_map<str, u32> m_textures_ids;
     vec<Camera> m_cameras;
     std::unordered_map<str, u32> m_cameras_ids;
     vec<UniformBuffer> m_uniform_buffers;
@@ -200,21 +241,24 @@ struct Renderer {
 
     Error reload_shader(Shader* shader);
     Error compile_shader(Shader* shader);
-    void bind_shader(Shader* shader);
+    void set_shader(Shader* shader);
     Error upload_mesh(Mesh* mesh);
+    Error upload_texture(Texture* texture);
+    void set_texture(Pass* pass, Shader* shader);
     void debug_marker_start(str name);
     void debug_marker_end();
-    void bind_default_framebuffer();
+    void set_default_framebuffer();
+    void set_framebuffer(Framebuffer* framebuffer);
     void set_viewport(u32 x, u32 y, u32 width, u32 height);
-    void bind_framebuffer(Framebuffer* framebuffer);
     void set_depth_test(bool enabled);
     void set_face_culling(bool enabled, CullingMode mode, CullingOrder order);
-    void draw_vertex_array(Mesh* mesh);
+    void draw_mesh(Mesh* mesh);
     Error set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform_name,
                                   UniformValue value);
     Error init_uniform_buffer(UniformBuffer* uniform_buffer);
 
     void add_mesh(Mesh mesh);
+    void add_texture(Texture texture);
     void add_renderable(Renderable renderable);
     void add_camera(Camera camera);
     void add_uniform_buffer(UniformBuffer buffer);

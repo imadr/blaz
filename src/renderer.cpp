@@ -29,6 +29,10 @@ Error Renderer::init(Game* game) {
         upload_mesh(&mesh);
     }
 
+    for (auto& texture : m_textures) {
+        upload_texture(&texture);
+    }
+
     add_uniform_buffer(UniformBuffer{
         .m_name = "u_mat",
         .m_binding_point = 0,
@@ -100,11 +104,11 @@ void Renderer::draw() {
 #endif
 
         if (pass.m_use_default_framebuffer) {
-            bind_default_framebuffer();
+            set_default_framebuffer();
             set_viewport(0, 0, m_game->m_window.m_size.width, m_game->m_window.m_size.height);
         } else {
             Framebuffer* framebuffer = &pipeline.m_framebuffers[pass.m_framebuffer];
-            bind_framebuffer(framebuffer);
+            set_framebuffer(framebuffer);
             set_viewport(0, 0, m_game->m_window.m_size.width, m_game->m_window.m_size.height);
         }
 
@@ -132,7 +136,7 @@ void Renderer::draw() {
             // pass_shader = m_error_shader;
         }
 
-        bind_shader(pass_shader);
+        set_shader(pass_shader);
 
         Camera& camera = m_cameras[pass.m_camera];
 
@@ -152,7 +156,7 @@ void Renderer::draw() {
                 set_uniform_buffer_data(
                     mat_buffer, "u_model_mat",
                     m_current_scene->m_nodes[renderable->m_node].m_global_matrix);
-                draw_vertex_array(&m_meshes[renderable->m_mesh]);
+                draw_mesh(&m_meshes[renderable->m_mesh]);
             }
         }
 
@@ -186,6 +190,11 @@ void Renderer::add_uniform_buffer(UniformBuffer buffer) {
 void Renderer::add_mesh(Mesh mesh) {
     m_meshes.push_back(mesh);
     m_meshes_ids[mesh.m_name] = u32(m_meshes.size()) - 1;
+}
+
+void Renderer::add_texture(Texture texture) {
+    m_textures.push_back(texture);
+    m_textures_ids[texture.m_name] = u32(m_textures.size()) - 1;
 }
 
 void Renderer::add_camera(Camera camera){

@@ -11,6 +11,8 @@ layout(std140, binding = 1) uniform u_view {
     vec3 u_camera_position;
 };
 
+uniform sampler2D u_albedo;
+
 const float PI = 3.14159265359;
 
 vec3 fresnel_schlick(float view_dot_halfway, vec3 F0) {
