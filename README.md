@@ -5,9 +5,10 @@
 - [Install CMake >= 3.12](https://cmake.org/download/)
 - ```git clone https://github.com/imadr/blaz.git```
 - ```cd blaz```
-- ```mkdir build```
-- ```cmake -S . -B build``` or use cmake-gui
-- Open the visual studio project or build with make
+- ```mkdir build && cd build```
+- ```cmake ..``` to generate the build files
+- ```cmake --build .``` to run the build **or** use the generated visual studio project file/makefile to build
+You can also use **cmake-gui**
 
 ## Samples
 
