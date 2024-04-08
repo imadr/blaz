@@ -10,6 +10,13 @@
 - ```cmake --build .``` to run the build **or** use the generated visual studio project file/makefile to build
 You can also use **cmake-gui**
 
+### Building for web
+
+- Install [emscripten](https://emscripten.org/)
+- ```mkdir build_wasm && cd build_wasm```
+- ```emcmake cmake ..```
+- ```cmake --build .```
+
 ## Samples
 
 <table border="0">
