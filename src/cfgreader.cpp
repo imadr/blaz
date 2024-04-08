@@ -1,4 +1,4 @@
-#include "CfgReader.h"
+#include "cfgReader.h"
 
 #include "filesystem.h"
 #include "logger.h"

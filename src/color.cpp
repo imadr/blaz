@@ -1,4 +1,4 @@
-#include "Color.h"
+#include "color.h"
 
 #include <algorithm>
 #include <cmath>

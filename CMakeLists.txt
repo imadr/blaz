@@ -96,7 +96,7 @@ add_library(blaz
 
 target_include_directories(blaz PUBLIC src)
 
-option(UNITY_BUILD "Unity Build" ON)
+option(UNITY_BUILD "Unity Build" OFF)
 
 if(UNITY_BUILD)
     set_target_properties(blaz PROPERTIES UNITY_BUILD ON)
