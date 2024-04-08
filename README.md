@@ -16,6 +16,7 @@ You can also use **cmake-gui**
 - ```mkdir build_wasm && cd build_wasm```
 - ```emcmake cmake ..```
 - ```cmake --build .```
+- To build a specific sample ```cmake --build . --target "01-hellotriangle"```
 
 ## Samples
 
