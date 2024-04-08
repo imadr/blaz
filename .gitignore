@@ -1,4 +1,5 @@
 build/
+build_wasm/
 *.scor*
 *.rsuser
 *.suo
