@@ -1,10 +1,14 @@
+#include <GLES3/gl3.h>
+#define GL_GLEXT_PROTOTYPES
+#include <GLES3/gl2ext.h>
+#include <emscripten/html5.h>
+
 #include <unordered_map>
 #include <utility>
 
 #include "color.h"
 #include "error.h"
 #include "game.h"
-#include "opengl.h"
 #include "platform.h"
 #include "renderer.h"
 #include "texture.h"
@@ -34,10 +38,9 @@ struct Framebuffer_OPENGL {
 };
 
 static std::unordered_map<TextureFormat, std::pair<GLint, GLenum>> opengl_texture_formats = {
-    {TextureFormat::RGB8, {GL_RGB8, GL_RGB}},
-    {TextureFormat::RGBA8, {GL_RGBA8, GL_RGBA}},
-    {TextureFormat::DEPTH32, {GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT}},
-    {TextureFormat::DEPTH32F, {GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT}},
+    {TextureFormat::RGB8, {GL_RGB, GL_RGB}},
+    {TextureFormat::RGBA8, {GL_RGBA, GL_RGBA}},
+    {TextureFormat::DEPTH32, {GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT}},
 };
 
 static std::unordered_map<TextureWrapMode, GLenum> opengl_texture_wrap_modes = {
@@ -56,18 +59,26 @@ static std::unordered_map<MeshPrimitive, GLenum> opengl_mesh_primitive_types = {
     {MeshPrimitive::LINES, GL_LINES},
 };
 
-Opengl* gl;
-
 Error Renderer::init_api() {
-    gl = new Opengl();
-    bool debug = false;
-#ifdef DEBUG_RENDERER
-    debug = true;
-#endif
-    Error err = gl->init(&m_game->m_window, debug);
-    if (err) {
-        return Error("Renderer::init ->\n" + err.message());
+    EmscriptenWebGLContextAttributes attributes;
+    attributes.alpha = false;
+    attributes.depth = true;
+    attributes.stencil = true;
+    attributes.antialias = true;
+    attributes.premultipliedAlpha = false;
+    attributes.preserveDrawingBuffer = false;
+    attributes.powerPreference = EM_WEBGL_POWER_PREFERENCE_HIGH_PERFORMANCE;
+    attributes.failIfMajorPerformanceCaveat = false;
+    attributes.majorVersion = 2;
+    attributes.minorVersion = 0;
+    attributes.enableExtensionsByDefault = true;
+
+    int context = emscripten_webgl_create_context("#canvas", &attributes);
+    if (!context) {
+        return Error("Webgl context could not be created");
     }
+
+    emscripten_webgl_make_context_current(context);
 
     return Error();
 }
@@ -77,77 +88,69 @@ void Renderer::clear(u32 clear_flag, RGBA clear_color, float clear_depth) {
         GLbitfield gl_clear_flag = 0;
         if (clear_flag & Clear::COLOR) {
             gl_clear_flag |= GL_COLOR_BUFFER_BIT;
-            gl->glClearColor(clear_color.r(), clear_color.g(), clear_color.b(), clear_color.a());
+            glClearColor(clear_color.r(), clear_color.g(), clear_color.b(), clear_color.a());
         }
         if (clear_flag & Clear::DEPTH) {
             gl_clear_flag |= GL_DEPTH_BUFFER_BIT;
-            gl->glClearDepth(clear_depth);
+            glClearDepthf(clear_depth);
         }
-        gl->glClear(gl_clear_flag);
+        glClear(gl_clear_flag);
     }
 }
 
 void Renderer::present() {
-    gl->swap_buffers(&m_game->m_window);
 }
 
 void Renderer::set_swap_interval(u32 interval) {
-    gl->set_swap_interval(interval);
 }
 
 Error Renderer::compile_shader(Shader* shader) {
     GLuint vertex_shader;
-    vertex_shader = gl->glCreateShader(GL_VERTEX_SHADER);
+    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 
     const char* c_str = shader->m_vertex_shader_source.c_str();
-    gl->glShaderSource(vertex_shader, 1, &c_str, NULL);
-    gl->glCompileShader(vertex_shader);
+    glShaderSource(vertex_shader, 1, &c_str, NULL);
+    glCompileShader(vertex_shader);
 
     int success;
     char info[512];
-    gl->glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-        gl->glGetShaderInfoLog(vertex_shader, 512, NULL, info);
-        gl->glDeleteShader(vertex_shader);
+        glGetShaderInfoLog(vertex_shader, 512, NULL, info);
+        glDeleteShader(vertex_shader);
         return Error("Renderer::compile_shader: Failed to compile vertex shader \"" +
                      shader->m_name + "\" : " + str(info));
     }
 
     GLuint fragment_shader;
-    fragment_shader = gl->glCreateShader(GL_FRAGMENT_SHADER);
+    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     c_str = shader->m_fragment_shader_source.c_str();
-    gl->glShaderSource(fragment_shader, 1, &c_str, NULL);
-    gl->glCompileShader(fragment_shader);
-    gl->glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+    glShaderSource(fragment_shader, 1, &c_str, NULL);
+    glCompileShader(fragment_shader);
+    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-        gl->glGetShaderInfoLog(fragment_shader, 512, NULL, info);
-        gl->glDeleteShader(fragment_shader);
+        glGetShaderInfoLog(fragment_shader, 512, NULL, info);
+        glDeleteShader(fragment_shader);
         return Error("Renderer::compile_shader: Failed to compile fragment shader \"" +
                      shader->m_name + "\" : " + str(info));
     }
 
     GLuint shader_program;
-    shader_program = gl->glCreateProgram();
+    shader_program = glCreateProgram();
 
-    gl->glAttachShader(shader_program, vertex_shader);
-    gl->glAttachShader(shader_program, fragment_shader);
-    gl->glLinkProgram(shader_program);
-    gl->glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
+    glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
     if (!success) {
-        gl->glGetProgramInfoLog(shader_program, 512, NULL, info);
-        gl->glDeleteProgram(shader_program);
+        glGetProgramInfoLog(shader_program, 512, NULL, info);
+        glDeleteProgram(shader_program);
         return Error("Renderer::compile_shader: Failed to link shader program \"" + shader->m_name +
                      "\" : " + str(info));
     }
 
-#ifdef DEBUG_RENDERER
-    gl->glObjectLabel(GL_PROGRAM, shader_program, -1, shader->m_name.c_str());
-    gl->glObjectLabel(GL_SHADER, vertex_shader, -1, (shader->m_name + "_vertex").c_str());
-    gl->glObjectLabel(GL_SHADER, fragment_shader, -1, (shader->m_name + "_fragment").c_str());
-#endif
-
-    gl->glDeleteShader(vertex_shader);
-    gl->glDeleteShader(fragment_shader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
 
     Shader_OPENGL* api_shader = new Shader_OPENGL;
     api_shader->m_program = shader_program;
@@ -155,11 +158,11 @@ Error Renderer::compile_shader(Shader* shader) {
     shader->m_api_data = api_shader;
 
     GLint n_uniforms, max_len;
-    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
-    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
+    glGetProgramiv(shader_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
+    glGetProgramiv(shader_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
     GLchar* uniform_name = (GLchar*)malloc(max_len);
 
-    gl->glUseProgram(shader_program);
+    glUseProgram(shader_program);
 
     struct Shader_Uniform_OPENGL {
         GLint m_size = -1;
@@ -172,12 +175,12 @@ Error Renderer::compile_shader(Shader* shader) {
     if (uniform_name != NULL) {
         for (i32 i = 0; i < n_uniforms; i++) {
             Shader_Uniform_OPENGL uniform;
-            gl->glGetActiveUniform(shader_program, i, max_len, NULL, &uniform.m_size,
-                                   &uniform.m_type, uniform_name);
-            uniform.m_location = gl->glGetUniformLocation(shader_program, uniform_name);
+            glGetActiveUniform(shader_program, i, max_len, NULL, &uniform.m_size, &uniform.m_type,
+                               uniform_name);
+            uniform.m_location = glGetUniformLocation(shader_program, uniform_name);
 
             if (uniform.m_type == GL_SAMPLER_2D) {
-                gl->glUniform1i(uniform.m_location, texture_unit_counter);
+                glUniform1i(uniform.m_location, texture_unit_counter);
                 uniform.m_texture_unit = texture_unit_counter;
                 texture_unit_counter++;
             }
@@ -190,17 +193,17 @@ Error Renderer::compile_shader(Shader* shader) {
 
 Error Renderer::upload_mesh(Mesh* mesh) {
     u32 vbo, vao, ebo;
-    gl->glGenVertexArrays(1, &vao);
-    gl->glGenBuffers(1, &vbo);
-    gl->glGenBuffers(1, &ebo);
-    gl->glBindVertexArray(vao);
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
+    glBindVertexArray(vao);
 
-    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    gl->glBufferData(GL_ARRAY_BUFFER, mesh->m_vertices.size() * sizeof(f32),
-                     mesh->m_vertices.data(), GL_STATIC_DRAW);
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->m_indices.size() * sizeof(u32),
-                     mesh->m_indices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, mesh->m_vertices.size() * sizeof(f32), mesh->m_vertices.data(),
+                 GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->m_indices.size() * sizeof(u32),
+                 mesh->m_indices.data(), GL_STATIC_DRAW);
 
     u32 attribs_stride = 0;
     for (i32 i = 0; i < mesh->m_attribs.size(); i++) {
@@ -208,10 +211,9 @@ Error Renderer::upload_mesh(Mesh* mesh) {
     }
     u32 attribs_offset = 0;
     for (i32 i = 0; i < mesh->m_attribs.size(); i++) {
-        gl->glEnableVertexAttribArray(i);
-        gl->glVertexAttribPointer(i, mesh->m_attribs[i].second, GL_FLOAT, GL_FALSE,
-                                  attribs_stride * sizeof(f32),
-                                  (void*)(attribs_offset * sizeof(f32)));
+        glEnableVertexAttribArray(i);
+        glVertexAttribPointer(i, mesh->m_attribs[i].second, GL_FLOAT, GL_FALSE,
+                              attribs_stride * sizeof(f32), (void*)(attribs_offset * sizeof(f32)));
         attribs_offset += mesh->m_attribs[i].second;
     }
 
@@ -221,68 +223,55 @@ Error Renderer::upload_mesh(Mesh* mesh) {
     api_mesh->m_vao = vao;
     mesh->m_api_data = api_mesh;
 
-#ifdef DEBUG_RENDERER
-    gl->glObjectLabel(GL_VERTEX_ARRAY, vao, -1, mesh->m_name.c_str());
-    gl->glObjectLabel(GL_BUFFER, vbo, -1, (mesh->m_name + "_vbo").c_str());
-    gl->glObjectLabel(GL_BUFFER, ebo, -1, (mesh->m_name + "_ebo").c_str());
-#endif
-
     return Error();
 }
 
 Error Renderer::init_uniform_buffer(UniformBuffer* uniform_buffer) {
     GLuint ubo;
-    gl->glGenBuffers(1, &ubo);
-    gl->glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    gl->glBufferData(GL_UNIFORM_BUFFER, uniform_buffer->m_size, NULL, GL_STATIC_DRAW);
-    gl->glBindBufferRange(GL_UNIFORM_BUFFER, uniform_buffer->m_binding_point, ubo, 0,
-                          uniform_buffer->m_size);
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, uniform_buffer->m_size, NULL, GL_STATIC_DRAW);
+    glBindBufferRange(GL_UNIFORM_BUFFER, uniform_buffer->m_binding_point, ubo, 0,
+                      uniform_buffer->m_size);
 
     UniformBuffer_OPENGL* api_uniform_buffer = new UniformBuffer_OPENGL;
     api_uniform_buffer->m_ubo = ubo;
     uniform_buffer->m_api_data = api_uniform_buffer;
-
-#ifdef DEBUG_RENDERER
-    gl->glObjectLabel(GL_BUFFER, ubo, -1, uniform_buffer->m_name.c_str());
-#endif
 
     return Error();
 }
 
 Error Renderer::set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform_name,
                                         UniformValue value) {
-    gl->glBindBuffer(GL_UNIFORM_BUFFER, ((UniformBuffer_OPENGL*)uniform_buffer->m_api_data)->m_ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ((UniformBuffer_OPENGL*)uniform_buffer->m_api_data)->m_ubo);
     Uniform& uniform = uniform_buffer->m_uniforms[uniform_buffer->m_uniforms_ids[uniform_name]];
-    gl->glBufferSubData(GL_UNIFORM_BUFFER, uniform.m_offset, uniform.m_size, &value);
-    gl->glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBufferSubData(GL_UNIFORM_BUFFER, uniform.m_offset, uniform.m_size, &value);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
     return Error();
 }
 
 void Renderer::set_shader(Shader* shader) {
-    gl->glUseProgram(((Shader_OPENGL*)shader->m_api_data)->m_program);
+    glUseProgram(((Shader_OPENGL*)shader->m_api_data)->m_program);
 }
 
 Error Renderer::upload_texture(Texture* texture) {
     u32 texture_name;
-    gl->glGenTextures(1, &texture_name);
-    gl->glBindTexture(GL_TEXTURE_2D, texture_name);
-    gl->glTexImage2D(GL_TEXTURE_2D, 0,
-                     opengl_texture_formats[texture->m_texture_params.m_format].first,
-                     texture->m_width, texture->m_height, 0,
-                     opengl_texture_formats[texture->m_texture_params.m_format].second,
-                     GL_UNSIGNED_BYTE, texture->m_data.data());
+    glGenTextures(1, &texture_name);
+    glBindTexture(GL_TEXTURE_2D, texture_name);
+    glTexImage2D(GL_TEXTURE_2D, 0, opengl_texture_formats[texture->m_texture_params.m_format].first,
+                 texture->m_width, texture->m_height, 0,
+                 opengl_texture_formats[texture->m_texture_params.m_format].second,
+                 GL_UNSIGNED_BYTE, texture->m_data.data());
 
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                        opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_s]);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                        opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_t]);
-    gl->glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-        opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_min]);
-    gl->glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-        opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_mag]);
-    gl->glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                    opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_s]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                    opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_t]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_min]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                    opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_mag]);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     Texture_OPENGL* api_texture = new Texture_OPENGL;
     api_texture->m_texture_name = texture_name;
@@ -295,13 +284,13 @@ void Renderer::set_texture(Pass* pass, Shader* shader) {
     // Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
 
     // for (const auto& texture_binding : pass->m_textures_bindings) {
-    //     u32 texture_unit = shader_opengl->m_uniforms[texture_binding.first].m_texture_unit;
-    //     gl->glActiveTexture(GL_TEXTURE0 + texture_unit);
+    //     u32 texture_unit = shader_openm_uniforms[texture_binding.first].m_texture_unit;
+    //     glActiveTexture(GL_TEXTURE0 + texture_unit);
 
     //     str texture_name = texture_binding.second;
     //     if (m_texture_manager->m_textures.count(texture_name)) {
     //         Texture* texture = &m_texture_manager->m_textures[texture_name];
-    //         gl->glBindTexture(GL_TEXTURE_2D,
+    //         glBindTexture(GL_TEXTURE_2D,
     //                           ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
     //     } else {
     //         logger.error(Error("Texture with name \"" + texture_name + "\" not found"));
@@ -311,8 +300,8 @@ void Renderer::set_texture(Pass* pass, Shader* shader) {
 
 // Error Renderer::create_framebuffer(Framebuffer* framebuffer) {
 //     u32 fbo;
-//     gl->glGenFramebuffers(1, &fbo);
-//     gl->glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+//     glGenFramebuffers(1, &fbo);
+//     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 //     Texture texture = {
 //         .m_width = framebuffer->m_width,
@@ -326,12 +315,12 @@ void Renderer::set_texture(Pass* pass, Shader* shader) {
 
 //     // @note change this to framebuffer type?
 //     if (framebuffer->m_texture_params.m_format == TextureFormat::DEPTH32F) {
-//         gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+//         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
 //                                    ((Texture_OPENGL*)texture.m_api_data)->m_texture_name, 0);
-//         gl->glDrawBuffer(GL_NONE);
-//         gl->glReadBuffer(GL_NONE);
+//         glDrawBuffer(GL_NONE);
+//         glReadBuffer(GL_NONE);
 //     } else {
-//         gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+//         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
 //                                    ((Texture_OPENGL*)texture.m_api_data)->m_texture_name, 0);
 //     }
 
@@ -339,7 +328,7 @@ void Renderer::set_texture(Pass* pass, Shader* shader) {
 //     api_framebuffer->m_fbo = fbo;
 //     framebuffer->m_api_data = api_framebuffer;
 
-//     gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 //     m_texture_manager->m_textures[framebuffer->m_name] = std::move(texture);
 
@@ -347,57 +336,54 @@ void Renderer::set_texture(Pass* pass, Shader* shader) {
 // }
 
 void Renderer::debug_marker_start(str name) {
-    gl->glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, name.c_str());
 }
 
 void Renderer::debug_marker_end() {
-    gl->glPopDebugGroup();
 }
 
 void Renderer::set_default_framebuffer() {
-    gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Renderer::set_viewport(u32 x, u32 y, u32 width, u32 height) {
-    gl->glViewport(x, y, width, height);
+    glViewport(x, y, width, height);
 }
 
 void Renderer::set_framebuffer(Framebuffer* framebuffer) {
-    gl->glBindFramebuffer(GL_FRAMEBUFFER, ((Framebuffer_OPENGL*)framebuffer->m_api_data)->m_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, ((Framebuffer_OPENGL*)framebuffer->m_api_data)->m_fbo);
 }
 
 void Renderer::set_depth_test(bool enabled) {
     if (enabled) {
-        gl->glEnable(GL_DEPTH_TEST);
+        glEnable(GL_DEPTH_TEST);
     } else {
-        gl->glDisable(GL_DEPTH_TEST);
+        glDisable(GL_DEPTH_TEST);
     }
 }
 
 void Renderer::set_face_culling(bool enabled, CullingMode mode, CullingOrder order) {
     if (enabled) {
-        gl->glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
     } else {
-        gl->glDisable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
     }
 
     if (mode == CullingMode::BACK) {
-        gl->glCullFace(GL_BACK);
+        glCullFace(GL_BACK);
     } else if (mode == CullingMode::FRONT) {
-        gl->glCullFace(GL_FRONT);
+        glCullFace(GL_FRONT);
     }
 
     if (order == CullingOrder::CCW) {
-        gl->glFrontFace(GL_CCW);
+        glFrontFace(GL_CCW);
     } else if (order == CullingOrder::CW) {
-        gl->glFrontFace(GL_CW);
+        glFrontFace(GL_CW);
     }
 }
 
 void Renderer::draw_mesh(Mesh* mesh) {
-    gl->glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
-    gl->glDrawElements(opengl_mesh_primitive_types[mesh->m_primitive],
-                       GLsizei(mesh->m_indices.size()), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
+    glDrawElements(opengl_mesh_primitive_types[mesh->m_primitive], GLsizei(mesh->m_indices.size()),
+                   GL_UNSIGNED_INT, 0);
 }
-
 }  // namespace blaz

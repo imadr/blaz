@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.12)
 
 project(blaz)
 
+# set(CMAKE_VERBOSE_MAKEFILE on)
+
 set(MISC_TARGET_FOLDER "misc")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER ${MISC_TARGET_FOLDER})
@@ -53,14 +55,27 @@ set(COMMON_SOURCES
     src/physics.h
 )
 
+if (EMSCRIPTEN)
+    add_compile_definitions(EMSCRIPTEN)
+    set(GRAPHICS_API "WebGL")
+endif()
+
 if (GRAPHICS_API STREQUAL "OpenGL")
     list(APPEND COMMON_SOURCES src/opengl.h)
     list(APPEND COMMON_SOURCES src/renderer_opengl.cpp)
+elseif (GRAPHICS_API STREQUAL "WebGL")
+    list(APPEND COMMON_SOURCES src/renderer_webgl.cpp)
 elseif (GRAPHICS_API STREQUAL "D3D11")
     list(APPEND COMMON_SOURCES src/renderer_d3d11.cpp)
 endif()
 
-if (WIN32)
+if (EMSCRIPTEN)
+    set(PLATFORM_SOURCES
+        src/platform_wasm.cpp
+        src/filesystem_wasm.cpp
+        src/my_time_wasm.cpp
+    )
+elseif (WIN32)
     set(PLATFORM_SOURCES
         src/filesystem_win32.cpp
         src/utils_win32.cpp
@@ -72,9 +87,7 @@ if (WIN32)
     if (GRAPHICS_API STREQUAL "OpenGL")
         list(APPEND COMMON_SOURCES src/opengl_win32.cpp)
     endif()
-endif()
-
-if (UNIX AND NOT APPLE)
+elseif (UNIX AND NOT APPLE)
     set(PLATFORM_SOURCES
         src/filesystem_linux.cpp
         src/platform_linux.cpp

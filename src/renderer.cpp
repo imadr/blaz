@@ -118,8 +118,7 @@ void Renderer::draw() {
             set_depth_test(false);
         }
 
-        set_face_culling(pass.m_enable_face_culling, pass.m_culling_mode,
-                              pass.m_culling_order);
+        set_face_culling(pass.m_enable_face_culling, pass.m_culling_mode, pass.m_culling_order);
 
         clear(pass.m_clear_flag, pass.m_clear_color, pass.m_clear_depth);
 
@@ -197,7 +196,7 @@ void Renderer::add_texture(Texture texture) {
     m_textures_ids[texture.m_name] = u32(m_textures.size()) - 1;
 }
 
-void Renderer::add_camera(Camera camera){
+void Renderer::add_camera(Camera camera) {
     m_cameras.push_back(camera);
     m_cameras_ids[camera.m_name] = u32(m_cameras.size()) - 1;
 }

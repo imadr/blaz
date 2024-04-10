@@ -25,6 +25,10 @@ struct Game {
 
     Error load_game(str path);
     Error load_level(u32 level);
+
+    bool done_screenshot = false;
+    std::function<bool()> main_loop;
+    void run();
 };
 
 }  // namespace blaz
