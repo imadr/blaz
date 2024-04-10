@@ -2,7 +2,6 @@
 #include "game.h"
 #include "logger.h"
 #include "my_time.h"
-
 using namespace blaz;
 
 int main() {
@@ -25,16 +24,19 @@ int main() {
         return 1;
     }
 
-    bool done_screenshot = false;
-    while (game.m_window.event_loop()) {
-        game.m_renderer.draw();
-        if (!done_screenshot) {
-            game.m_window.screenshot("../tests/01-hellotriangle.bmp");
-            done_screenshot = true;
+    game.main_loop = [&game]() {
+        if (game.m_window.event_loop()) {
+            game.m_renderer.draw();
+            if (!game.done_screenshot) {
+                game.m_window.screenshot("../tests/01-hellotriangle.bmp");
+                game.done_screenshot = true;
+            }
+            return true;
         }
-    }
+        return false;
+    };
 
-    game.m_window.close();
+    game.run();
 
     return 0;
 }

@@ -7,7 +7,28 @@
 #include "logger.h"
 #include "types.h"
 
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#endif
+
 namespace blaz {
+
+#ifdef EMSCRIPTEN
+void emscripten_main_loop(void* arg) {
+    Game* game = (Game*)arg;
+    game->main_loop();
+}
+#endif
+
+void Game::run() {
+#ifdef EMSCRIPTEN
+    void* arg = (void*)(this);
+    emscripten_set_main_loop_arg(emscripten_main_loop, arg, 0, true);
+#else
+    while (main_loop()) {
+    }
+#endif
+}
 
 Error Game::load_game(str path) {
     pair<Error, Cfg> cfg = read_cfg_file(path);

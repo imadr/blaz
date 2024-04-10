@@ -67,7 +67,6 @@ enum class TextureWrapMode {
     REPEAT,
     MIRRORED_REPEAT,
     CLAMP_TO_EDGE,
-    CLAMP_TO_BORDER,
 };
 
 enum class TextureFilteringMode {
@@ -97,7 +96,6 @@ struct TextureParams {
     TextureFormat m_format = TextureFormat::RGBA8;
     TextureWrapMode m_wrap_mode_s = TextureWrapMode::REPEAT;
     TextureWrapMode m_wrap_mode_t = TextureWrapMode::REPEAT;
-    RGBA m_clamp_to_border_color = RGBA(0, 0, 0, 0);
     TextureFilteringMode m_filter_mode_min = TextureFilteringMode::LINEAR;
     TextureFilteringMode m_filter_mode_mag = TextureFilteringMode::LINEAR;
 };
