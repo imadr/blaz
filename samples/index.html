@@ -23,6 +23,11 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight; 
 Module.canvas = canvas;
 
+window.addEventListener("resize", function(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight; 
+});
+
 var request = new XMLHttpRequest();
 request.open("GET", "01-hellotriangle.wasm", true);
 request.responseType = "arraybuffer";
