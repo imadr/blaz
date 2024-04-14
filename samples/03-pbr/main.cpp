@@ -47,15 +47,19 @@ int main() {
     }
 
     bool done_screenshot = false;
-    while (game.m_window.event_loop()) {
-        game.m_renderer.draw();
-        if (!done_screenshot) {
-            game.m_window.screenshot("../tests/03-pbr.bmp");
-            done_screenshot = true;
+    game.main_loop = [&game, &done_screenshot]() {
+        if (game.m_window.event_loop()) {
+            game.m_renderer.draw();
+            if (!done_screenshot) {
+                game.m_window.screenshot("../tests/03-pbr.bmp");
+                done_screenshot = true;
+            }
+            return true;
         }
-    }
+        return false;
+    };
 
-    game.m_window.close();
+    game.run();
 
     return 0;
 }

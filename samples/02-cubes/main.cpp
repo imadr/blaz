@@ -28,20 +28,24 @@ int main() {
     }
 
     f32 rotation = 1;
-    bool done_screenshot = false;
-    while (game.m_window.event_loop()) {
-        rotation += 0.01f;
-        game.m_current_level->m_scene.m_nodes[2].set_rotation(
-            Quat::from_axis_angle(Vec3(1, 1, 0), rotation));
+    bool done_screenshot;
+    game.main_loop = [&game, &rotation, &done_screenshot]() {
+        if (game.m_window.event_loop()) {
+            rotation += 0.01f;
+            game.m_current_level->m_scene.m_nodes[2].set_rotation(
+                Quat::from_axis_angle(Vec3(1, 1, 0), rotation));
 
-        game.m_renderer.draw();
-        if (!done_screenshot) {
-            game.m_window.screenshot("../tests/02-cubes.bmp");
-            done_screenshot = true;
+            game.m_renderer.draw();
+            if (!done_screenshot) {
+                game.m_window.screenshot("../tests/02-cubes.bmp");
+                done_screenshot = true;
+            }
+            return true;
         }
-    }
+        return false;
+    };
 
-    game.m_window.close();
+    game.run();
 
     return 0;
 }

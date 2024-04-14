@@ -24,12 +24,13 @@ int main() {
         return 1;
     }
 
-    game.main_loop = [&game]() {
+    bool done_screenshot = false;
+    game.main_loop = [&game, &done_screenshot]() {
         if (game.m_window.event_loop()) {
             game.m_renderer.draw();
-            if (!game.done_screenshot) {
+            if (!done_screenshot) {
                 game.m_window.screenshot("../tests/01-hellotriangle.bmp");
-                game.done_screenshot = true;
+                done_screenshot = true;
             }
             return true;
         }
