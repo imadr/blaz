@@ -29,12 +29,12 @@ window.addEventListener("resize", function(){
 });
 
 var request = new XMLHttpRequest();
-request.open("GET", "01-hellotriangle.wasm", true);
+request.open("GET", "${SAMPLE_NAME}.wasm", true);
 request.responseType = "arraybuffer";
 request.onload = function() {
     Module.wasmBinary = request.response;
     var script = document.createElement("script");
-    script.src = "01-hellotriangle.js";
+    script.src = "${SAMPLE_NAME}.js";
     document.body.appendChild(script);
 };
 request.send();

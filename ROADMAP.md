@@ -1,6 +1,5 @@
 # Roadmap
 
-- webgl backend fix
 - textures
 - materials
 - finish pbr shader

@@ -13,6 +13,7 @@ You can also use **cmake-gui**
 #### Building for web
 
 - Install [emscripten](https://emscripten.org/)
+- ```emsdk_env.bat``` or ```emsdk_env.sh```
 - ```mkdir build_wasm && cd build_wasm```
 - ```emcmake cmake ..```
 - ```cmake --build .```
