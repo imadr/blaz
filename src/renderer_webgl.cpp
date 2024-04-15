@@ -61,6 +61,7 @@ static std::unordered_map<MeshPrimitive, GLenum> opengl_mesh_primitive_types = {
 
 Error Renderer::init_api() {
     EmscriptenWebGLContextAttributes attributes;
+    emscripten_webgl_init_context_attributes(&attributes);
     attributes.alpha = false;
     attributes.depth = true;
     attributes.stencil = true;
