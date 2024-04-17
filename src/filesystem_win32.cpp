@@ -122,4 +122,38 @@ pair<Error, str> read_whole_file(str path) {
     return std::make_pair(Error(), file_content);
 }
 
+pair<Error, vec<u8>> read_whole_file_binary(str path) {
+    std::wstring path_wstr = narrow_to_wide_str(path);
+    HANDLE file_handle = CreateFileW(path_wstr.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+                                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    vec<u8> file_content;
+
+    if (file_handle == INVALID_HANDLE_VALUE) {
+        return std::make_pair(
+            Error("Failed to open file '" + path + "' : " + win32_get_last_error()), file_content);
+    }
+
+    LARGE_INTEGER file_size;
+    if (!GetFileSizeEx(file_handle, &file_size)) {
+        CloseHandle(file_handle);
+        return std::make_pair(
+            Error("Failed to get file size '" + path + "' : " + win32_get_last_error()), file_content);
+    }
+
+    file_content.resize(static_cast<size_t>(file_size.QuadPart));
+
+    DWORD bytes_read;
+    if (!ReadFile(file_handle, &file_content[0], static_cast<DWORD>(file_size.QuadPart),
+                  &bytes_read, NULL)) {
+        CloseHandle(file_handle);
+        return std::make_pair(
+            Error("Failed to read file '" + path + "' : " + win32_get_last_error()), file_content);
+    }
+
+    CloseHandle(file_handle);
+    file_content.resize(static_cast<size_t>(bytes_read));
+
+    return std::make_pair(Error(), file_content);
+}
+
 }  // namespace blaz

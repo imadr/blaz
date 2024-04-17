@@ -356,6 +356,7 @@ GL_OLD_FUNCTIONS_LIST
     GL_FUNCTION(void, glObjectLabel, GLenum identifier, GLuint name, GLsizei length,              \
                 const GLchar* label)                                                              \
     GL_FUNCTION(void, glDeleteProgram, GLuint program)                                            \
+    GL_FUNCTION(void, glGetUniformiv, GLuint program, GLint location, GLint* params)              \
     GL_FUNCTION(void, glBindBufferRange, GLenum, GLuint, GLuint, GLintptr, GLsizeiptr)
 
 #define GL_FUNCTION(return_type, name, ...) typedef return_type name##Type(__VA_ARGS__);

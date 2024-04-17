@@ -162,7 +162,7 @@ vec<std::string_view> split_strview(std::string_view str, char delim) {
     return result;
 }
 
-pair<Error, Mesh> load_from_obj_file(str mesh_path) {
+pair<Error, Mesh> load_mesh_from_obj_file(str mesh_path) {
     // std::ifstream mesh_file(mesh_path);
     // if (!mesh_file.is_open()) {
     //     return {Error("Can't open file " + mesh_path), Mesh()};
@@ -227,7 +227,8 @@ pair<Error, Mesh> load_from_obj_file(str mesh_path) {
     //                 std::from_chars(face[0].data(), face[0].data() + face[0].size(), face_1);
     //                 std::from_chars(face[1].data(), face[1].data() + face[1].size(), face_2);
     //                 std::from_chars(face[2].data(), face[2].data() + face[2].size(), face_3);
-    //                 vertex_indices.push_back(std::make_tuple(face_1 - 1, face_2 - 1, face_3 - 1));
+    //                 vertex_indices.push_back(std::make_tuple(face_1 - 1, face_2 - 1, face_3 -
+    //                 1));
     //             }
     //             indices.push_back(unique_vertices[line[j]]);
     //         }

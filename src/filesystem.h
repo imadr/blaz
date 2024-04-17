@@ -17,5 +17,6 @@ struct FileWatcher {
 };
 
 pair<Error, str> read_whole_file(str path);
+pair<Error, vec<u8>> read_whole_file_binary(str path);
 
 }  // namespace blaz

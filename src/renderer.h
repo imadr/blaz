@@ -117,6 +117,7 @@ struct Shader {
     void* m_api_data = NULL;
     bool m_should_reload = true;
     bool m_is_error = false;
+    std::unordered_map<str, u32> m_textures_binding_points;
 };
 
 struct Uniform {
@@ -148,6 +149,7 @@ struct Mesh {
 
 struct Texture {
     str m_name;
+    str m_path;
     vec<u8> m_data;
     u32 m_width = 0;
     u32 m_height = 0;
@@ -194,6 +196,7 @@ struct Pass {
     bool m_enable_face_culling = true;
     CullingMode m_culling_mode = CullingMode::BACK;
     CullingOrder m_culling_order = CullingOrder::CCW;
+    vec<str> m_textures;
 };
 
 struct Pipeline {
@@ -242,7 +245,7 @@ struct Renderer {
     void set_shader(Shader* shader);
     Error upload_mesh(Mesh* mesh);
     Error upload_texture(Texture* texture);
-    void set_texture(Pass* pass, Shader* shader);
+    void set_textures(Pass* pass, Shader* shader);
     void debug_marker_start(str name);
     void debug_marker_end();
     void set_default_framebuffer();

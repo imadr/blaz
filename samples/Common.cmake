@@ -12,7 +12,7 @@ if (EMSCRIPTEN)
     set_target_properties(${SAMPLE_NAME} PROPERTIES LINK_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/data/@data")
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/../index.html.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/index.html"        
+        "${CMAKE_CURRENT_BINARY_DIR}/index.html"
     )
 else()
     add_custom_target(${SAMPLE_NAME}_DATA
@@ -20,4 +20,10 @@ else()
     )
     set_target_properties(${SAMPLE_NAME}_DATA PROPERTIES FOLDER ${MISC_TARGET_FOLDER})
     add_dependencies(${SAMPLE_NAME} ${SAMPLE_NAME}_DATA)
+
+    add_custom_target(${SAMPLE_NAME}_INTERNAL_DATA
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/../internal_shaders/" ${CMAKE_CURRENT_BINARY_DIR}/internal_data
+    )
+    set_target_properties(${SAMPLE_NAME}_INTERNAL_DATA PROPERTIES FOLDER ${MISC_TARGET_FOLDER})
+    add_dependencies(${SAMPLE_NAME} ${SAMPLE_NAME}_INTERNAL_DATA)
 endif()

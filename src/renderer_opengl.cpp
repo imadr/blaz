@@ -22,6 +22,7 @@ struct UniformBuffer_OPENGL {
 
 struct Shader_OPENGL {
     GLuint m_program = 0;
+    std::unordered_map<str, GLint> m_textures_binding_points;
 };
 
 struct Texture_OPENGL {
@@ -161,27 +162,17 @@ Error Renderer::compile_shader(Shader* shader) {
 
     gl->glUseProgram(shader_program);
 
-    struct Shader_Uniform_OPENGL {
-        GLint m_size = -1;
-        GLint m_location = -1;
-        GLenum m_type = -1;
-        u32 m_texture_unit = -1;
-    };
-
-    u32 texture_unit_counter = 0;
     if (uniform_name != NULL) {
         for (i32 i = 0; i < n_uniforms; i++) {
-            Shader_Uniform_OPENGL uniform;
-            gl->glGetActiveUniform(shader_program, i, max_len, NULL, &uniform.m_size,
-                                   &uniform.m_type, uniform_name);
-            uniform.m_location = gl->glGetUniformLocation(shader_program, uniform_name);
-
-            if (uniform.m_type == GL_SAMPLER_2D) {
-                gl->glUniform1i(uniform.m_location, texture_unit_counter);
-                uniform.m_texture_unit = texture_unit_counter;
-                texture_unit_counter++;
+            GLint size = -1;
+            GLenum type = -1;
+            gl->glGetActiveUniform(shader_program, i, max_len, NULL, &size, &type, uniform_name);
+            if (type == GL_SAMPLER_2D) {
+                GLint location = gl->glGetUniformLocation(shader_program, uniform_name);
+                GLint binding_point;
+                gl->glGetUniformiv(shader_program, location, &binding_point);
+                shader->m_textures_binding_points[uniform_name] = binding_point;
             }
-            // api_shader->m_uniforms[str(uniform_name)] = uniform;
         }
     }
 
@@ -291,22 +282,15 @@ Error Renderer::upload_texture(Texture* texture) {
     return Error();
 }
 
-void Renderer::set_texture(Pass* pass, Shader* shader) {
-    // Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
+void Renderer::set_textures(Pass* pass, Shader* shader) {
+    Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
 
-    // for (const auto& texture_binding : pass->m_textures_bindings) {
-    //     u32 texture_unit = shader_opengl->m_uniforms[texture_binding.first].m_texture_unit;
-    //     gl->glActiveTexture(GL_TEXTURE0 + texture_unit);
-
-    //     str texture_name = texture_binding.second;
-    //     if (m_texture_manager->m_textures.count(texture_name)) {
-    //         Texture* texture = &m_texture_manager->m_textures[texture_name];
-    //         gl->glBindTexture(GL_TEXTURE_2D,
-    //                           ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
-    //     } else {
-    //         logger.error(Error("Texture with name \"" + texture_name + "\" not found"));
-    //     }
-    // }
+    for (const auto& texture_name : pass->m_textures) {
+        GLint texture_binding_point = shader_opengl->m_textures_binding_points[texture_name];
+        gl->glActiveTexture(GL_TEXTURE0 + texture_binding_point);
+        Texture* texture = &m_textures[m_textures_ids[texture_name]];
+        gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
+    }
 }
 
 // Error Renderer::create_framebuffer(Framebuffer* framebuffer) {

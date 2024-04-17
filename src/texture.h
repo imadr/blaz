@@ -7,6 +7,8 @@
 namespace blaz {
 
 struct Texture;
-pair<Error, Texture> load_data_from_tga_file(str texture_path);
+
+Error load_texture(Texture* texture);
+Error load_texture_from_tga_file(Texture* texture);
 
 }  // namespace blaz

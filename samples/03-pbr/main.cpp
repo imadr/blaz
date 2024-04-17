@@ -2,6 +2,7 @@
 #include "game.h"
 #include "logger.h"
 #include "mesh.h"
+#include "texture.h"
 
 using namespace blaz;
 
