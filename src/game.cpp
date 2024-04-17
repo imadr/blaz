@@ -63,6 +63,14 @@ Error Game::load_game(str path) {
         m_renderer.m_meshes_ids[mesh.m_name] = u32(m_renderer.m_meshes.size()) - 1;
     }
 
+    for (auto& texture_cfg : game_cfg["textures"]) {
+        Texture texture;
+        texture.m_name = texture_cfg["name"].str_value;
+        texture.m_path = texture_cfg["path"].str_value;
+        m_renderer.m_textures.push_back(texture);
+        m_renderer.m_textures_ids[texture.m_name] = u32(m_renderer.m_textures.size()) - 1;
+    }
+
     for (auto& level_cfg : game_cfg["levels"]) {
         Level new_level;
         new_level.m_name = level_cfg["name"].str_value;

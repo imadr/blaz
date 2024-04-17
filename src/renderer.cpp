@@ -11,6 +11,9 @@ Error Renderer::init(Game* game) {
     m_game = game;
 
     Error err = init_api();
+    if (err) {
+        return err;
+    }
 
     set_swap_interval(1);
 
@@ -21,8 +24,16 @@ Error Renderer::init(Game* game) {
     };
     game->m_window.m_resize_callback(&game->m_window);
 
-    if (err) {
-        return err;
+    {
+        m_error_shader.m_name = "internal_error_shader";
+        m_error_shader.m_vertex_shader_path = "internal_data/error_shader.vert.glsl";
+        m_error_shader.m_fragment_shader_path = "internal_data/error_shader.frag.glsl";
+        m_shaders.push_back(m_error_shader);
+        m_shaders_ids[m_error_shader.m_name] = u32(m_shaders.size()) - 1;
+        Error err = reload_shader(&m_error_shader);
+        if (err) {
+            return err;
+        }
     }
 
     for (auto& mesh : m_meshes) {
@@ -30,6 +41,7 @@ Error Renderer::init(Game* game) {
     }
 
     for (auto& texture : m_textures) {
+        load_texture(&texture);
         upload_texture(&texture);
     }
 
@@ -88,7 +100,12 @@ Error Renderer::reload_shader(Shader* shader) {
 
     shader->m_should_reload = false;
 
-    return compile_shader(shader);
+    Error err2 = compile_shader(shader);
+    if (err2) {
+        shader->m_is_error = true;
+    }
+
+    return err2;
 }
 
 void Renderer::draw() {
@@ -132,10 +149,12 @@ void Renderer::draw() {
         }
 
         if (pass_shader->m_is_error) {
-            // pass_shader = m_error_shader;
+            pass_shader = &m_error_shader;
         }
 
         set_shader(pass_shader);
+
+        // set_textures(&pass, pass_shader);
 
         Camera& camera = m_cameras[pass.m_camera];
 

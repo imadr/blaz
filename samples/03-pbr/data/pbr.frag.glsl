@@ -11,7 +11,7 @@ layout(std140, binding = 1) uniform u_view {
     vec3 u_camera_position;
 };
 
-layout(binding = 2) uniform sampler2D u_tex_albedo;
+layout(binding = 2) uniform sampler2D u_texture_albedo;
 
 const float PI = 3.14159265359;
 
@@ -54,6 +54,7 @@ void main() {
     float metallic = 0.9;
     float ambient_occlusion = 1.0;
     vec3 albedo = vec3(1.0, 0.0, 0.0);
+    albedo = texture(u_texture_albedo, v_uv).rgb;
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
@@ -71,13 +72,13 @@ void main() {
     float normal_distribution = normal_distribution_ggx(v_world_normal, halfway_vector, roughness);
     float geometry = geometry_smith(v_world_normal, view_vector, light_direction, roughness);
     vec3 fresnel = fresnel_schlick(max(dot(halfway_vector, view_vector), 0.0), F0);
-    
+
     vec3 numerator = normal_distribution * geometry * fresnel;
     float denominator = 4.0 * max(dot(v_world_normal, view_vector), 0.0) *
                             max(dot(v_world_normal, light_direction), 0.0) +
                         0.0001;
     vec3 specular = numerator / denominator;
-    
+
     vec3 specular_contribution = fresnel;
     vec3 diffuse_contribution = vec3(1.0) - specular_contribution;
     diffuse_contribution *= 1.0 - metallic;

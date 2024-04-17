@@ -3,53 +3,63 @@
 #include <cstdio>
 #include <fstream>
 #include <iosfwd>
-#include "types.h"
+
 #include "error.h"
+#include "filesystem.h"
 #include "renderer.h"
+#include "types.h"
 
 namespace blaz {
 
-pair<Error, Texture> load_data_from_tga_file(str texture_path) {
-    std::ifstream texture_file(texture_path, std::ios::binary);
-    if (!texture_file.is_open()) {
-        return std::make_pair(Error("Can't open file " + texture_path), Texture());
+Error load_texture(Texture* texture) {
+    // @todo file format check here
+    return load_texture_from_tga_file(texture);
+}
+
+Error load_texture_from_tga_file(Texture* texture) {
+    pair<Error, vec<u8>> file_content = read_whole_file_binary(texture->m_path);
+    if (file_content.first) {
+        return file_content.first;
     }
 
-    u8 header[18];
-    texture_file.read((char*)header, 18);
+    vec<u8> data = file_content.second;
 
-    Texture texture;
-    texture.m_width = header[13] << 8 | header[12];
-    texture.m_height = header[15] << 8 | header[14];
-    texture.m_depth = header[16];
-
-    if (texture.m_depth == 24) {
-        texture.m_channels = 3;
-    } else if (texture.m_depth == 32) {
-        texture.m_channels = 4;
+    if (data.size() < 18) {
+        return Error("Invalid TGA file format, file is too small");
     }
 
-    texture.m_data.resize(texture.m_width * texture.m_height * texture.m_channels);
+    texture->m_width = data[13] << 8 | data[12];
+    texture->m_height = data[15] << 8 | data[14];
+    texture->m_depth = data[16];
 
-    for (u32 i = 0; i < texture.m_width * texture.m_height * texture.m_channels; i += texture.m_channels) {
+    if (texture->m_depth == 24) {
+        texture->m_channels = 3;
+    } else if (texture->m_depth == 32) {
+        texture->m_channels = 4;
+    }
+
+    texture->m_data.resize(texture->m_width * texture->m_height * texture->m_channels);
+
+    size_t pixel_data_offset = 18;
+    for (size_t i = 0; i < texture->m_width * texture->m_height * texture->m_channels;
+         i += texture->m_channels) {
         u8 b, g, r, a;
-        texture_file.read((char*)&b, 1);
-        texture_file.read((char*)&g, 1);
-        texture_file.read((char*)&r, 1);
-        if (texture.m_channels == 4) {
-            texture_file.read((char*)&a, 1);
-            (texture.m_data)[i + 0] = r;
-            (texture.m_data)[i + 1] = g;
-            (texture.m_data)[i + 2] = b;
-            (texture.m_data)[i + 3] = a;
-        } else if (texture.m_channels == 3) {
-            (texture.m_data)[i + 0] = r;
-            (texture.m_data)[i + 1] = g;
-            (texture.m_data)[i + 2] = b;
+        b = data[pixel_data_offset++];
+        g = data[pixel_data_offset++];
+        r = data[pixel_data_offset++];
+        if (texture->m_channels == 4) {
+            a = data[pixel_data_offset++];
+            (texture->m_data)[i + 0] = r;
+            (texture->m_data)[i + 1] = g;
+            (texture->m_data)[i + 2] = b;
+            (texture->m_data)[i + 3] = a;
+        } else if (texture->m_channels == 3) {
+            (texture->m_data)[i + 0] = r;
+            (texture->m_data)[i + 1] = g;
+            (texture->m_data)[i + 2] = b;
         }
     }
-
-    return std::make_pair(Error(), texture);
+    return Error();
 }
 
 }  // namespace blaz
