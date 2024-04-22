@@ -67,6 +67,7 @@ Error Game::load_game(str path) {
         Texture texture;
         texture.m_name = texture_cfg["name"].str_value;
         texture.m_path = texture_cfg["path"].str_value;
+        texture.m_texture_params.m_format = TextureFormatStr[texture_cfg["format"].str_value];
         m_renderer.m_textures.push_back(texture);
         m_renderer.m_textures_ids[texture.m_name] = u32(m_renderer.m_textures.size()) - 1;
     }
@@ -168,6 +169,10 @@ Error Game::load_game(str path) {
             }
             if (pass_cfg["culling_mode"]) {
                 pass.m_culling_mode = CullingModeStr[pass_cfg["culling_mode"].str_value];
+            }
+
+            for (auto texture : pass_cfg["texture_uniforms"]) {
+                pass.m_texture_uniforms.push_back(texture.str_value);
             }
 
             pipeline.m_passes.push_back(pass);

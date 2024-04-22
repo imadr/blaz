@@ -154,7 +154,8 @@ void Renderer::draw() {
 
         set_shader(pass_shader);
 
-        // set_textures(&pass, pass_shader);
+        set_textures(&pass, pass_shader);
+
 
         Camera& camera = m_cameras[pass.m_camera];
 

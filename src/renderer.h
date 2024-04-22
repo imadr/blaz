@@ -57,10 +57,18 @@ static std::unordered_map<str, MeshPrimitive> MeshPrimitiveStr = {
 };
 
 enum class TextureFormat {
+    R8,
+    RG8,
     RGB8,
     RGBA8,
     DEPTH32,
     DEPTH32F,
+};
+
+static std::unordered_map<str, TextureFormat> TextureFormatStr = {
+    {"R8", TextureFormat::R8},           {"RG8", TextureFormat::RG8},
+    {"RGB8", TextureFormat::RGB8},       {"RGBA8", TextureFormat::RGBA8},
+    {"DEPTH32", TextureFormat::DEPTH32}, {"DEPTH32F", TextureFormat::DEPTH32F},
 };
 
 enum class TextureWrapMode {
@@ -196,7 +204,9 @@ struct Pass {
     bool m_enable_face_culling = true;
     CullingMode m_culling_mode = CullingMode::BACK;
     CullingOrder m_culling_order = CullingOrder::CCW;
-    vec<str> m_textures;
+    vec<str> m_texture_uniforms;
+
+    std::unordered_map<str, str> m_texture_uniforms_binding;  // @tmp
 };
 
 struct Pipeline {

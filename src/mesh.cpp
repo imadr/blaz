@@ -110,7 +110,8 @@ Mesh make_uv_sphere(u32 slices, u32 stacks) {
             Vec3 normal = Vec3(x, y, z).normalize();
             mesh.m_vertices.insert(mesh.m_vertices.end(), {x, y, z});
             mesh.m_vertices.insert(mesh.m_vertices.end(), {normal.x(), normal.y(), normal.z()});
-            mesh.m_vertices.insert(mesh.m_vertices.end(), {0, 0});
+            mesh.m_vertices.insert(mesh.m_vertices.end(),
+                                   {float(i) / float(stacks), float(j) / float(slices)});
         }
     }
     mesh.m_vertices.insert(mesh.m_vertices.end(), {0, -1, 0, 0, -1, 0, 0, 0});
@@ -140,27 +141,27 @@ Mesh make_uv_sphere(u32 slices, u32 stacks) {
     return mesh;
 }
 
-vec<std::string_view> split_strview(std::string_view str, char delim) {
-    vec<std::string_view> result;
+// vec<std::string_view> split_strview(std::string_view str, char delim) {
+//     vec<std::string_view> result;
 
-    int index_comma_to_left_of_column = 0;
-    int index_comma_to_right_of_column = -1;
+//     int index_comma_to_left_of_column = 0;
+//     int index_comma_to_right_of_column = -1;
 
-    for (int i = 0; i < static_cast<int>(str.size()); i++) {
-        if (str[i] == delim) {
-            index_comma_to_left_of_column = index_comma_to_right_of_column;
-            index_comma_to_right_of_column = i;
-            int index = index_comma_to_left_of_column + 1;
-            int length = index_comma_to_right_of_column - index;
-            std::string_view column(str.data() + index, length);
-            result.push_back(column);
-        }
-    }
-    const std::string_view final_column(str.data() + index_comma_to_right_of_column + 1,
-                                        str.size() - index_comma_to_right_of_column - 1);
-    result.push_back(final_column);
-    return result;
-}
+//     for (int i = 0; i < static_cast<int>(str.size()); i++) {
+//         if (str[i] == delim) {
+//             index_comma_to_left_of_column = index_comma_to_right_of_column;
+//             index_comma_to_right_of_column = i;
+//             int index = index_comma_to_left_of_column + 1;
+//             int length = index_comma_to_right_of_column - index;
+//             std::string_view column(str.data() + index, length);
+//             result.push_back(column);
+//         }
+//     }
+//     const std::string_view final_column(str.data() + index_comma_to_right_of_column + 1,
+//                                         str.size() - index_comma_to_right_of_column - 1);
+//     result.push_back(final_column);
+//     return result;
+// }
 
 pair<Error, Mesh> load_mesh_from_obj_file(str mesh_path) {
     // std::ifstream mesh_file(mesh_path);
