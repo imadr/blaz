@@ -12,6 +12,9 @@ layout(std140, binding = 1) uniform u_view {
 };
 
 layout(binding = 2) uniform sampler2D u_texture_albedo;
+layout(binding = 3) uniform sampler2D u_texture_metalness;
+layout(binding = 4) uniform sampler2D u_texture_roughness;
+layout(binding = 5) uniform sampler2D u_texture_normals;
 
 const float PI = 3.14159265359;
 
@@ -50,13 +53,19 @@ void main() {
     vec3 light_position = vec3(1, 2, 2);
     vec3 light_color = vec3(10, 10, 10);
 
+    float metalness = 0.9;
+    metalness = texture(u_texture_metalness, v_uv).r;
+
     float roughness = 0.3;
-    float metallic = 0.9;
+    roughness = texture(u_texture_roughness, v_uv).r;
+
     float ambient_occlusion = 1.0;
+
     vec3 albedo = vec3(1.0, 0.0, 0.0);
     albedo = texture(u_texture_albedo, v_uv).rgb;
+
     vec3 F0 = vec3(0.04);
-    F0 = mix(F0, albedo, metallic);
+    F0 = mix(F0, albedo, metalness);
 
     vec3 light_direction = normalize(light_position - v_world_position);
     vec3 view_vector = normalize(u_camera_position - v_world_position);
@@ -81,7 +90,7 @@ void main() {
 
     vec3 specular_contribution = fresnel;
     vec3 diffuse_contribution = vec3(1.0) - specular_contribution;
-    diffuse_contribution *= 1.0 - metallic;
+    diffuse_contribution *= 1.0 - metalness;
 
     vec3 outgoing_radiance = (diffuse_contribution * albedo / PI + specular) * radiance * diffuse;
 
@@ -89,6 +98,5 @@ void main() {
 
     vec3 color = ambient + outgoing_radiance / (outgoing_radiance + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
-
     o_color = vec4(vec3(color), 1);
 }

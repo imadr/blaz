@@ -22,7 +22,6 @@ struct UniformBuffer_OPENGL {
 
 struct Shader_OPENGL {
     GLuint m_program = 0;
-    std::unordered_map<str, GLint> m_textures_binding_points;
 };
 
 struct Texture_OPENGL {
@@ -35,6 +34,8 @@ struct Framebuffer_OPENGL {
 };
 
 static std::unordered_map<TextureFormat, std::pair<GLint, GLenum>> opengl_texture_formats = {
+    {TextureFormat::R8, {GL_R8, GL_RED}},
+    {TextureFormat::RG8, {GL_RG8, GL_RG}},
     {TextureFormat::RGB8, {GL_RGB8, GL_RGB}},
     {TextureFormat::RGBA8, {GL_RGBA8, GL_RGBA}},
     {TextureFormat::DEPTH32, {GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT}},
@@ -257,6 +258,7 @@ Error Renderer::upload_texture(Texture* texture) {
     u32 texture_name;
     gl->glGenTextures(1, &texture_name);
     gl->glBindTexture(GL_TEXTURE_2D, texture_name);
+
     gl->glTexImage2D(GL_TEXTURE_2D, 0,
                      opengl_texture_formats[texture->m_texture_params.m_format].first,
                      texture->m_width, texture->m_height, 0,
@@ -283,12 +285,13 @@ Error Renderer::upload_texture(Texture* texture) {
 }
 
 void Renderer::set_textures(Pass* pass, Shader* shader) {
-    Shader_OPENGL* shader_opengl = ((Shader_OPENGL*)shader->m_api_data);
-
-    for (const auto& texture_name : pass->m_textures) {
-        GLint texture_binding_point = shader_opengl->m_textures_binding_points[texture_name];
+    for (const auto& texture_uniform : pass->m_texture_uniforms_binding) {
+        GLint texture_binding_point = shader->m_textures_binding_points[texture_uniform.first];
+        if (texture_binding_point == 0) {
+            continue;
+        }
         gl->glActiveTexture(GL_TEXTURE0 + texture_binding_point);
-        Texture* texture = &m_textures[m_textures_ids[texture_name]];
+        Texture* texture = &m_textures[m_textures_ids[texture_uniform.second]];
         gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
     }
 }

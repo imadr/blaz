@@ -46,6 +46,12 @@ int main() {
         logger.error(err);
         return 1;
     }
+    game.m_renderer.m_pipelines[0].m_passes[0].m_texture_uniforms_binding = {
+        {"u_texture_albedo", "texture_albedo"},
+        {"u_texture_metalness", "texture_metalness"},
+        {"u_texture_roughness", "texture_roughness"},
+        {"u_texture_normals", "texture_normals"},
+    };
 
     bool done_screenshot = false;
     game.main_loop = [&game, &done_screenshot]() {

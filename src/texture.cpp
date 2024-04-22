@@ -31,32 +31,39 @@ Error load_texture_from_tga_file(Texture* texture) {
     texture->m_width = data[13] << 8 | data[12];
     texture->m_height = data[15] << 8 | data[14];
     texture->m_depth = data[16];
-
-    if (texture->m_depth == 24) {
-        texture->m_channels = 3;
-    } else if (texture->m_depth == 32) {
-        texture->m_channels = 4;
-    }
+    texture->m_channels = data[16] / 8.0f;
 
     texture->m_data.resize(texture->m_width * texture->m_height * texture->m_channels);
 
     size_t pixel_data_offset = 18;
     for (size_t i = 0; i < texture->m_width * texture->m_height * texture->m_channels;
          i += texture->m_channels) {
-        u8 b, g, r, a;
-        b = data[pixel_data_offset++];
-        g = data[pixel_data_offset++];
-        r = data[pixel_data_offset++];
-        if (texture->m_channels == 4) {
-            a = data[pixel_data_offset++];
+        if (texture->m_channels == 1) {
+            u8 r = data[pixel_data_offset++];
+            (texture->m_data)[i + 0] = r;
+        } else if (texture->m_channels == 2) {
+            u8 g = data[pixel_data_offset++];
+            u8 r = data[pixel_data_offset++];
+            (texture->m_data)[i + 0] = r;
+            (texture->m_data)[i + 0] = g;
+
+        } else if (texture->m_channels == 3) {
+            u8 b = data[pixel_data_offset++];
+            u8 g = data[pixel_data_offset++];
+            u8 r = data[pixel_data_offset++];
+            (texture->m_data)[i + 0] = r;
+            (texture->m_data)[i + 1] = g;
+            (texture->m_data)[i + 2] = b;
+
+        } else if (texture->m_channels == 4) {
+            u8 b = data[pixel_data_offset++];
+            u8 g = data[pixel_data_offset++];
+            u8 r = data[pixel_data_offset++];
+            u8 a = data[pixel_data_offset++];
             (texture->m_data)[i + 0] = r;
             (texture->m_data)[i + 1] = g;
             (texture->m_data)[i + 2] = b;
             (texture->m_data)[i + 3] = a;
-        } else if (texture->m_channels == 3) {
-            (texture->m_data)[i + 0] = r;
-            (texture->m_data)[i + 1] = g;
-            (texture->m_data)[i + 2] = b;
         }
     }
     return Error();

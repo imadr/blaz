@@ -138,6 +138,7 @@ typedef double GLclampd;
 #define GL_DEPTH 0x1801
 #define GL_STENCIL 0x1802
 #define GL_DITHER 0x0BD0
+#define GL_R8 0x8229
 #define GL_RGB 0x1907
 #define GL_RGBA 0x1908
 #define GL_TEXTURE_WRAP_S 0x2802
@@ -259,6 +260,9 @@ typedef double GLclampd;
 #define GL_SHADER 0x82E1
 #define GL_PROGRAM 0x82E2
 #define GL_FRONT_AND_BACK 0x0408
+#define GL_RED 0x1903
+#define GL_RG8 0x822B
+#define GL_RG 0x8227
 
 #ifdef OS_WIN32
 
