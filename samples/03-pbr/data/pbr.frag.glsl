@@ -3,7 +3,8 @@
 layout(location = 0) in vec3 v_position;
 layout(location = 1) in vec3 v_world_position;
 layout(location = 2) in vec3 v_world_normal;
-layout(location = 3) in vec2 v_uv;
+layout(location = 3) in vec3 v_world_tangent;
+layout(location = 4) in vec2 v_texcoord;
 
 layout(location = 0) out vec4 o_color;
 
@@ -54,15 +55,25 @@ void main() {
     vec3 light_color = vec3(10, 10, 10);
 
     float metalness = 0.9;
-    metalness = texture(u_texture_metalness, v_uv).r;
+    metalness = texture(u_texture_metalness, v_texcoord).r;
 
     float roughness = 0.3;
-    roughness = texture(u_texture_roughness, v_uv).r;
+    roughness = texture(u_texture_roughness, v_texcoord).r;
 
     float ambient_occlusion = 1.0;
 
     vec3 albedo = vec3(1.0, 0.0, 0.0);
-    albedo = texture(u_texture_albedo, v_uv).rgb;
+    albedo = texture(u_texture_albedo, v_texcoord).rgb;
+
+    vec3 normal = normalize(v_world_normal);
+    vec3 tangent = normalize(v_world_tangent);
+    tangent = normalize(tangent - dot(tangent, normal) * normal);
+    vec3 bitangent = cross(tangent, normal);
+    mat3 tbn_matrix = mat3(tangent, bitangent, normal);
+
+    vec3 normal_map = texture(u_texture_normals, v_texcoord).rgb;
+    normal_map = normal_map * 2.0 - vec3(1.0);
+    normal_map = normalize(tbn_matrix * normal_map);
 
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metalness);
@@ -71,21 +82,21 @@ void main() {
     vec3 view_vector = normalize(u_camera_position - v_world_position);
     vec3 halfway_vector = normalize(light_direction + view_vector);
 
-    float diffuse = max(dot(v_world_normal, light_direction), 0.0);
+    float diffuse = max(dot(normal_map, light_direction), 0.0);
 
     float dist = distance(light_position, v_world_position);
     float attenuation = 1.0 / (dist * dist);
 
     vec3 radiance = light_color * attenuation;
 
-    float normal_distribution = normal_distribution_ggx(v_world_normal, halfway_vector, roughness);
-    float geometry = geometry_smith(v_world_normal, view_vector, light_direction, roughness);
+    float normal_distribution = normal_distribution_ggx(normal_map, halfway_vector, roughness);
+    float geometry = geometry_smith(normal_map, view_vector, light_direction, roughness);
     vec3 fresnel = fresnel_schlick(max(dot(halfway_vector, view_vector), 0.0), F0);
 
     vec3 numerator = normal_distribution * geometry * fresnel;
-    float denominator = 4.0 * max(dot(v_world_normal, view_vector), 0.0) *
-                            max(dot(v_world_normal, light_direction), 0.0) +
-                        0.0001;
+    float denominator =
+        4.0 * max(dot(normal_map, view_vector), 0.0) * max(dot(normal_map, light_direction), 0.0) +
+        0.0001;
     vec3 specular = numerator / denominator;
 
     vec3 specular_contribution = fresnel;
