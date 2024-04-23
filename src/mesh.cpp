@@ -1,5 +1,7 @@
 #include "mesh.h"
 
+#include <logger.h>
+
 #include <charconv>
 #include <fstream>
 #include <sstream>
@@ -38,8 +40,9 @@ Mesh make_cube() {
             {
                 {"position", 3},
                 {"normal", 3},
-                {"uv", 2},
+                {"texcoord", 2},
             },
+        .m_vertex_stride = 8,
         .m_primitive = MeshPrimitive::TRIANGLES,
     };
 }
@@ -62,6 +65,7 @@ Mesh make_cube_wireframe() {
             {
                 {"position", 3},
             },
+        .m_vertex_stride = 3,
         .m_primitive = MeshPrimitive::LINES,
     };
 }
@@ -79,10 +83,80 @@ Mesh make_plane() {
             {
                 {"position", 3},
                 {"normal", 3},
-                {"uv", 2},
+                {"texcoord", 2},
             },
+        .m_vertex_stride = 8,
         .m_primitive = MeshPrimitive::TRIANGLES,
     };
+}
+
+void generate_tangent(Mesh* mesh) {
+    bool found = false;
+    for (u32 i = 0; i < mesh->m_attribs.size(); i++) {
+        if (mesh->m_attribs[i].first == "tangent") {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        logger.error("Mesh doesn't have tangent attrib");
+        return;
+    }
+
+    for (u32 i = 0; i < mesh->m_indices.size() / 3; i++) {
+        u32 vertex_0 = mesh->m_indices[i * 3 + 0];
+        u32 vertex_1 = mesh->m_indices[i * 3 + 1];
+        u32 vertex_2 = mesh->m_indices[i * 3 + 2];
+
+        Vec3 pos_0 = Vec3(mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 0],
+                          mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 1],
+                          mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 2]);
+        Vec3 pos_1 = Vec3(mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 0],
+                          mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 1],
+                          mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 2]);
+        Vec3 pos_2 = Vec3(mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 0],
+                          mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 1],
+                          mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 2]);
+
+        Vec2 texcoord_0 = Vec2(mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 9],
+                               mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 10]);
+        Vec2 texcoord_1 = Vec2(mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 9],
+                               mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 10]);
+        Vec2 texcoord_2 = Vec2(mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 9],
+                               mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 10]);
+
+        Vec3 edge_1 = pos_1 - pos_0;
+        Vec3 edge_2 = pos_2 - pos_0;
+
+        f32 delta_u_1 = texcoord_1.x() - texcoord_0.x();
+        f32 delta_v_1 = texcoord_1.y() - texcoord_0.y();
+        f32 delta_u_2 = texcoord_2.x() - texcoord_0.x();
+        f32 delta_v_2 = texcoord_2.y() - texcoord_0.y();
+
+        f32 f = 1.0f / (delta_u_1 * delta_v_2 - delta_u_2 * delta_v_1);
+
+        f32 tangent_x = f * (delta_v_2 * edge_1.x() - delta_v_1 * edge_2.x());
+        f32 tangent_y = f * (delta_v_2 * edge_1.y() - delta_v_1 * edge_2.y());
+        f32 tangent_z = f * (delta_v_2 * edge_1.z() - delta_v_1 * edge_2.z());
+
+        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 6] += tangent_x;
+        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 7] += tangent_y;
+        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 8] += tangent_z;
+    }
+
+    for (u32 i = 0; i < mesh->m_indices.size() / 3; i++) {
+        u32 vertex_0 = mesh->m_indices[i * 3 + 0];
+        u32 vertex_1 = mesh->m_indices[i * 3 + 1];
+        u32 vertex_2 = mesh->m_indices[i * 3 + 2];
+
+        Vec3 tangent = Vec3(mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 6],
+                            mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 7],
+                            mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 8]);
+        tangent = tangent.normalize();
+        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 6] = tangent.x();
+        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 7] = tangent.y();
+        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 8] = tangent.z();
+    }
 }
 
 Mesh make_uv_sphere(u32 slices, u32 stacks) {
@@ -92,12 +166,14 @@ Mesh make_uv_sphere(u32 slices, u32 stacks) {
             {
                 {"position", 3},
                 {"normal", 3},
-                {"uv", 2},
+                {"tangent", 3},
+                {"texcoord", 2},
             },
+        .m_vertex_stride = 11,
         .m_primitive = MeshPrimitive::TRIANGLES,
     };
 
-    mesh.m_vertices = {0, 1, 0, 0, 1, 0, 0, 0};
+    mesh.m_vertices = {0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0};
 
     for (u32 i = 0; i < stacks; i++) {
         f32 phi = f32(PI) * f32(i + 1) / f32(stacks);
@@ -110,11 +186,12 @@ Mesh make_uv_sphere(u32 slices, u32 stacks) {
             Vec3 normal = Vec3(x, y, z).normalize();
             mesh.m_vertices.insert(mesh.m_vertices.end(), {x, y, z});
             mesh.m_vertices.insert(mesh.m_vertices.end(), {normal.x(), normal.y(), normal.z()});
+            mesh.m_vertices.insert(mesh.m_vertices.end(), {1, 1, 1});
             mesh.m_vertices.insert(mesh.m_vertices.end(),
                                    {float(i) / float(stacks), float(j) / float(slices)});
         }
     }
-    mesh.m_vertices.insert(mesh.m_vertices.end(), {0, -1, 0, 0, -1, 0, 0, 0});
+    mesh.m_vertices.insert(mesh.m_vertices.end(), {0, -1, 0, 0, -1, 0, 1, 1, 1, 0, 0});
 
     for (u32 i = 0; i < slices; i++) {
         u32 i0 = i + 1;
@@ -122,7 +199,8 @@ Mesh make_uv_sphere(u32 slices, u32 stacks) {
         mesh.m_indices.insert(mesh.m_indices.end(), {0, i1, i0});
         i0 = i + slices * (stacks - 2) + 1;
         i1 = (i + 1) % slices + slices * (stacks - 2) + 1;
-        mesh.m_indices.insert(mesh.m_indices.end(), {i0, i1, u32(mesh.m_vertices.size() / 8) - 1});
+        mesh.m_indices.insert(mesh.m_indices.end(),
+                              {i0, i1, u32(mesh.m_vertices.size() / mesh.m_vertex_stride) - 1});
     }
 
     for (u32 j = 0; j < stacks - 2; j++) {
@@ -138,134 +216,9 @@ Mesh make_uv_sphere(u32 slices, u32 stacks) {
         }
     }
 
+    generate_tangent(&mesh);
+
     return mesh;
-}
-
-// vec<std::string_view> split_strview(std::string_view str, char delim) {
-//     vec<std::string_view> result;
-
-//     int index_comma_to_left_of_column = 0;
-//     int index_comma_to_right_of_column = -1;
-
-//     for (int i = 0; i < static_cast<int>(str.size()); i++) {
-//         if (str[i] == delim) {
-//             index_comma_to_left_of_column = index_comma_to_right_of_column;
-//             index_comma_to_right_of_column = i;
-//             int index = index_comma_to_left_of_column + 1;
-//             int length = index_comma_to_right_of_column - index;
-//             std::string_view column(str.data() + index, length);
-//             result.push_back(column);
-//         }
-//     }
-//     const std::string_view final_column(str.data() + index_comma_to_right_of_column + 1,
-//                                         str.size() - index_comma_to_right_of_column - 1);
-//     result.push_back(final_column);
-//     return result;
-// }
-
-pair<Error, Mesh> load_mesh_from_obj_file(str mesh_path) {
-    // std::ifstream mesh_file(mesh_path);
-    // if (!mesh_file.is_open()) {
-    //     return {Error("Can't open file " + mesh_path), Mesh()};
-    // }
-    // std::stringstream buffer;
-    // buffer << mesh_file.rdbuf();
-    // str mesh_content = buffer.str();
-
-    // vec<std::string_view> lines = split_strview(mesh_content, '\n');
-
-    // struct Position {
-    //     f32 x, y, z;
-    // };
-    // struct Normal {
-    //     f32 x, y, z;
-    // };
-    // struct Tangent {
-    //     f32 x, y, z;
-    // };
-    // struct Texcoord {
-    //     f32 u, v;
-    // };
-
-    // vec<Position> positions;
-    // vec<Normal> normals;
-    // vec<Texcoord> texcoords;
-
-    // std::map<std::string_view, u32> unique_vertices;
-    // vec<std::tuple<u32, u32, u32>> vertex_indices;
-
-    // vec<f32> vertices;
-    // vec<u32> indices;
-
-    // for (u32 i = 0; i < lines.size(); i++) {
-    //     vec<std::string_view> line = split_strview(lines[i], ' ');
-    //     if (line[0] == "#" || line[0] == "mtllib" || line[0] == "o" || line[0] == "s" ||
-    //         line[0] == "usemtl") {
-    //         continue;
-    //     } else if (line[0] == "v") {
-    //         f32 x, y, z;
-    //         std::from_chars(line[1].data(), line[1].data() + line[1].size(), x);
-    //         std::from_chars(line[2].data(), line[2].data() + line[2].size(), y);
-    //         std::from_chars(line[3].data(), line[3].data() + line[3].size(), z);
-    //         positions.push_back(Position(x, y, z));
-    //     } else if (line[0] == "vn") {
-    //         f32 x, y, z;
-    //         std::from_chars(line[1].data(), line[1].data() + line[1].size(), x);
-    //         std::from_chars(line[2].data(), line[2].data() + line[2].size(), y);
-    //         std::from_chars(line[3].data(), line[3].data() + line[3].size(), z);
-    //         normals.push_back(Normal(x, y, z));
-    //     } else if (line[0] == "vt") {
-    //         f32 u, v;
-    //         std::from_chars(line[1].data(), line[1].data() + line[1].size(), u);
-    //         std::from_chars(line[2].data(), line[2].data() + line[2].size(), v);
-    //         texcoords.push_back(Texcoord(u, v));
-    //     } else if (line[0] == "f") {
-    //         for (u32 j = 1; j < 4; j++) {
-    //             if (!unique_vertices.contains(line[j])) {
-    //                 vec<std::string_view> face = split_strview(line[j], '/');
-    //                 unique_vertices[line[j]] = (u32)vertex_indices.size();
-    //                 u32 face_1, face_2, face_3;
-    //                 std::from_chars(face[0].data(), face[0].data() + face[0].size(), face_1);
-    //                 std::from_chars(face[1].data(), face[1].data() + face[1].size(), face_2);
-    //                 std::from_chars(face[2].data(), face[2].data() + face[2].size(), face_3);
-    //                 vertex_indices.push_back(std::make_tuple(face_1 - 1, face_2 - 1, face_3 -
-    //                 1));
-    //             }
-    //             indices.push_back(unique_vertices[line[j]]);
-    //         }
-    //     }
-    // }
-
-    // vertices.reserve(unique_vertices.size() * 8);
-    // for (u32 i = 0; i < vertex_indices.size(); i++) {
-    //     u32 position_index = std::get<0>(vertex_indices[i]);
-    //     u32 texcoord_index = std::get<1>(vertex_indices[i]);
-    //     u32 normal_index = std::get<2>(vertex_indices[i]);
-    //     vertices.push_back(positions[position_index].x);
-    //     vertices.push_back(positions[position_index].y);
-    //     vertices.push_back(positions[position_index].z);
-    //     vertices.push_back(normals[normal_index].x);
-    //     vertices.push_back(normals[normal_index].y);
-    //     vertices.push_back(normals[normal_index].z);
-    //     vertices.push_back(texcoords[texcoord_index].u);
-    //     vertices.push_back(texcoords[texcoord_index].v);
-    // }
-
-    // Mesh mesh = Mesh{
-    //     .m_name = "sphere",
-    //     .m_vertices = vertices,
-    //     .m_indices = indices,
-    //     .m_attribs =
-    //         {
-    //             {"position", 3},
-    //             {"normal", 3},
-    //             {"uv", 2},
-    //         },
-    //     .m_primitive = MeshPrimitive::TRIANGLES,
-    // };
-
-    // return {Error(), mesh};
-    return {Error("not implemented"), Mesh()};
 }
 
 Mesh make_wireframe_sphere(u32 vertices) {
@@ -274,6 +227,7 @@ Mesh make_wireframe_sphere(u32 vertices) {
                          {
                              {"position", 3},
                          },
+                     .m_vertex_stride = 3,
                      .m_primitive = MeshPrimitive::LINES};
 
     for (u32 side = 0; side < 3; side++) {
