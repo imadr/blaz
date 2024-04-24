@@ -1,8 +1,6 @@
 # Roadmap
 
-- textures
 - materials
-- finish pbr shader
 - ui
 - d3d11 backend
 - physics sample
