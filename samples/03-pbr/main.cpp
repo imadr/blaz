@@ -2,6 +2,7 @@
 #include "game.h"
 #include "logger.h"
 #include "mesh.h"
+#include "my_time.h"
 #include "texture.h"
 
 using namespace blaz;
@@ -20,7 +21,8 @@ int main() {
         return 1;
     }
 
-    game.m_renderer.add_mesh(make_uv_sphere(64, 64));
+    // game.m_renderer.add_mesh(make_uv_sphere(64, 64));
+    game.m_renderer.add_mesh(load_mesh_from_obj_file("data/damaged_helmet.obj").second);
 
     for (u32 i = 0; i < 3; i++) {
         for (u32 j = 0; j < 3; j++) {
@@ -53,14 +55,10 @@ int main() {
         {"u_texture_normals", "texture_normals"},
     };
 
-    bool done_screenshot = false;
-    game.main_loop = [&game, &done_screenshot]() {
+
+    game.main_loop = [&game]() {
         if (game.m_window.event_loop()) {
             game.m_renderer.draw();
-            if (!done_screenshot) {
-                game.m_window.screenshot("../tests/03-pbr.bmp");
-                done_screenshot = true;
-            }
             return true;
         }
         return false;

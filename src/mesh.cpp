@@ -2,11 +2,7 @@
 
 #include <logger.h>
 
-#include <charconv>
-#include <fstream>
-#include <sstream>
-#include <string_view>
-
+#include "filesystem.h"
 #include "my_math.h"
 
 namespace blaz {
@@ -248,6 +244,134 @@ Mesh make_wireframe_sphere(u32 vertices) {
     }
 
     return mesh;
+}
+
+pair<Error, Mesh> load_mesh_from_obj_file(str mesh_path) {
+    Mesh mesh;
+    pair<Error, str> file_content = read_whole_file(mesh_path);
+    if (file_content.first) {
+        return std::make_pair(file_content.first, mesh);
+    }
+
+    vec<Vec3> positions;
+    vec<Vec3> normals;
+    vec<Vec2> texcoords;
+
+    std::map<std::tuple<u32, u32, u32>, u32> unique_faces;
+    std::vector<std::tuple<u32, u32, u32>> vertex_indices;
+
+    str& obj = file_content.second;
+    str token;
+    u32 token_n = 0;
+
+    Vec3 vec3_buffer;
+    Vec2 vec2_buffer;
+    u32 faces_buffer[9];
+
+    enum struct State {
+        DEFAULT,
+        SKIP_UNTIL_NEW_LINE,
+        FILL_POSITION,
+        FILL_NORMALS,
+        FILL_TEXCOORD,
+        FILL_FACES,
+    };
+    State state = State::DEFAULT;
+
+    obj += '\0';
+    for (u32 i = 0; i < obj.size(); i++) {
+        if (state == State::SKIP_UNTIL_NEW_LINE) {
+            if (obj[i] == '\n' || obj[i] == '\0') {
+                state = State::DEFAULT;
+            } else {
+                continue;
+            }
+        }
+
+        bool is_spacer = obj[i] == ' ' || obj[i] == '\0' || obj[i] == '\n' || obj[i] == '/';
+        if (is_spacer) {
+            if (token_n == 0) {
+                if ((token == "#" || token == "o" || token == "s" || token == "usemtl" ||
+                     token == "mtllib")) {
+                    state = State::SKIP_UNTIL_NEW_LINE;
+                } else if (token == "v") {
+                    state = State::FILL_POSITION;
+                } else if (token == "vn") {
+                    state = State::FILL_NORMALS;
+                } else if (token == "vt") {
+                    state = State::FILL_TEXCOORD;
+                } else if (token == "f") {
+                    state = State::FILL_FACES;
+                }
+            } else {
+                if (state == State::FILL_POSITION || state == State::FILL_NORMALS) {
+                    vec3_buffer[token_n - 1] = std::stof(token);
+                } else if (state == State::FILL_TEXCOORD) {
+                    vec2_buffer[token_n - 1] = std::stof(token);
+                } else if (state == State::FILL_FACES) {
+                    faces_buffer[token_n - 1] = std::stoi(token);
+                }
+            }
+
+            if (token_n == 3 && state == State::FILL_POSITION) {
+                positions.push_back(vec3_buffer);
+            } else if (token_n == 3 && state == State::FILL_NORMALS) {
+                normals.push_back(vec3_buffer);
+            } else if (token_n == 2 && state == State::FILL_TEXCOORD) {
+                texcoords.push_back(vec2_buffer);
+            } else if (token_n == 9 && state == State::FILL_FACES) {
+                for (u32 j = 0; j <= 2; j++) {
+                    std::tuple<u32, u32, u32> face = {faces_buffer[j * 3], faces_buffer[j * 3 + 1],
+                                                      faces_buffer[j * 3 + 2]};
+                    if (!unique_faces.contains(face)) {
+                        unique_faces[face] = u32(vertex_indices.size());
+                        vertex_indices.push_back(std::make_tuple(faces_buffer[j * 3] - 1,
+                                                                 faces_buffer[j * 3 + 1] - 1,
+                                                                 faces_buffer[j * 3 + 2] - 1));
+                    }
+                    mesh.m_indices.push_back(unique_faces[face]);
+                }
+            }
+
+            token_n++;
+            token = "";
+
+            if (obj[i] == '\0') {
+                break;
+            } else if (obj[i] == '\n') {
+                token_n = 0;
+                state = State::DEFAULT;
+            }
+            continue;
+        }
+
+        token.push_back(obj[i]);
+    }
+
+    mesh.m_vertices.reserve(unique_faces.size() * 8);
+    for (u32 i = 0; i < vertex_indices.size(); i++) {
+        u32 position_index = std::get<0>(vertex_indices[i]);
+        u32 texcoord_index = std::get<1>(vertex_indices[i]);
+        u32 normal_index = std::get<2>(vertex_indices[i]);
+        mesh.m_vertices.push_back(positions[position_index].x());
+        mesh.m_vertices.push_back(positions[position_index].y());
+        mesh.m_vertices.push_back(positions[position_index].z());
+        mesh.m_vertices.push_back(normals[normal_index].x());
+        mesh.m_vertices.push_back(normals[normal_index].y());
+        mesh.m_vertices.push_back(normals[normal_index].z());
+        mesh.m_vertices.push_back(texcoords[texcoord_index].x());
+        mesh.m_vertices.push_back(texcoords[texcoord_index].y());
+    }
+
+    mesh.m_attribs = {
+        {"position_attrib", 3},
+        {"normal_attrib", 3},
+        {"texcoord_attrib", 2},
+    };
+    mesh.m_vertex_stride = 8;
+    mesh.m_primitive = MeshPrimitive::TRIANGLES;
+
+    return std::make_pair(Error(), mesh);
 }
 
 }  // namespace blaz

@@ -83,8 +83,7 @@ int main() {
     }
 
     u64 last_time = get_timestamp_microsecond();
-    bool done_screenshot;
-    game.main_loop = [&game, &last_time, &done_screenshot]() {
+    game.main_loop = [&game, &last_time]() {
         if (game.m_window.event_loop()) {
             u64 current_time = get_timestamp_microsecond();
             f32 delta_time = ((f32)(current_time - last_time) / 1000);
@@ -92,10 +91,7 @@ int main() {
 
             game.m_physics.update(delta_time / 1000.0f);
             game.m_renderer.draw();
-            if (!done_screenshot) {
-                game.m_window.screenshot("../tests/04-physics.bmp");
-                done_screenshot = true;
-            }
+
             return true;
         }
         return false;

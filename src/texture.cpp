@@ -31,7 +31,7 @@ Error load_texture_from_tga_file(Texture* texture) {
     texture->m_width = data[13] << 8 | data[12];
     texture->m_height = data[15] << 8 | data[14];
     texture->m_depth = data[16];
-    texture->m_channels = data[16] / 8.0f;
+    texture->m_channels = data[16] / 8;
 
     texture->m_data.resize(texture->m_width * texture->m_height * texture->m_channels);
 

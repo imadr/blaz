@@ -263,6 +263,8 @@ struct Vec2 {
 
     f32 length();
     Vec2 normalize();
+
+    str to_str();
 };
 
 Vec2 vec2_lerp(Vec2 a, Vec2 b, f32 t);
