@@ -21,8 +21,8 @@ int main() {
         return 1;
     }
 
-    // game.m_renderer.add_mesh(make_uv_sphere(64, 64));
-    game.m_renderer.add_mesh(load_mesh_from_obj_file("data/damaged_helmet.obj").second);
+    game.m_renderer.add_mesh(make_uv_sphere(64, 64));
+    // game.m_renderer.add_mesh(load_mesh_from_obj_file("data/damaged_helmet.obj").second);
 
     for (u32 i = 0; i < 3; i++) {
         for (u32 j = 0; j < 3; j++) {
@@ -49,12 +49,10 @@ int main() {
         return 1;
     }
     game.m_renderer.m_pipelines[0].m_passes[0].m_texture_uniforms_binding = {
-        {"u_texture_albedo", "texture_albedo"},
-        {"u_texture_metalness", "texture_metalness"},
-        {"u_texture_roughness", "texture_roughness"},
-        {"u_texture_normals", "texture_normals"},
+        {"u_texture_albedo", "metal_albedo"},
+        {"u_texture_metalroughness", "metal_metalroughness"},
+        {"u_texture_normals", "metal_normals"},
     };
-
 
     game.main_loop = [&game]() {
         if (game.m_window.event_loop()) {

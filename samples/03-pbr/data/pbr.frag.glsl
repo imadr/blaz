@@ -13,9 +13,8 @@ layout(std140, binding = 1) uniform u_view {
 };
 
 layout(binding = 2) uniform sampler2D u_texture_albedo;
-layout(binding = 3) uniform sampler2D u_texture_metalness;
-layout(binding = 4) uniform sampler2D u_texture_roughness;
-layout(binding = 5) uniform sampler2D u_texture_normals;
+layout(binding = 3) uniform sampler2D u_texture_metalroughness;
+layout(binding = 4) uniform sampler2D u_texture_normals;
 
 const float PI = 3.14159265359;
 
@@ -55,10 +54,10 @@ void main() {
     vec3 light_color = vec3(10, 10, 10);
 
     float metalness = 0.9;
-    metalness = texture(u_texture_metalness, v_texcoord).r;
+    metalness = texture(u_texture_metalroughness, v_texcoord).g;
 
     float roughness = 0.3;
-    roughness = texture(u_texture_roughness, v_texcoord).r;
+    roughness = texture(u_texture_metalroughness, v_texcoord).b;
 
     float ambient_occlusion = 1.0;
 
