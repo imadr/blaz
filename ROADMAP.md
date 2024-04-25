@@ -1,5 +1,6 @@
 # Roadmap
 
+- camera movement
 - materials
 - ui
 - d3d11 backend
