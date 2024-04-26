@@ -1,6 +1,6 @@
 # Blender 4.0.2
 # www.blender.org
-mtllib damaged_helmet.mtl
+mtllib damagedhelmet.mtl
 o node_damagedHelmet_-6514
 v -0.611995 -0.483090 -0.030941
 v -0.579505 -0.521758 0.056274

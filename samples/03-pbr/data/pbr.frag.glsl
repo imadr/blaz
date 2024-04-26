@@ -109,4 +109,6 @@ void main() {
     vec3 color = ambient + outgoing_radiance / (outgoing_radiance + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
     o_color = vec4(vec3(color), 1);
+    o_color =
+        vec4(texture(u_texture_metalroughness, vec2(v_texcoord.x, 1.0 - v_texcoord.y)).bbb, 1);
 }

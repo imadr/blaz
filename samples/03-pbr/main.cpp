@@ -21,8 +21,8 @@ int main() {
         return 1;
     }
 
-    game.m_renderer.add_mesh(make_uv_sphere(64, 64));
-    // game.m_renderer.add_mesh(load_mesh_from_obj_file("data/damaged_helmet.obj").second);
+    // game.m_renderer.add_mesh(make_uv_sphere(64, 64));
+    game.m_renderer.add_mesh(load_mesh_from_obj_file("data/damaged_helmet.obj").second);
 
     for (u32 i = 0; i < 3; i++) {
         for (u32 j = 0; j < 3; j++) {
