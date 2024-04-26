@@ -359,17 +359,23 @@ pair<Error, Mesh> load_mesh_from_obj_file(str mesh_path) {
         mesh.m_vertices.push_back(normals[normal_index].x());
         mesh.m_vertices.push_back(normals[normal_index].y());
         mesh.m_vertices.push_back(normals[normal_index].z());
+        mesh.m_vertices.push_back(1);
+        mesh.m_vertices.push_back(1);
+        mesh.m_vertices.push_back(1);
         mesh.m_vertices.push_back(texcoords[texcoord_index].x());
         mesh.m_vertices.push_back(texcoords[texcoord_index].y());
     }
 
     mesh.m_attribs = {
-        {"position_attrib", 3},
-        {"normal_attrib", 3},
-        {"texcoord_attrib", 2},
+        {"position", 3},
+        {"normal", 3},
+        {"tangent", 3},
+        {"texcoord", 2},
     };
-    mesh.m_vertex_stride = 8;
+    mesh.m_vertex_stride = 11;
     mesh.m_primitive = MeshPrimitive::TRIANGLES;
+
+    generate_tangent(&mesh);
 
     return std::make_pair(Error(), mesh);
 }
