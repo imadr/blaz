@@ -15,6 +15,7 @@ layout(std140, binding = 1) uniform u_view {
 layout(binding = 2) uniform sampler2D u_texture_albedo;
 layout(binding = 3) uniform sampler2D u_texture_metalroughness;
 layout(binding = 4) uniform sampler2D u_texture_normals;
+layout(binding = 5) uniform sampler2D u_texture_emissive;
 
 const float PI = 3.14159265359;
 
@@ -51,13 +52,16 @@ float geometry_smith(vec3 normal, vec3 view, vec3 light, float roughness) {
 
 void main() {
     vec3 light_position = vec3(1, 2, 2);
-    vec3 light_color = vec3(10, 10, 10);
+    vec3 light_color = vec3(30, 30, 30);
 
     float metalness = 0.9;
     metalness = texture(u_texture_metalroughness, v_texcoord).g;
 
     float roughness = 0.3;
     roughness = texture(u_texture_metalroughness, v_texcoord).b;
+
+    vec3 emissive = 0.0;
+    emissive = texture(u_texture_emissive, v_texcoord).rgb;
 
     float ambient_occlusion = 1.0;
 
@@ -102,13 +106,11 @@ void main() {
     vec3 diffuse_contribution = vec3(1.0) - specular_contribution;
     diffuse_contribution *= 1.0 - metalness;
 
-    vec3 outgoing_radiance = (diffuse_contribution * albedo / PI + specular) * radiance * diffuse;
+    vec3 outgoing_radiance = (diffuse_contribution * albedo / PI + specular) * radiance * diffuse + emissive;
 
     vec3 ambient = vec3(0.03) * albedo * ambient_occlusion;
 
     vec3 color = ambient + outgoing_radiance / (outgoing_radiance + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
     o_color = vec4(vec3(color), 1);
-    o_color =
-        vec4(texture(u_texture_metalroughness, vec2(v_texcoord.x, 1.0 - v_texcoord.y)).bbb, 1);
 }
