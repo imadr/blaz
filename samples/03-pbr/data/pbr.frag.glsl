@@ -51,8 +51,8 @@ float geometry_smith(vec3 normal, vec3 view, vec3 light, float roughness) {
 }
 
 void main() {
-    vec3 light_position = vec3(1, 2, 2);
-    vec3 light_color = vec3(30);
+    vec3 light_position = vec3(0, 2, 3);
+    vec3 light_color = vec3(20);
 
     float metalness = 0.9;
     metalness = texture(u_texture_metalroughness, v_texcoord).b;
