@@ -176,10 +176,12 @@ Error Game::load_game(str path) {
         m_renderer.m_pipelines_ids[pipeline.m_name] = u32(m_renderer.m_pipelines.size()) - 1;
     }
 
-    m_renderer.m_current_pipeline = m_renderer.m_pipelines_ids[game_cfg["current_pipeline"].str_value];
+    m_renderer.m_current_pipeline =
+        m_renderer.m_pipelines_ids[game_cfg["current_pipeline"].str_value];
     m_renderer.m_current_scene = &m_scene;
     m_physics.m_current_scene = &m_scene;
-    main_camera = &m_renderer.m_cameras[m_renderer.m_cameras_ids[game_cfg["main_camera"].str_value]];
+    main_camera =
+        &m_renderer.m_cameras[m_renderer.m_cameras_ids[game_cfg["main_camera"].str_value]];
 
     return Error();
 }

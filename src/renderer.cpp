@@ -156,18 +156,17 @@ void Renderer::draw() {
 
         set_textures(&pass, pass_shader);
 
-
-        Camera& camera = m_cameras[pass.m_camera];
+        Camera* camera = &m_cameras[pass.m_camera];
 
         UniformBuffer* mat_buffer = &m_uniform_buffers[m_uniform_buffers_ids["u_mat"]];
-        camera.update_projection_matrix();
-        camera.update_view_matrix();
-        set_uniform_buffer_data(mat_buffer, "u_projection_mat", camera.m_projection_matrix);
-        set_uniform_buffer_data(mat_buffer, "u_view_mat", camera.m_view_matrix);
+        camera->update_projection_matrix();
+        camera->update_view_matrix();
+        set_uniform_buffer_data(mat_buffer, "u_projection_mat", camera->m_projection_matrix);
+        set_uniform_buffer_data(mat_buffer, "u_view_mat", camera->m_view_matrix);
 
         UniformBuffer* view_buffer = &m_uniform_buffers[m_uniform_buffers_ids["u_view"]];
         set_uniform_buffer_data(view_buffer, "u_camera_position",
-                                camera.m_scene->m_nodes[camera.m_node].m_position);
+                                camera->m_scene->m_nodes[camera->m_node].m_position);
 
         for (const str tag : pass.m_tags) {
             for (const u32 id : m_tagged_renderables[tag]) {

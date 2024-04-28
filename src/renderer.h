@@ -151,7 +151,7 @@ struct Mesh {
     vec<u32> m_indices;
     vec<pair<str, u32>> m_attribs;
     u32 m_vertex_stride;
-    MeshPrimitive m_primitive;
+    MeshPrimitive m_primitive = MeshPrimitive::TRIANGLES;
     void* m_api_data = NULL;
     bool m_should_reload = true;
 };
@@ -176,9 +176,9 @@ struct Material {
 struct Renderable {
     str m_name;
     vec<str> m_tags;
-    u32 m_material;
-    u32 m_mesh;
-    u32 m_node;
+    u32 m_material = 0;
+    u32 m_mesh = 0;
+    u32 m_node = 0;
 };
 
 enum class PassType { VERT_FRAG, BLITTING, COMPUTE };

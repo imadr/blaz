@@ -32,8 +32,11 @@ void Camera::update_projection_matrix() {
 }
 
 void Camera::update_view_matrix() {
-    if (!m_dirty_view_matrix) return;
-    m_dirty_view_matrix = false;
+    if (m_scene->m_nodes[m_node].m_was_dirty){
+        m_scene->m_nodes[m_node].m_was_dirty = false;
+    } else {
+        return;
+    }
     m_view_matrix = (m_scene->m_nodes[m_node].m_global_matrix).invert();
 }
 
