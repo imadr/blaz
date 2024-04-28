@@ -2,8 +2,8 @@
 
 #include <algorithm>
 
-#include "renderer.h"
 #include "node.h"
+#include "renderer.h"
 
 namespace blaz {
 

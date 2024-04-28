@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 
-#include "camera.h"
 #include "my_math.h"
 #include "types.h"
 

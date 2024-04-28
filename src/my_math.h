@@ -10,7 +10,7 @@ const f64 PI = 3.14159265358979323846264338327950288;
 const f64 PI2 = 6.28318530717958647692528676655900576;
 
 struct Vec2I {
-    i32 v[3];
+    i32 v[2];
     i32 &operator[](int i) {
         return v[i];
     }
@@ -57,6 +57,8 @@ struct Vec2I {
         v[1] -= other.v[1];
         return *this;
     }
+
+    str to_str();
 };
 
 Vec2I operator*(f32 s, Vec2I v);

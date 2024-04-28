@@ -160,8 +160,24 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                 str key = win32_keycodes[w_param];
                 window->m_keyboard[key] = KeyState::RELEASED;
             } break;
+            case WM_LBUTTONDOWN: {
+                window->m_left_mouse_button = ButtonState::PRESSED;
+                window->m_mouse_click_callback(window->m_left_mouse_button, window->m_right_mouse_button);
+            } break;
+            case WM_RBUTTONDOWN: {
+                window->m_right_mouse_button = ButtonState::PRESSED;
+                window->m_mouse_click_callback(window->m_left_mouse_button, window->m_right_mouse_button);
+            } break;
+            case WM_LBUTTONUP: {
+                window->m_left_mouse_button = ButtonState::RELEASED;
+                window->m_mouse_click_callback(window->m_left_mouse_button, window->m_right_mouse_button);
+            } break;
+            case WM_RBUTTONUP: {
+                window->m_right_mouse_button = ButtonState::RELEASED;
+                window->m_mouse_click_callback(window->m_left_mouse_button, window->m_right_mouse_button);
+            } break;
             case WM_INPUT: {
-                if (window->m_mouse_callback == NULL) break;
+                if (window->m_mouse_move_callback == NULL) break;
 
                 UINT size = 0;
 
@@ -173,8 +189,8 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                     RAWINPUT* raw_input = (RAWINPUT*)buffer;
 
                     if (raw_input->header.dwType == RIM_TYPEMOUSE) {
-                        window->m_mouse_callback(Vec2I((i32)raw_input->data.mouse.lLastX,
-                                                       (i32)raw_input->data.mouse.lLastY));
+                        window->m_mouse_move_callback(Vec2I((i32)raw_input->data.mouse.lLastX,
+                                                            (i32)raw_input->data.mouse.lLastY));
                     }
                 }
                 delete[] buffer;
