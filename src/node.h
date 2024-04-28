@@ -23,6 +23,8 @@ struct Node {
     Mat4 m_global_matrix = Mat4();
     Mat4 m_local_matrix = Mat4();
 
+    bool m_was_dirty = true;
+
     void update_matrix();
     void set_position(Vec3 position);
     void set_rotation(Quat rotation);

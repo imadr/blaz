@@ -161,6 +161,8 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                 window->m_keyboard[key] = KeyState::RELEASED;
             } break;
             case WM_LBUTTONDOWN: {
+                POINT mouse_pos;
+                GetCursorPos(&mouse_pos);
                 window->m_left_mouse_button = ButtonState::PRESSED;
                 window->m_mouse_click_callback(window->m_left_mouse_button, window->m_right_mouse_button);
             } break;

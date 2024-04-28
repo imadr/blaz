@@ -15,7 +15,7 @@ enum class Projection { PERSPECTIVE, ORTHOGRAPHIC };
 struct Camera {
     str m_name;
     Scene* m_scene = NULL;
-    u32 m_node;
+    u32 m_node = NULL;
 
     f32 m_fov = rad(90);
     f32 m_z_near = 0.1f;
@@ -32,7 +32,6 @@ struct Camera {
     Mat4 m_projection_matrix = Mat4();
     bool m_dirty_projection_matrix = true;
     Mat4 m_view_matrix = Mat4();
-    bool m_dirty_view_matrix = true;
 
     void update_projection_matrix();
     void update_view_matrix();
