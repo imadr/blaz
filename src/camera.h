@@ -1,28 +1,14 @@
 #pragma once
 
+#include "logger.h"
 #include "my_math.h"
+#include "node.h"
+#include "platform.h"
 #include "types.h"
 
 namespace blaz {
 
 struct Scene;
-
-enum class CameraMode { ORBIT, FLY, FPS };
-
-struct CameraOrbit {
-    f32 zoom = 3.0f;
-    Vec3 pivot = Vec3(0, 0, 0);
-    f32 mouse_sensitivity = 0.003f;
-    f32 yaw = 0;
-    f32 pitch = 0;
-};
-
-struct CameraFly {
-    f32 mouse_sensitivity = 0.001f;
-    f32 move_speed = 0.01f;
-    f32 yaw = 0;
-    f32 pitch = 0;
-};
 
 enum class Projection { PERSPECTIVE, ORTHOGRAPHIC };
 

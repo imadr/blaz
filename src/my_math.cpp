@@ -299,6 +299,14 @@ str Mat4::to_str() {
     return s;
 }
 
+str Vec2I::to_str() {
+    std::stringstream stream;
+    stream << v[0] << " ";
+    stream << v[1];
+    str s = stream.str();
+    return s;
+}
+
 str Vec2::to_str() {
     std::stringstream stream;
     stream << std::fixed << std::setprecision(4) << v[0] << " ";
