@@ -49,15 +49,16 @@ int main() {
         {"u_texture_emissive", "damagedhelmet_emissive"},
     };
 
-    // https://oguz81.github.io/ArcballCamera/
-    // http://courses.cms.caltech.edu/cs171/assignments/hw3/hw3-notes/notes-hw3.html
-    game.m_window.m_mouse_move_callback = [game](Vec2I mouse_delta) {
+    game.m_window.m_mouse_move_callback = [&game](Vec2I mouse_delta) {
         // game.main_camera->mouse_move(mouse_delta);
-        logger.info(mouse_delta.to_str());
+        // logger.info(mouse_delta.to_str());
     };
-    game.m_window.m_mouse_click_callback = [game](ButtonState left_button,
-                                                  ButtonState right_button) {
-        // game.main_camera->mouse_click(left_button, right_button);
+
+    game.m_window.m_mouse_click_callback = [&game](Vec2I mouse_position, ButtonState left_button,
+                                                   ButtonState right_button) {
+        if (left_button == ButtonState::PRESSED) {
+            game.main_camera.m_arcball.m_start_mouse_pos = mouse_position;
+        }
     };
 
     game.main_loop = [&game]() {
