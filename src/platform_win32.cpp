@@ -160,23 +160,28 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                 str key = win32_keycodes[w_param];
                 window->m_keyboard[key] = KeyState::RELEASED;
             } break;
-            case WM_LBUTTONDOWN: {
-                POINT mouse_pos;
-                GetCursorPos(&mouse_pos);
-                window->m_left_mouse_button = ButtonState::PRESSED;
-                window->m_mouse_click_callback(window->m_left_mouse_button, window->m_right_mouse_button);
-            } break;
-            case WM_RBUTTONDOWN: {
-                window->m_right_mouse_button = ButtonState::PRESSED;
-                window->m_mouse_click_callback(window->m_left_mouse_button, window->m_right_mouse_button);
-            } break;
-            case WM_LBUTTONUP: {
-                window->m_left_mouse_button = ButtonState::RELEASED;
-                window->m_mouse_click_callback(window->m_left_mouse_button, window->m_right_mouse_button);
-            } break;
+            case WM_LBUTTONDOWN:
+            case WM_RBUTTONDOWN:
+            case WM_LBUTTONUP:
             case WM_RBUTTONUP: {
-                window->m_right_mouse_button = ButtonState::RELEASED;
-                window->m_mouse_click_callback(window->m_left_mouse_button, window->m_right_mouse_button);
+                POINT mouse_pos;
+                if (GetCursorPos(&mouse_pos)) {
+                    if (message == WM_LBUTTONDOWN) {
+                        window->m_left_mouse_button = ButtonState::PRESSED;
+                    } else if (message == WM_LBUTTONUP) {
+                        window->m_left_mouse_button = ButtonState::RELEASED;
+                    } else if (message == WM_RBUTTONDOWN) {
+                        window->m_right_mouse_button = ButtonState::PRESSED;
+                    } else if (message == WM_RBUTTONUP) {
+                        window->m_right_mouse_button = ButtonState::RELEASED;
+                    }
+                    if (window->m_mouse_click_callback) {
+                        window->m_mouse_click_callback(Vec2I(mouse_pos.x, mouse_pos.y),
+                                                       window->m_left_mouse_button,
+                                                       window->m_right_mouse_button);
+                    }
+                }
+
             } break;
             case WM_INPUT: {
                 if (window->m_mouse_move_callback == NULL) break;

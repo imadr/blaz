@@ -33,6 +33,12 @@ struct Camera {
     bool m_dirty_projection_matrix = true;
     Mat4 m_view_matrix = Mat4();
 
+    struct ArcBall {
+        Vec2I start_mouse_pos;
+    };
+
+    ArcBall m_arcball;
+
     void update_projection_matrix();
     void update_view_matrix();
     void set_aspect_ratio(f32 aspect_ratio);
