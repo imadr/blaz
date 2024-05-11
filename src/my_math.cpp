@@ -144,14 +144,17 @@ Mat4 orthographic_projection(f32 left, f32 right, f32 bottom, f32 top, f32 z_nea
                 -(top + bottom) / (top - bottom), -(z_far + z_near) / (z_far - z_near), 1);
 }
 
+// column major
 Mat4 translate_3d(Vec3 t) {
     return Mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, t.x(), t.y(), t.z(), 1);
 }
 
+// column major
 Mat4 scale_3d(Vec3 s) {
     return Mat4(s.x(), 0, 0, 0, 0, s.y(), 0, 0, 0, 0, s.z(), 0, 0, 0, 0, 1);
 }
 
+// column major
 Mat4 rotate_3d(Quat q) {
     f32 xx = q.x() * q.x();
     f32 yy = q.y() * q.y();
@@ -184,8 +187,43 @@ Quat Quat::from_euler(Vec3 euler) {
 
 Quat Quat::from_axis_angle(Vec3 axis, f32 angle) {
     axis = axis.normalize();
-    f32 s = sin(angle / 2);
-    return Quat(axis.x() * s, axis.y() * s, axis.z() * s, cos(angle / 2));
+    f32 s = sinf(angle / 2);
+    return Quat(axis.x() * s, axis.y() * s, axis.z() * s, cosf(angle / 2));
+}
+
+Quat Quat::from_rotation_matrix(const Mat4& m) {
+    Quat q;
+
+    f32 trace = m[0] + m[5] + m[10];
+    if (trace > 0) {
+        f32 s = 0.5f / sqrtf(trace + 1.0f);
+        q.w() = 0.25f / s;
+        q.x() = (m[6] - m[9]) * s;
+        q.y() = (m[8] - m[2]) * s;
+        q.z() = (m[1] - m[4]) * s;
+    } else {
+        if (m[0] > m[5] && m[0] > m[10]) {
+            f32 s = 2.0f * sqrtf(1.0f + m[0] - m[5] - m[10]);
+            q.w() = (m[6] - m[9]) / s;
+            q.x() = 0.25f * s;
+            q.y() = (m[1] + m[4]) / s;
+            q.z() = (m[8] + m[2]) / s;
+        } else if (m[5] > m[10]) {
+            f32 s = 2.0f * sqrtf(1.0f + m[5] - m[0] - m[10]);
+            q.w() = (m[8] - m[2]) / s;
+            q.x() = (m[1] + m[4]) / s;
+            q.y() = 0.25f * s;
+            q.z() = (m[6] + m[9]) / s;
+        } else {
+            f32 s = 2.0f * sqrtf(1.0f + m[10] - m[0] - m[5]);
+            q.w() = (m[1] - m[4]) / s;
+            q.x() = (m[8] + m[2]) / s;
+            q.y() = (m[6] + m[9]) / s;
+            q.z() = 0.25f * s;
+        }
+    }
+
+    return q;
 }
 
 Mat4 operator*(f32 s, Mat4 m) {
@@ -280,20 +318,20 @@ f32 rad(f32 deg) {
 str Mat4::to_str() {
     std::stringstream stream;
     stream << std::fixed << std::setprecision(4) << m[0] << " ";
-    stream << std::fixed << std::setprecision(4) << m[1] << " ";
-    stream << std::fixed << std::setprecision(4) << m[2] << " ";
-    stream << std::fixed << std::setprecision(4) << m[3] << std::endl;
     stream << std::fixed << std::setprecision(4) << m[4] << " ";
-    stream << std::fixed << std::setprecision(4) << m[5] << " ";
-    stream << std::fixed << std::setprecision(4) << m[6] << " ";
-    stream << std::fixed << std::setprecision(4) << m[7] << std::endl;
     stream << std::fixed << std::setprecision(4) << m[8] << " ";
+    stream << std::fixed << std::setprecision(4) << m[12] << std::endl;
+    stream << std::fixed << std::setprecision(4) << m[1] << " ";
+    stream << std::fixed << std::setprecision(4) << m[5] << " ";
     stream << std::fixed << std::setprecision(4) << m[9] << " ";
+    stream << std::fixed << std::setprecision(4) << m[13] << std::endl;
+    stream << std::fixed << std::setprecision(4) << m[2] << " ";
+    stream << std::fixed << std::setprecision(4) << m[6] << " ";
     stream << std::fixed << std::setprecision(4) << m[10] << " ";
-    stream << std::fixed << std::setprecision(4) << m[11] << std::endl;
-    stream << std::fixed << std::setprecision(4) << m[12] << " ";
-    stream << std::fixed << std::setprecision(4) << m[13] << " ";
-    stream << std::fixed << std::setprecision(4) << m[14] << " ";
+    stream << std::fixed << std::setprecision(4) << m[14] << std::endl;
+    stream << std::fixed << std::setprecision(4) << m[3] << " ";
+    stream << std::fixed << std::setprecision(4) << m[7] << " ";
+    stream << std::fixed << std::setprecision(4) << m[11] << " ";
     stream << std::fixed << std::setprecision(4) << m[15];
     str s = stream.str();
     return s;

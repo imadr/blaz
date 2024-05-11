@@ -278,68 +278,9 @@ Vec2 operator+(Vec2 a, Vec2 b);
 
 f32 rad(f32 deg);
 
-struct Quat {
-    f32 v[4];
-    f32 &operator[](int i) {
-        return v[i];
-    }
-
-    void *ptr(Quat &q) {
-        return q.v;
-    }
-
-    f32 &x() {
-        return v[0];
-    }
-    f32 &y() {
-        return v[1];
-    }
-    f32 &z() {
-        return v[2];
-    }
-    f32 &w() {
-        return v[3];
-    }
-
-    Quat() : v{0, 0, 0, 1} {
-    }
-    Quat(f32 x, f32 y, f32 z, f32 w) : v{x, y, z, w} {
-    }
-
-    Quat(Vec4 v) : v{v.x(), v.y(), v.z(), v.w()} {
-    }
-
-    Quat operator=(Quat other) {
-        v[0] = other.v[0];
-        v[1] = other.v[1];
-        v[2] = other.v[2];
-        v[3] = other.v[3];
-        return *this;
-    }
-
-    Quat(const Quat &other) {
-        v[0] = other.v[0];
-        v[1] = other.v[1];
-        v[2] = other.v[2];
-        v[3] = other.v[3];
-    }
-
-    Quat conjugate();
-    f32 length();
-    Quat normalize();
-
-    str to_str();
-
-    static Quat from_euler(Vec3 euler);
-    static Quat from_axis_angle(Vec3 axis, f32 angle);
-};
-
-Quat operator*(Quat a, Quat b);
-Vec3 rotate_vector(Vec3 v, Quat q);
-
 struct Mat4 {
     f32 m[16];
-    f32 &operator[](int i) {
+    const f32 &operator[](int i) const {
         return m[i];
     }
 
@@ -403,6 +344,66 @@ struct Mat4 {
 Mat4 operator*(Mat4 a, Mat4 b);
 Mat4 operator*(Mat4 v, f32 s);
 Mat4 operator*(f32 s, Mat4 v);
+
+struct Quat {
+    f32 v[4];
+    const f32 &operator[](int i) const {
+        return v[i];
+    }
+
+    void *ptr(Quat &q) {
+        return q.v;
+    }
+
+    f32 &x() {
+        return v[0];
+    }
+    f32 &y() {
+        return v[1];
+    }
+    f32 &z() {
+        return v[2];
+    }
+    f32 &w() {
+        return v[3];
+    }
+
+    Quat() : v{0, 0, 0, 1} {
+    }
+    Quat(f32 x, f32 y, f32 z, f32 w) : v{x, y, z, w} {
+    }
+
+    Quat(Vec4 v) : v{v.x(), v.y(), v.z(), v.w()} {
+    }
+
+    Quat operator=(Quat other) {
+        v[0] = other.v[0];
+        v[1] = other.v[1];
+        v[2] = other.v[2];
+        v[3] = other.v[3];
+        return *this;
+    }
+
+    Quat(const Quat &other) {
+        v[0] = other.v[0];
+        v[1] = other.v[1];
+        v[2] = other.v[2];
+        v[3] = other.v[3];
+    }
+
+    Quat conjugate();
+    f32 length();
+    Quat normalize();
+
+    str to_str();
+
+    static Quat from_euler(Vec3 euler);
+    static Quat from_axis_angle(Vec3 axis, f32 angle);
+    static Quat from_rotation_matrix(const Mat4 &m);
+};
+
+Quat operator*(Quat a, Quat b);
+Vec3 rotate_vector(Vec3 v, Quat q);
 
 Mat4 perspective_projection(f32 fov, f32 aspect_ratio, f32 z_near, f32 z_far);
 Mat4 orthographic_projection(f32 left, f32 right, f32 bottom, f32 top, f32 z_near, f32 z_far);

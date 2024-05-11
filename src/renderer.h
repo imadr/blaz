@@ -230,7 +230,7 @@ struct Renderer {
     void draw_pass(u32 pass);
 
     vec<Pipeline> m_pipelines;
-    u32 m_current_pipeline;
+    u32 m_current_pipeline = 0;
     std::unordered_map<str, u32> m_pipelines_ids;
     vec<Shader> m_shaders;
     std::unordered_map<str, u32> m_shaders_ids;
