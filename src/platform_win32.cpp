@@ -4,6 +4,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <windowsx.h>
 
 #ifndef HID_USAGE_PAGE_GENERIC
 #define HID_USAGE_PAGE_GENERIC ((unsigned short)0x01)
@@ -166,6 +167,7 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
             case WM_RBUTTONUP: {
                 POINT mouse_pos;
                 if (GetCursorPos(&mouse_pos)) {
+                    ScreenToClient(window_handle, &mouse_pos);
                     if (message == WM_LBUTTONDOWN) {
                         window->m_left_mouse_button = ButtonState::PRESSED;
                     } else if (message == WM_LBUTTONUP) {
@@ -183,8 +185,13 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                 }
 
             } break;
-            case WM_INPUT: {
+            case WM_MOUSEMOVE: {
                 if (window->m_mouse_move_callback == NULL) break;
+                window->m_mouse_move_callback(
+                    Vec2I(i32(GET_X_LPARAM(l_param)), i32(GET_Y_LPARAM(l_param))));
+            } break;
+            case WM_INPUT: {
+                if (window->m_mouse_move_raw_callback == NULL) break;
 
                 UINT size = 0;
 
@@ -196,8 +203,8 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                     RAWINPUT* raw_input = (RAWINPUT*)buffer;
 
                     if (raw_input->header.dwType == RIM_TYPEMOUSE) {
-                        window->m_mouse_move_callback(Vec2I((i32)raw_input->data.mouse.lLastX,
-                                                            (i32)raw_input->data.mouse.lLastY));
+                        window->m_mouse_move_raw_callback(Vec2I((i32)raw_input->data.mouse.lLastX,
+                                                                (i32)raw_input->data.mouse.lLastY));
                     }
                 }
                 delete[] buffer;

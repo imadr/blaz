@@ -12,6 +12,8 @@ struct Scene;
 
 enum class Projection { PERSPECTIVE, ORTHOGRAPHIC };
 
+enum class CameraMode { ORBIT };
+
 struct Camera {
     str m_name;
     Scene* m_scene = NULL;
@@ -33,11 +35,10 @@ struct Camera {
     bool m_dirty_projection_matrix = true;
     Mat4 m_view_matrix = Mat4();
 
-    struct ArcBall {
-        Vec2I start_mouse_pos;
-    };
-
-    ArcBall m_arcball;
+    CameraMode m_camera_mode = CameraMode::ORBIT;
+    Vec3 m_orbit_target = Vec3(0, 0, 0);
+    bool m_mouse_pressed = false;
+    void orbit_mouse_move(Vec2I delta);
 
     void update_projection_matrix();
     void update_view_matrix();

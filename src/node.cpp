@@ -29,7 +29,7 @@ void add_node(Scene* scene, Node node, str parent) {
 
 void Node::update_matrix() {
     m_was_dirty = true;
-    m_local_matrix = scale_3d(m_scale) * rotate_3d(m_rotation) * translate_3d(m_position);
+    m_local_matrix = translate_3d(m_position) * rotate_3d(m_rotation) * scale_3d(m_scale);
     if (!is_root_node) {
         m_global_matrix = m_local_matrix * m_scene->m_nodes[m_parent].m_global_matrix;
     }

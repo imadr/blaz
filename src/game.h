@@ -15,7 +15,7 @@ struct Game {
     Physics m_physics;
     Scene m_scene;
 
-    Camera* main_camera;
+    Camera* main_camera = NULL;
 
     Error load_game(str path);
 
