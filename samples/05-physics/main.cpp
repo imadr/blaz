@@ -19,7 +19,7 @@ int main() {
         logger.error(err);
     }
 
-    err = game.m_window.init("04-physics");
+    err = game.m_window.init("05-physics");
     if (err) {
         logger.error(err);
         return 1;
