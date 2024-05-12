@@ -62,6 +62,10 @@ int main() {
         game.main_camera->orbit_mouse_move(delta);
     };
 
+    game.m_window.m_mouse_wheel_callback = [&game](i8 delta) {
+        game.main_camera->orbit_mouse_wheel(delta);
+    };
+
     game.main_loop = [&game]() {
         if (game.m_window.event_loop()) {
             game.m_renderer.draw();
