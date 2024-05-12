@@ -67,9 +67,9 @@ void Camera::update_orbit_camera() {
     Node* camera_node = &m_scene->m_nodes[m_node];
 
     Vec3 pos =
-        Vec3(m_orbit_radius * cos(m_orbit_spherical_angles[1]) * cos(m_orbit_spherical_angles[0]),
-             m_orbit_radius * sin(m_orbit_spherical_angles[1]),
-             m_orbit_radius * cos(m_orbit_spherical_angles[1]) * sin(m_orbit_spherical_angles[0]));
+        Vec3(m_orbit_zoom * cos(m_orbit_spherical_angles[1]) * cos(m_orbit_spherical_angles[0]),
+             m_orbit_zoom * sin(m_orbit_spherical_angles[1]),
+             m_orbit_zoom * cos(m_orbit_spherical_angles[1]) * sin(m_orbit_spherical_angles[0]));
 
     camera_node->set_position(pos);
 
@@ -83,8 +83,8 @@ void Camera::update_orbit_camera() {
 }
 
 void Camera::orbit_mouse_wheel(i8 delta) {
-    m_orbit_radius -= f32(delta) / 200.0f;
-    m_orbit_radius = std::max(0.1f, m_orbit_radius);
+    m_orbit_zoom -= f32(delta) / 200.0f;
+    m_orbit_zoom = std::max(0.1f, m_orbit_zoom);
 
     update_orbit_camera();
 }
