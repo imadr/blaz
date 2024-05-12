@@ -190,6 +190,11 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                 window->m_mouse_move_callback(
                     Vec2I(i32(GET_X_LPARAM(l_param)), i32(GET_Y_LPARAM(l_param))));
             } break;
+            case WM_MOUSEWHEEL: {
+                if (window->m_mouse_wheel_callback == NULL) break;
+                i8 delta = GET_WHEEL_DELTA_WPARAM(w_param);
+                window->m_mouse_wheel_callback(delta);
+            } break;
             case WM_INPUT: {
                 if (window->m_mouse_move_raw_callback == NULL) break;
 

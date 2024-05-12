@@ -37,8 +37,12 @@ struct Camera {
 
     CameraMode m_camera_mode = CameraMode::ORBIT;
     Vec3 m_orbit_target = Vec3(0, 0, 0);
+    f32 m_orbit_radius = 5.0f;
+    Vec2 m_orbit_spherical_angles = Vec2(f32(PI_HALF), 0);
     bool m_mouse_pressed = false;
+    void update_orbit_camera();
     void orbit_mouse_move(Vec2I delta);
+    void orbit_mouse_wheel(i8 delta);
 
     void update_projection_matrix();
     void update_view_matrix();

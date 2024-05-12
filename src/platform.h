@@ -36,6 +36,7 @@ struct Window {
     std::function<void(Vec2I)> m_mouse_move_raw_callback = NULL;
     std::function<void(Vec2I)> m_mouse_move_callback = NULL;
     std::function<void(Vec2I, ButtonState, ButtonState)> m_mouse_click_callback = NULL;
+    std::function<void(i8)> m_mouse_wheel_callback = NULL;
 };
 
 }  // namespace blaz
