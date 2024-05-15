@@ -82,7 +82,7 @@ void Camera::update_orbit_camera() {
     camera_node->set_rotation(q);
 }
 
-void Camera::orbit_mouse_wheel(i8 delta) {
+void Camera::orbit_mouse_wheel(i16 delta) {
     m_orbit_zoom -= f32(delta) / 200.0f;
     m_orbit_zoom = std::max(0.1f, m_orbit_zoom);
 

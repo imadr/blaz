@@ -26,7 +26,7 @@ int main() {
 
     game.main_loop = [&game]() {
         if (game.m_window.event_loop()) {
-            game.m_renderer.draw();
+            game.m_renderer.update();
 
             return true;
         }

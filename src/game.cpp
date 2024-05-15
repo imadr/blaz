@@ -149,7 +149,9 @@ Error Game::load_game(str path) {
                 pass.m_tags.push_back(tag.str_value);
             }
 
-            pass.m_camera = m_renderer.m_cameras_ids[pass_cfg["camera"].str_value];
+            if(pass_cfg["camera"]){
+                pass.m_camera = m_renderer.m_cameras_ids[pass_cfg["camera"].str_value];
+            }
             if (pass_cfg["enabled"]) {
                 pass.m_enabled = pass_cfg["enabled"].bool_value;
             }
@@ -166,6 +168,11 @@ Error Game::load_game(str path) {
                 pass.m_culling_mode = CullingModeStr[pass_cfg["culling_mode"].str_value];
             }
 
+            if (pass_cfg["bufferless_draw"]) {
+                pass.m_bufferless_draw = true;
+                pass.m_bufferless_draw_count = u32(pass_cfg["bufferless_draw"].float_value);
+            }
+
             for (auto texture : pass_cfg["texture_uniforms"]) {
                 pass.m_texture_uniforms.push_back(texture.str_value);
             }
@@ -180,8 +187,10 @@ Error Game::load_game(str path) {
         m_renderer.m_pipelines_ids[game_cfg["current_pipeline"].str_value];
     m_renderer.m_current_scene = &m_scene;
     m_physics.m_current_scene = &m_scene;
-    main_camera =
-        &m_renderer.m_cameras[m_renderer.m_cameras_ids[game_cfg["main_camera"].str_value]];
+
+    if(game_cfg["main_camera"]){
+        main_camera = &m_renderer.m_cameras[m_renderer.m_cameras_ids[game_cfg["main_camera"].str_value]];
+    }
 
     return Error();
 }

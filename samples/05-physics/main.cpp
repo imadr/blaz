@@ -90,7 +90,7 @@ int main() {
             last_time = current_time;
 
             game.m_physics.update(delta_time / 1000.0f);
-            game.m_renderer.draw();
+            game.m_renderer.update();
 
             return true;
         }

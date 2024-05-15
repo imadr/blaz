@@ -31,10 +31,9 @@ int main() {
     game.main_loop = [&game, &rotation]() {
         if (game.m_window.event_loop()) {
             rotation += 0.01f;
-            game.m_scene.m_nodes[2].set_rotation(
-                Quat::from_axis_angle(Vec3(1, 1, 0), rotation));
+            game.m_scene.m_nodes[2].set_rotation(Quat::from_axis_angle(Vec3(1, 1, 0), rotation));
 
-            game.m_renderer.draw();
+            game.m_renderer.update();
 
             return true;
         }

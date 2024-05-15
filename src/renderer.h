@@ -86,18 +86,19 @@ enum UniformType {
     UNIFORM_MAT4,
     UNIFORM_VEC4,
     UNIFORM_VEC3,
+    UNIFORM_VEC2,
     UNIFORM_FLOAT,
     UNIFORM_BOOL,
 };
 
 static std::unordered_map<UniformType, u32> UniformTypeAlignment = {
     {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16},
-    {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},
+    {UNIFORM_VEC2, 16}, {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},
 };
 
 static std::unordered_map<UniformType, u32> UniformTypeSize = {
     {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16},
-    {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},
+    {UNIFORM_VEC2, 16}, {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},
 };
 
 struct TextureParams {
@@ -181,10 +182,10 @@ struct Renderable {
     u32 m_node = 0;
 };
 
-enum class PassType { VERT_FRAG, BLITTING, COMPUTE };
+enum class PassType { RENDER, BLITTING, COMPUTE };
 
 static std::unordered_map<str, PassType> PassTypeStr = {
-    {"VERT_FRAG", PassType::VERT_FRAG},
+    {"RENDER", PassType::RENDER},
     {"BLITTING", PassType::BLITTING},
     {"COMPUTE", PassType::COMPUTE},
 };
@@ -198,7 +199,7 @@ struct Pass {
     u32 m_shader;
     vec<str> m_tags;
     u32 m_framebuffer;
-    u32 m_camera;
+    i32 m_camera = -1;
     bool m_enabled = true;
     bool m_use_default_framebuffer = true;
     bool m_enable_depth_test = true;
@@ -206,7 +207,8 @@ struct Pass {
     CullingMode m_culling_mode = CullingMode::BACK;
     CullingOrder m_culling_order = CullingOrder::CCW;
     vec<str> m_texture_uniforms;
-
+    bool m_bufferless_draw = false;
+    u32 m_bufferless_draw_count = 3;
     std::unordered_map<str, str> m_texture_uniforms_binding;  // @tmp
 };
 
@@ -218,7 +220,7 @@ struct Pipeline {
 
 struct Game;
 
-using UniformValue = std::variant<Mat4, Vec4, Vec3, f32, bool>;
+using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
 
 struct Renderer {
     Game* m_game = NULL;
@@ -226,8 +228,7 @@ struct Renderer {
 
     Error init(Game* game);
     Error init_api();
-    void draw();
-    void draw_pass(u32 pass);
+    void update();
 
     vec<Pipeline> m_pipelines;
     u32 m_current_pipeline = 0;
@@ -265,6 +266,7 @@ struct Renderer {
     void set_depth_test(bool enabled);
     void set_face_culling(bool enabled, CullingMode mode, CullingOrder order);
     void draw_mesh(Mesh* mesh);
+    void draw_bufferless(u32 count);
     Error set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform_name,
                                   UniformValue value);
     Error init_uniform_buffer(UniformBuffer* uniform_buffer);
