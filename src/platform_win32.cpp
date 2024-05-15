@@ -126,7 +126,7 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
         Window* window = reinterpret_cast<Window*>(user_data);
         switch (message) {
             case WM_SIZE: {
-                if (window->m_resize_callback == NULL) break;
+                if (window->m_resize_callbacks.size() == 0) break;
                 window->m_size.width = LOWORD(l_param);
                 window->m_size.height = HIWORD(l_param);
 
@@ -151,7 +151,9 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
                     d3d11->device_context->RSSetViewports(1, &viewport);
                 }
 
-                window->m_resize_callback(window);
+                for (auto& callback : window->m_resize_callbacks) {
+                    callback(window);
+                }
             } break;
             case WM_KEYDOWN: {
                 str key = win32_keycodes[w_param];
@@ -192,7 +194,7 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
             } break;
             case WM_MOUSEWHEEL: {
                 if (window->m_mouse_wheel_callback == NULL) break;
-                i8 delta = GET_WHEEL_DELTA_WPARAM(w_param);
+                i16 delta = GET_WHEEL_DELTA_WPARAM(w_param);
                 window->m_mouse_wheel_callback(delta);
             } break;
             case WM_INPUT: {

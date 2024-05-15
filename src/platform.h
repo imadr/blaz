@@ -32,11 +32,11 @@ struct Window {
     ButtonState m_left_mouse_button = ButtonState::RELEASED;
     ButtonState m_right_mouse_button = ButtonState::RELEASED;
 
-    std::function<void(Window*)> m_resize_callback = NULL;
+    vec<std::function<void(Window*)>> m_resize_callbacks;
     std::function<void(Vec2I)> m_mouse_move_raw_callback = NULL;
     std::function<void(Vec2I)> m_mouse_move_callback = NULL;
     std::function<void(Vec2I, ButtonState, ButtonState)> m_mouse_click_callback = NULL;
-    std::function<void(i8)> m_mouse_wheel_callback = NULL;
+    std::function<void(i16)> m_mouse_wheel_callback = NULL;
 };
 
 }  // namespace blaz

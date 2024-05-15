@@ -292,6 +292,7 @@ typedef double GLclampd;
     GL_FUNCTION(void, glDisable, GLenum cap)                                                \
     GL_FUNCTION(void, glDrawElements, GLenum mode, GLsizei count, GLenum type,              \
                 const GLvoid* indices)                                                      \
+    GL_FUNCTION(void, glDrawArrays, GLenum mode, GLint first, GLsizei count)                \
     GL_FUNCTION(void, glDrawBuffer, GLenum mode)                                            \
     GL_FUNCTION(void, glReadBuffer, GLenum mode)                                            \
     GL_FUNCTION(void, glFrontFace, GLenum mode)                                             \

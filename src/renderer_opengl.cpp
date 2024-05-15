@@ -59,6 +59,7 @@ static std::unordered_map<MeshPrimitive, GLenum> opengl_mesh_primitive_types = {
 };
 
 Opengl* gl;
+u32 dummy_vao;
 
 Error Renderer::init_api() {
     gl = new Opengl();
@@ -70,6 +71,8 @@ Error Renderer::init_api() {
     if (err) {
         return Error("Renderer::init ->\n" + err.message());
     }
+
+    gl->glGenVertexArrays(1, &dummy_vao);
 
     return Error();
 }
@@ -385,6 +388,11 @@ void Renderer::draw_mesh(Mesh* mesh) {
     gl->glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
     gl->glDrawElements(opengl_mesh_primitive_types[mesh->m_primitive],
                        GLsizei(mesh->m_indices.size()), GL_UNSIGNED_INT, 0);
+}
+
+void Renderer::draw_bufferless(u32 count) {
+    gl->glBindVertexArray(dummy_vao);
+    gl->glDrawArrays(GL_TRIANGLES, 0, count);
 }
 
 }  // namespace blaz

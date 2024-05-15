@@ -45,7 +45,7 @@ struct Camera {
     bool m_mouse_pressed = false;
     void update_orbit_camera();
     void orbit_mouse_move(Vec2I delta);
-    void orbit_mouse_wheel(i8 delta);
+    void orbit_mouse_wheel(i16 delta);
 };
 
 }  // namespace blaz

@@ -17,12 +17,13 @@ Error Renderer::init(Game* game) {
 
     set_swap_interval(1);
 
-    game->m_window.m_resize_callback = [this](Window* window) {
+    auto callback = [this](Window* window) {
         for (auto& camera : m_cameras) {
             camera.set_aspect_ratio(f32(window->m_size.width) / f32(window->m_size.height));
         }
     };
-    game->m_window.m_resize_callback(&game->m_window);
+    game->m_window.m_resize_callbacks.push_back(callback);
+    callback(&game->m_window);
 
     {
         m_error_shader.m_name = "internal_error_shader";
@@ -108,7 +109,7 @@ Error Renderer::reload_shader(Shader* shader) {
     return err2;
 }
 
-void Renderer::draw() {
+void Renderer::update() {
     if (m_pipelines.size() <= m_current_pipeline) return;
 
     Pipeline& pipeline = m_pipelines[m_current_pipeline];
@@ -156,25 +157,31 @@ void Renderer::draw() {
 
         set_textures(&pass, pass_shader);
 
-        Camera* camera = &m_cameras[pass.m_camera];
-
         UniformBuffer* mat_buffer = &m_uniform_buffers[m_uniform_buffers_ids["u_mat"]];
-        camera->update_projection_matrix();
-        camera->update_view_matrix();
-        set_uniform_buffer_data(mat_buffer, "u_projection_mat", camera->m_projection_matrix);
-        set_uniform_buffer_data(mat_buffer, "u_view_mat", camera->m_view_matrix);
 
-        UniformBuffer* view_buffer = &m_uniform_buffers[m_uniform_buffers_ids["u_view"]];
-        set_uniform_buffer_data(view_buffer, "u_camera_position",
-                                camera->m_scene->m_nodes[camera->m_node].m_position);
+        if (pass.m_camera > -1) {
+            Camera* camera = &m_cameras[pass.m_camera];
+            camera->update_projection_matrix();
+            camera->update_view_matrix();
+            set_uniform_buffer_data(mat_buffer, "u_projection_mat", camera->m_projection_matrix);
+            set_uniform_buffer_data(mat_buffer, "u_view_mat", camera->m_view_matrix);
 
-        for (const str tag : pass.m_tags) {
-            for (const u32 id : m_tagged_renderables[tag]) {
-                Renderable* renderable = &m_renderables[id];
-                set_uniform_buffer_data(
-                    mat_buffer, "u_model_mat",
-                    m_current_scene->m_nodes[renderable->m_node].m_global_matrix);
-                draw_mesh(&m_meshes[renderable->m_mesh]);
+            UniformBuffer* view_buffer = &m_uniform_buffers[m_uniform_buffers_ids["u_view"]];
+            set_uniform_buffer_data(view_buffer, "u_camera_position",
+                                    camera->m_scene->m_nodes[camera->m_node].m_position);
+        }
+
+        if (pass.m_bufferless_draw) {
+            draw_bufferless(pass.m_bufferless_draw_count);
+        } else {
+            for (const str tag : pass.m_tags) {
+                for (const u32 id : m_tagged_renderables[tag]) {
+                    Renderable* renderable = &m_renderables[id];
+                    set_uniform_buffer_data(
+                        mat_buffer, "u_model_mat",
+                        m_current_scene->m_nodes[renderable->m_node].m_global_matrix);
+                    draw_mesh(&m_meshes[renderable->m_mesh]);
+                }
             }
         }
 
