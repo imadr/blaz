@@ -137,6 +137,8 @@ Vec3 operator*(f32 s, Vec3 v);
 Vec3 operator-(Vec3 a, Vec3 b);
 Vec3 operator+(Vec3 a, Vec3 b);
 
+struct Quat;
+
 struct Vec4 {
     f32 v[4];
     f32 &operator[](int i) {
@@ -199,6 +201,8 @@ struct Vec4 {
         v[3] -= other.v[3];
         return *this;
     }
+
+    Vec4(Quat q);
 
     f32 length();
     Vec4 normalize();

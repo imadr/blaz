@@ -415,4 +415,10 @@ Quat Quat::normalize() {
     return Quat(v[0] / m, v[1] / m, v[2] / m, v[3] / m);
 }
 
+Vec4::Vec4(Quat q) {
+    for (int i = 0; i < 4; ++i) {
+        v[i] = q[i];
+    }
+}
+
 }  // namespace blaz

@@ -35,19 +35,59 @@ int main() {
                     .m_name = "u_resolution",
                     .m_type = UNIFORM_VEC2,
                 },
+                Uniform{
+                    .m_name = "u_camera_position",
+                    .m_type = UNIFORM_VEC3,
+                },
+                Uniform{
+                    .m_name = "u_camera_target",
+                    .m_type = UNIFORM_VEC3,
+                },
             },
         .m_should_reload = true,
     });
 
-    auto callback = [&game](Window* window) {
-        UniformBuffer* mat_buffer =
-            &game.m_renderer.m_uniform_buffers[game.m_renderer.m_uniform_buffers_ids["u_info"]];
+    UniformBuffer* info_uniform =
+        &game.m_renderer.m_uniform_buffers[game.m_renderer.m_uniform_buffers_ids["u_info"]];
+
+    auto resize_callback = [&game, &info_uniform](Window* window) {
         game.m_renderer.set_uniform_buffer_data(
-            mat_buffer, "u_resolution",
+            info_uniform, "u_resolution",
             Vec2(f32(game.m_window.m_size.width), f32(game.m_window.m_size.height)));
     };
-    game.m_window.m_resize_callbacks.push_back(callback);
-    callback(&game.m_window);
+    game.m_window.m_resize_callbacks.push_back(resize_callback);
+    resize_callback(&game.m_window);
+
+    game.m_window.m_mouse_click_callback = [&game](Vec2I mouse_position, ButtonState left_button,
+                                                   ButtonState right_button) {
+        if (left_button == ButtonState::PRESSED) {
+            game.main_camera->m_mouse_pressed = true;
+        } else if (left_button == ButtonState::RELEASED) {
+            game.main_camera->m_mouse_pressed = false;
+        }
+    };
+
+    auto update_camera_uniforms = [&game, &info_uniform]() {
+        game.m_renderer.set_uniform_buffer_data(info_uniform, "u_camera_position",
+                                                game.get_node_by_name("main_camera")->m_position);
+        game.m_renderer.set_uniform_buffer_data(info_uniform, "u_camera_target",
+                                                game.main_camera->m_orbit_target);
+    };
+
+    game.m_window.m_mouse_move_raw_callback = [&game, &update_camera_uniforms](Vec2I delta) {
+        game.main_camera->orbit_mouse_move(delta);
+        update_camera_uniforms();
+    };
+
+    game.m_window.m_mouse_wheel_callback = [&game, &update_camera_uniforms](i16 delta) {
+        game.main_camera->orbit_mouse_wheel(delta);
+        update_camera_uniforms();
+    };
+
+    game.main_camera->m_orbit_zoom = 10.0f;
+    game.main_camera->update_orbit_camera();
+
+    update_camera_uniforms();
 
     game.main_loop = [&game]() {
         if (game.m_window.event_loop()) {
