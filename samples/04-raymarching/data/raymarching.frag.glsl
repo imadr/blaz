@@ -6,6 +6,8 @@ layout(location = 0) out vec4 o_color;
 
 layout(std140, binding = 0) uniform u_info {
     vec2 u_resolution;
+    vec3 u_camera_position;
+    vec3 u_camera_target;
 };
 
 #define PI 3.14159265359
@@ -52,12 +54,22 @@ vec3 transform(vec3 p, Transform t) {
     return p_;
 }
 
-vec2 sphere(vec3 point, float radius, float id) {
-    return vec2(length(point) - radius, id);
+float sphere(vec3 point, float radius) {
+    return length(point) - radius;
 }
 
-vec2 plane(vec3 point, vec3 normal, float distance, float id) {
-    return vec2(dot(point, normal) + distance, id);
+float plane(vec3 point, vec3 normal) {
+    return dot(point, normal);
+}
+
+float box(vec3 point, vec3 size) {
+    vec3 q = abs(point) - size;
+    return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
+
+float cylinder(vec3 point, float height, float radius) {
+    vec2 d = abs(vec2(length(point.xz), point.y)) - vec2(radius, height);
+    return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
 }
 
 vec2 vec_min(vec2 a, vec2 b) {
@@ -66,43 +78,63 @@ vec2 vec_min(vec2 a, vec2 b) {
 
 #define SPHERE_PRIMITIVE 0
 #define PLANE_PRIMITIVE 1
+#define BOX_PRIMITIVE 2
+#define CYLINDER_PRIMITIVE 3
 
 struct PrimitiveInfo {
     float sphere_radius;
-    float plane_distance;
     vec3 plane_normal;
+    vec3 box_size;
+    float cylinder_height;
+    float cylinder_radius;
 };
 
 struct Object {
     int id;
     int primitive;
     Transform transform;
-    vec3 color;
+    vec3 albedo;
+    vec3 reflectivity;
     PrimitiveInfo primitive_info;
 };
 
 vec2 primitive(vec3 point, Object object) {
+    float sdf = 0.0f;
+    vec3 t_point = transform(point, object.transform);
     if (object.primitive == SPHERE_PRIMITIVE) {
-        return sphere(transform(point, object.transform), object.primitive_info.sphere_radius,
-                      object.id);
+        sdf = sphere(t_point, object.primitive_info.sphere_radius);
     } else if (object.primitive == PLANE_PRIMITIVE) {
-        return plane(point, object.primitive_info.plane_normal,
-                     object.primitive_info.plane_distance, object.id);
+        sdf = plane(t_point, object.primitive_info.plane_normal);
+    } else if (object.primitive == BOX_PRIMITIVE) {
+        sdf = box(t_point, object.primitive_info.box_size);
+    } else if (object.primitive == CYLINDER_PRIMITIVE) {
+        sdf = cylinder(t_point, object.primitive_info.cylinder_height,
+                       object.primitive_info.cylinder_radius);
     }
+    return vec2(sdf, object.id);
 }
 
-#define NUM_OBJECTS 3
+#define NUM_OBJECTS 4
 #define PLANE_1 1
 #define SPHERE_1 2
 #define SPHERE_2 3
+#define SPHERE_3 4
+// #define BOX_1 3
+// #define CYLINDER_1 4
 const Object objects[NUM_OBJECTS] = {
-    Object(PLANE_1, PLANE_PRIMITIVE, Transform(vec3(0, 0, 0), vec3(0, 0, 0)), vec3(0.6),
-           PrimitiveInfo(0.0, 2.0, vec3(0.0, 1.0, 0.0))),
-    Object(SPHERE_1, SPHERE_PRIMITIVE, Transform(vec3(0, 0, 8), vec3(0, 0, 0)), vec3(1.0, 0.0, 0.0),
-           PrimitiveInfo(1.0, 0.0, vec3(0.0))),
-    Object(SPHERE_2, SPHERE_PRIMITIVE, Transform(vec3(-2, 0, 8), vec3(0, 0, 0)),
-           vec3(1.0, 0.0, 1.0), PrimitiveInfo(1.0, 0.0, vec3(0.0)))};
-
+    Object(PLANE_1, PLANE_PRIMITIVE, Transform(vec3(0, -5, 0), vec3(0, 0, 0)), vec3(1.0), vec3(0.0),
+           PrimitiveInfo(0.0, vec3(0.0, 1.0, 0.0), vec3(0), 0, 0)),
+    Object(SPHERE_1, SPHERE_PRIMITIVE, Transform(vec3(0, 0, 0), vec3(0, 0, 0)), vec3(1.0, 0.0, 0.0),
+           vec3(1.0, 0.0, 0.0), PrimitiveInfo(1.0, vec3(0.0), vec3(0), 0, 0)),
+    Object(SPHERE_2, SPHERE_PRIMITIVE, Transform(vec3(4, 0, 0), vec3(0, 0, 0)), vec3(0.0, 1.0, 0.0),
+           vec3(0.0, 1.0, 0.0), PrimitiveInfo(1.0, vec3(0.0), vec3(0), 0, 0)),
+    Object(SPHERE_3, SPHERE_PRIMITIVE, Transform(vec3(-4, 0, 0), vec3(0, 0, 0)),
+           vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 1.0), PrimitiveInfo(1.0, vec3(0.0), vec3(0), 0, 0))
+    // Object(BOX_1, BOX_PRIMITIVE, Transform(vec3(4, 0, 0), vec3(0, 0, 0)), vec3(0.0, 1.0, 0.0),
+    //        vec3(1.0), PrimitiveInfo(0.0, vec3(0.0), vec3(1.0), 0, 0)),
+    // Object(CYLINDER_1, CYLINDER_PRIMITIVE, Transform(vec3(-4, 0, 0), vec3(0, 0, 0)),
+    //        vec3(0.0, 0.0, 1.0), vec3(0.0), PrimitiveInfo(0.0, vec3(0.0), vec3(0.0), 1.0, 1.0))};
+};
 vec2 scene(vec3 point) {
     vec2 min_ = primitive(point, objects[0]);
 
@@ -137,7 +169,7 @@ vec2 march(vec3 ray_origin, vec3 ray_direction) {
 vec3 normal(vec3 point) {
     if (point.z > 1000.) return vec3(0.);
     float dist = scene(point).x;
-    float delta = 0.00001;
+    float delta = 0.001;
     vec2 dir = vec2(delta, 0.);
     float dx = scene(point + dir.xyy).x - dist;
     float dy = scene(point + dir.yxy).x - dist;
@@ -145,44 +177,61 @@ vec3 normal(vec3 point) {
     return normalize(vec3(dx, dy, dz));
 }
 
-float lighting(vec3 point, vec3 normal, vec3 light_pos) {
-    vec3 direction_to_light = normalize(light_pos);
-    if (march(point + normal * 0.001, direction_to_light).x < length(light_pos - point)) {
-        return 0.;
+vec3 light_direction = normalize(vec3(0.5, 2.0, 1.0));
+
+vec3 render(inout vec3 ray_origin, inout vec3 ray_direction, inout vec3 reflectivity) {
+    vec2 march_out = march(ray_origin, ray_direction);
+
+    if (march_out.y == 0.0) {  // SKY
+        return vec3(0.0, 0.72, 0.96);
     }
-    return max(0., dot(normal, direction_to_light));
+
+    float depth = march_out.x;
+    vec3 point = ray_origin + ray_direction * depth;
+    vec3 norm = normal(point);
+    vec3 reflected = reflect(ray_direction, norm);
+    ray_origin = point + norm;
+    ray_direction = reflected;
+
+    vec3 color = objects[int(march_out.y) - 1].albedo;
+    vec3 diffuse = vec3(max(0.0, dot(norm, light_direction)));
+
+    if (march_out.y == 1) {  // CHECKBOARD
+        vec2 tile = floor(point.xz / 3.0);
+        color = clamp(vec3(mod((tile.x + tile.y), 2)), 0.5, 1.0);
+    }
+
+    reflectivity = objects[int(march_out.y) - 1].reflectivity;
+
+    return color * diffuse;
 }
 
 void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy - 0.5;
     uv.x *= u_resolution.x / u_resolution.y;
 
-    vec3 camera_pos = vec3(0, 0, 0);
-    vec3 camera_target = vec3(0, 0, 1);
-
-    mat3 matrix = lookat_matrix(camera_pos, camera_target, 0.0);
+    mat3 matrix = lookat_matrix(u_camera_position, u_camera_target, 0.0);
     vec3 view = matrix * normalize(vec3(uv, 1.0));
 
-    vec2 march_out = march(camera_pos, view);
-    float depth = march_out.x;
-    vec3 col = objects[int(march_out.y) - 1].color;
+    vec3 ray_origin = u_camera_position;
+    vec3 ray_direction = view;
 
-    if (march_out.y == 0.0) {
-        o_color = mix(vec4(0.80, 0.94, 0.99, 1.), vec4(0., 0.72, 0.96, 1.), uv.y * 3.);
-        return;
-    }
+    vec3 reflectivity = vec3(0.0);
+    vec3 diffuse = render(ray_origin, ray_direction, reflectivity);
 
-    vec3 point = camera_pos + view * depth;
-    vec3 norm = normal(point);
-    vec3 light_position = vec3(0., 2.0, 0.0);
-    float directional_light = lighting(point, norm, light_position);
+    vec3 bounce_reflectivity = vec3(0.0);
+    vec3 specular = vec3(0.0);
+    vec3 bounce = reflectivity * render(ray_origin, ray_direction, bounce_reflectivity);
+    specular += bounce;
 
-    vec3 light = vec3(0);
+    // vec3 fil = vec3(1.0);
+    // for (int i = 0; i < 3; i++) {
+    //     fil *= reflectivity;
+    // }
 
-    vec3 ambient_light = vec3(0.3);
-    light += ambient_light + directional_light;
+    vec3 final_color = diffuse + specular;
 
-    col *= light;
+    final_color = pow(final_color, vec3(1.0 / 2.2));
 
-    o_color = vec4(col, 1.);
+    o_color = vec4(final_color, 1.0);
 }

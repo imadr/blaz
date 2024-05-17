@@ -19,6 +19,10 @@ struct Game {
 
     Error load_game(str path);
 
+    Node* get_node_by_name(str name) {
+        return &m_scene.m_nodes[m_scene.m_nodes_ids[name]];
+    }
+
     std::function<bool()> main_loop;
     void run();
 };
