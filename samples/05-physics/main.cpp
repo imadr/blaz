@@ -92,6 +92,11 @@ int main() {
             game.m_physics.update(delta_time / 1000.0f);
             game.m_renderer.update();
 
+            if (!game.took_screen_start) {
+                game.m_window.screenshot("05-physics.bmp");
+                game.took_screen_start = true;
+            }
+
             return true;
         }
         return false;

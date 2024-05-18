@@ -36,8 +36,12 @@ You can also use **cmake-gui**
     03-pbr
   </td>
   <td>
-    <img src="samples/tests/04-physics.bmp" width="300"/><br>
-    04-physics
+    <img src="samples/tests/04-raymarching.bmp" width="300"/><br>
+    04-raymarching
+  </td>
+  <td>
+    <img src="samples/tests/05-physics.bmp" width="300"/><br>
+    05-physics
   </td>
 </tr>
 </table>

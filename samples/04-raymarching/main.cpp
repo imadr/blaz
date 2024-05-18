@@ -90,7 +90,9 @@ int main() {
         update_camera_uniforms();
     };
 
-    game.main_camera->m_orbit_zoom = 10.0f;
+    game.main_camera->m_orbit_zoom = 15.0f;
+    game.main_camera->m_orbit_spherical_angles = Vec2(f32(PI_HALF), f32(PI) / 10.0);
+
     game.main_camera->update_orbit_camera();
 
     update_camera_uniforms();
@@ -99,6 +101,10 @@ int main() {
         if (game.m_window.event_loop()) {
             game.m_renderer.update();
 
+            if (!game.took_screen_start) {
+                game.m_window.screenshot("04-raymarching.bmp");
+                game.took_screen_start = true;
+            }
             return true;
         }
         return false;
