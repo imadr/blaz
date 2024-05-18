@@ -40,9 +40,12 @@ struct Camera {
     void update_view_matrix();
     CameraMode m_camera_mode = CameraMode::ORBIT;
     Vec3 m_orbit_target = Vec3(0, 0, 0);
+    f32 m_orbit_rotate_sensitivity = 0.006f;
+    f32 m_orbit_pan_sensitivity = 0.02f;
     f32 m_orbit_zoom = 5.0f;
     Vec2 m_orbit_spherical_angles = Vec2(f32(PI_HALF), 0);
-    bool m_mouse_pressed = false;
+    bool m_mouse_left_pressed = false;
+    bool m_mouse_right_pressed = false;
     void update_orbit_camera();
     void orbit_mouse_move(Vec2I delta);
     void orbit_mouse_wheel(i16 delta);
