@@ -61,9 +61,15 @@ int main() {
     game.m_window.m_mouse_click_callback = [&game](Vec2I mouse_position, ButtonState left_button,
                                                    ButtonState right_button) {
         if (left_button == ButtonState::PRESSED) {
-            game.main_camera->m_mouse_pressed = true;
+            game.main_camera->m_mouse_left_pressed = true;
         } else if (left_button == ButtonState::RELEASED) {
-            game.main_camera->m_mouse_pressed = false;
+            game.main_camera->m_mouse_left_pressed = false;
+        }
+
+        if (right_button == ButtonState::PRESSED) {
+            game.main_camera->m_mouse_right_pressed = true;
+        } else if (right_button == ButtonState::RELEASED) {
+            game.main_camera->m_mouse_right_pressed = false;
         }
     };
 

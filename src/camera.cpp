@@ -71,7 +71,7 @@ void Camera::update_orbit_camera() {
              m_orbit_zoom * sin(m_orbit_spherical_angles[1]),
              m_orbit_zoom * cos(m_orbit_spherical_angles[1]) * sin(m_orbit_spherical_angles[0]));
 
-    camera_node->set_position(pos);
+    camera_node->set_position(pos + m_orbit_target);
 
     Vec3 forward = (camera_node->m_position - m_orbit_target).normalize();
     Vec3 right = vec3_cross(Vec3(0, 1, 0), forward).normalize();
@@ -91,11 +91,23 @@ void Camera::orbit_mouse_wheel(i16 delta) {
 
 void Camera::orbit_mouse_move(Vec2I delta) {
     if (m_camera_mode != CameraMode::ORBIT) return;
-    if (!m_mouse_pressed) return;
+    if (m_mouse_left_pressed) {
+        m_orbit_spherical_angles += Vec2(f32(delta.x()) * m_orbit_rotate_sensitivity,
+                                         f32(delta.y()) * m_orbit_rotate_sensitivity);
+        m_orbit_spherical_angles[1] =
+            std::clamp(m_orbit_spherical_angles[1], f32(-PI_HALF) + 0.1f, f32(PI_HALF) - 0.1f);
+    }
 
-    m_orbit_spherical_angles += Vec2(f32(delta.x()) / 150.0f, f32(delta.y()) / 150.0f);
-    m_orbit_spherical_angles[1] =
-        std::clamp(m_orbit_spherical_angles[1], f32(-PI_HALF) + 0.1f, f32(PI_HALF) - 0.1f);
+    if (m_mouse_right_pressed) {
+        Node* camera_node = &m_scene->m_nodes[m_node];
+
+        Vec3 forward = (camera_node->m_position - m_orbit_target).normalize();
+        Vec3 right = vec3_cross(Vec3(0, 1, 0), forward).normalize();
+        Vec3 up = vec3_cross(forward, right).normalize();
+
+        m_orbit_target += (f32(-delta.x()) * m_orbit_pan_sensitivity) * right +
+                          (f32(delta.y()) * m_orbit_pan_sensitivity) * up;
+    }
 
     update_orbit_camera();
 }
