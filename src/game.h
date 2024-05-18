@@ -25,6 +25,8 @@ struct Game {
 
     std::function<bool()> main_loop;
     void run();
+
+    bool took_screen_start = false;
 };
 
 }  // namespace blaz

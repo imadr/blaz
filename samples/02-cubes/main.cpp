@@ -35,6 +35,11 @@ int main() {
 
             game.m_renderer.update();
 
+            if (!game.took_screen_start) {
+                game.m_window.screenshot("02-cubes.bmp");
+                game.took_screen_start = true;
+            }
+
             return true;
         }
         return false;

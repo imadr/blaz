@@ -77,6 +77,12 @@ int main() {
     game.main_loop = [&game]() {
         if (game.m_window.event_loop()) {
             game.m_renderer.update();
+
+            if (!game.took_screen_start) {
+                game.m_window.screenshot("03-pbr.bmp");
+                game.took_screen_start = true;
+            }
+
             return true;
         }
         return false;
