@@ -63,7 +63,6 @@ struct TokenizerState {
     u32 column;
     u32 line;
     u32 tokens_count;
-    u32 tokens_capacity;
     u32 in_comment;
     Error error;
 };
