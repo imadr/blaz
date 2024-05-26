@@ -62,7 +62,6 @@ struct TokenizerState {
     vec<Token> tokens;
     u32 column;
     u32 line;
-    u32 tokens_count;
     u32 in_comment;
     Error error;
 };
@@ -171,7 +170,6 @@ TokenizerState tokenize(str text, str path) {
                             .tokens = vec<Token>(),
                             .column = 1,
                             .line = 1,
-                            .tokens_count = 0,
                             .in_comment = 0,
                             .error = Error()};
 
