@@ -1,7 +1,11 @@
 # Roadmap
 
-- raytracing sample
+- terrain pbr sample
+  - perlin noise lib
+  - erosion
+  - for sky https://ebruneton.github.io/precomputed_atmospheric_scattering/
 - materials
+- compute shaders -> raytracing sample
 - ibl
 - deferred rendering
 - ui
