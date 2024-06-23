@@ -200,7 +200,7 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
     if (debug_context) debug |= WGL_CONTEXT_DEBUG_BIT_ARB;
 
     i32 context_attributes[] = {WGL_CONTEXT_MAJOR_VERSION_ARB,
-                                3,
+                                4,
                                 WGL_CONTEXT_MINOR_VERSION_ARB,
                                 3,
                                 WGL_CONTEXT_FLAGS_ARB,

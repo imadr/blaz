@@ -19,7 +19,7 @@ int main() {
         logger.error(err);
     }
 
-    err = game.m_window.init("05-physics");
+    err = game.m_window.init("06-physics");
     if (err) {
         logger.error(err);
         return 1;
@@ -93,7 +93,7 @@ int main() {
             game.m_renderer.update();
 
             if (!game.took_screen_start) {
-                game.m_window.screenshot("05-physics.bmp");
+                game.m_window.screenshot("06-physics.bmp");
                 game.took_screen_start = true;
             }
 

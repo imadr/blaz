@@ -117,12 +117,17 @@ struct Framebuffer {
     void* m_api_data = NULL;
 };
 
+enum class ShaderType { VERTEX_FRAGMENT, COMPUTE };
+
 struct Shader {
     str m_name;
+    ShaderType m_type;
     str m_vertex_shader_source;
     str m_fragment_shader_source;
+    str m_compute_shader_source;
     str m_vertex_shader_path;
     str m_fragment_shader_path;
+    str m_compute_shader_path;
     void* m_api_data = NULL;
     bool m_should_reload = true;
     bool m_is_error = false;
