@@ -40,8 +40,21 @@ Error Game::load_game(str path) {
     for (auto& shader_cfg : game_cfg["shaders"]) {
         Shader shader;
         shader.m_name = shader_cfg["name"].str_value;
-        shader.m_vertex_shader_path = shader_cfg["vertex_shader_path"].str_value;
-        shader.m_fragment_shader_path = shader_cfg["fragment_shader_path"].str_value;
+        if (shader_cfg["vertex_shader_path"]) {
+            shader.m_vertex_shader_path = shader_cfg["vertex_shader_path"].str_value;
+        }
+        if (shader_cfg["fragment_shader_path"]) {
+            shader.m_fragment_shader_path = shader_cfg["fragment_shader_path"].str_value;
+        }
+        if (shader_cfg["compute_shader_path"]) {
+            shader.m_compute_shader_path = shader_cfg["compute_shader_path"].str_value;
+        }
+        if (shader_cfg["type"].str_value == "VERTEX_FRAGMENT") {
+            shader.m_type = ShaderType::VERTEX_FRAGMENT;
+        } else if (shader_cfg["type"].str_value == "COMPUTE") {
+            shader.m_type = ShaderType::COMPUTE;
+        }
+
         shader.m_should_reload = true;
         m_renderer.m_shaders.push_back(shader);
         m_renderer.m_shaders_ids[shader.m_name] = u32(m_renderer.m_shaders.size()) - 1;
@@ -149,7 +162,7 @@ Error Game::load_game(str path) {
                 pass.m_tags.push_back(tag.str_value);
             }
 
-            if(pass_cfg["camera"]){
+            if (pass_cfg["camera"]) {
                 pass.m_camera = m_renderer.m_cameras_ids[pass_cfg["camera"].str_value];
             }
             if (pass_cfg["enabled"]) {
@@ -188,8 +201,9 @@ Error Game::load_game(str path) {
     m_renderer.m_current_scene = &m_scene;
     m_physics.m_current_scene = &m_scene;
 
-    if(game_cfg["main_camera"]){
-        main_camera = &m_renderer.m_cameras[m_renderer.m_cameras_ids[game_cfg["main_camera"].str_value]];
+    if (game_cfg["main_camera"]) {
+        main_camera =
+            &m_renderer.m_cameras[m_renderer.m_cameras_ids[game_cfg["main_camera"].str_value]];
     }
 
     return Error();
