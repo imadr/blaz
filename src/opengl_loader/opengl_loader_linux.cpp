@@ -1,5 +1,5 @@
 // clang-format off
-#include "opengl.h"
+#include "opengl_loader/opengl_loader.h"
 
 #include <dlfcn.h>
 #include <cstdio>
@@ -58,11 +58,11 @@ typedef void (*glXSwapBuffersType)(::Display*, GLXDrawable);
 
 glXSwapBuffersType glXSwapBuffers;
 
-void Opengl::swap_buffers(blaz::Window* window) {
+void OpenglLoader::swap_buffers(blaz::Window* window) {
     glXSwapBuffers(m_x11->display, m_x11->window);
 }
 
-Error Opengl::init(blaz::Window* window, bool debug_context) {
+Error OpenglLoader::init(blaz::Window* window, bool debug_context) {
     GLXContext m_context_linux;
     m_x11 = (Window_X11*)window->m_os_data;
 
@@ -70,7 +70,7 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
     if (!libgl_handle) {
         libgl_handle = dlopen("libGL.so", RTLD_LAZY | RTLD_LOCAL);
         if (!libgl_handle) {
-            return Error("Opengl::init: " + str(dlerror()));
+            return Error("OpenglLoader::init: " + str(dlerror()));
         }
     }
 
@@ -109,7 +109,7 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
     GLXFBConfig* framebuffer_config = glXChooseFBConfig(m_x11->display, m_x11->screen_num,
                                                         visual_attributes, &num_framebuffer_config);
     if (!framebuffer_config) {
-        return Error("Opengl::init : glXChooseFBConfig : Failed to get framebuffer config");
+        return Error("OpenglLoader::init : glXChooseFBConfig : Failed to get framebuffer config");
     }
 
     int debug = GLX_CONTEXT_CORE_PROFILE_BIT_ARB;
@@ -130,19 +130,19 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
 
     glXMakeCurrent(m_x11->display, m_x11->window, m_context_linux);
 
-#define GL_FUNCTION(return_type, name, ...)               \
-    name = (name##Type*)dlsym(libgl_handle, #name);       \
-    if (!name) {                                          \
-        return Error("Opengl::init : " + str(dlerror())); \
+#define GL_FUNCTION(return_type, name, ...)                     \
+    name = (name##Type*)dlsym(libgl_handle, #name);             \
+    if (!name) {                                                \
+        return Error("OpenglLoader::init : " + str(dlerror())); \
     }
 
     GL_FUNCTIONS_LIST
 #undef GL_FUNCTION
 
-#define GL_FUNCTION(return_type, name, ...)               \
-    name = (name##Type*)dlsym(libgl_handle, #name);       \
-    if (!name) {                                          \
-        return Error("Opengl::init : " + str(dlerror())); \
+#define GL_FUNCTION(return_type, name, ...)                     \
+    name = (name##Type*)dlsym(libgl_handle, #name);             \
+    if (!name) {                                                \
+        return Error("OpenglLoader::init : " + str(dlerror())); \
     }
 
     GL_OLD_FUNCTIONS_LIST

@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.12)
 
 project(blaz)
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(OS_LINUX TRUE)
+    add_compile_definitions(OS_LINUX)
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(OS_WINDOWS TRUE)
+    add_compile_definitions(OS_WINDOWS)
+endif()
+
 set(MISC_TARGET_FOLDER "misc")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER ${MISC_TARGET_FOLDER})
@@ -9,7 +17,7 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER ${MISC_TARGET_FOLDER})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(GRAPHICS_APIS "OpenGL" "D3D11")
+set(GRAPHICS_APIS "OpenGL" "D3D11" "Vulkan")
 
 if(NOT GRAPHICS_API)
     set(GRAPHICS_API "OpenGL" CACHE STRING "Graphics API" FORCE)
@@ -59,12 +67,16 @@ if (EMSCRIPTEN)
 endif()
 
 if (GRAPHICS_API STREQUAL "OpenGL")
-    list(APPEND COMMON_SOURCES src/opengl.h)
+    list(APPEND COMMON_SOURCES src/opengl_loader.h)
     list(APPEND COMMON_SOURCES src/renderer_opengl.cpp)
 elseif (GRAPHICS_API STREQUAL "WebGL")
     list(APPEND COMMON_SOURCES src/renderer_webgl.cpp)
 elseif (GRAPHICS_API STREQUAL "D3D11")
     list(APPEND COMMON_SOURCES src/renderer_d3d11.cpp)
+elseif (GRAPHICS_API STREQUAL "Vulkan")
+    list(APPEND COMMON_SOURCES src/vulkan_loader.h)
+    list(APPEND COMMON_SOURCES src/vulkan_loader.cpp)
+    list(APPEND COMMON_SOURCES src/renderer_vulkan.cpp)
 endif()
 
 if (EMSCRIPTEN)
@@ -73,7 +85,7 @@ if (EMSCRIPTEN)
         src/filesystem_wasm.cpp
         src/my_time_wasm.cpp
     )
-elseif (WIN32)
+elseif (OS_WINDOWS)
     set(PLATFORM_SOURCES
         src/filesystem_win32.cpp
         src/utils_win32.cpp
@@ -83,9 +95,9 @@ elseif (WIN32)
     )
 
     if (GRAPHICS_API STREQUAL "OpenGL")
-        list(APPEND COMMON_SOURCES src/opengl_win32.cpp)
+        list(APPEND COMMON_SOURCES src/opengl_loader_win32.cpp)
     endif()
-elseif (UNIX AND NOT APPLE)
+elseif (OS_LINUX)
     set(PLATFORM_SOURCES
         src/filesystem_linux.cpp
         src/platform_linux.cpp
@@ -93,7 +105,7 @@ elseif (UNIX AND NOT APPLE)
     )
 
     if (GRAPHICS_API STREQUAL "OpenGL")
-        list(APPEND COMMON_SOURCES src/opengl_linux.cpp)
+        list(APPEND COMMON_SOURCES src/opengl_loader_linux.cpp)
     endif()
 endif()
 
@@ -113,7 +125,7 @@ if(UNITY_BUILD)
     set_target_properties(blaz PROPERTIES UNITY_BUILD ON)
 endif()
 
-if (WIN32)
+if (OS_WINDOWS)
     target_link_libraries(blaz gdi32 user32)
 
     if (GRAPHICS_API STREQUAL "OpenGL")

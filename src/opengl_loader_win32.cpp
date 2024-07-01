@@ -1,5 +1,5 @@
 // clang-format off
-#include "opengl.h"
+#include "opengl_loader/opengl_loader.h"
 #include "utils_WIN32.h"
 #include "types.h"
 
@@ -46,23 +46,23 @@ typedef BOOL(APIENTRY* wglSwapIntervalEXT_TYPE)(int);
 
 wglSwapIntervalEXT_TYPE wglSwapIntervalEXT;
 
-void Opengl::set_swap_interval(u32 interval) {
+void OpenglLoader::set_swap_interval(u32 interval) {
     if (wglSwapIntervalEXT != NULL) {
         wglSwapIntervalEXT(interval);
     }
 }
 
-void Opengl::swap_buffers(blaz::Window* window) {
+void OpenglLoader::swap_buffers(blaz::Window* window) {
     SwapBuffers(m_win32_opengl->device_context);
 }
 
-Error Opengl::init(blaz::Window* window, bool debug_context) {
+Error OpenglLoader::init(blaz::Window* window, bool debug_context) {
     m_win32_opengl = (Window_WIN32_Opengl*)window->m_os_data;
 
     HGLRC m_context_win32;
 
     if (m_win32_opengl->device_context == NULL) {
-        return Error("Opengl::init: A window is needed for opengl context creation");
+        return Error("OpenglLoader::init: A window is needed for opengl context creation");
     }
 
     WNDCLASS dummy_class = {0};
@@ -238,10 +238,10 @@ Error Opengl::init(blaz::Window* window, bool debug_context) {
         return Error("wglSwapIntervalEXT unavailable");
     }
 
-#define GL_FUNCTION(return_type, name, ...)               \
-    name = (name##Type*)wglGetProcAddress(#name);         \
-    if (!name) {                                          \
-        return Error("Opengl::init : Can't load " #name); \
+#define GL_FUNCTION(return_type, name, ...)                     \
+    name = (name##Type*)wglGetProcAddress(#name);               \
+    if (!name) {                                                \
+        return Error("OpenglLoader::init : Can't load " #name); \
     }
 
     GL_FUNCTIONS_LIST
