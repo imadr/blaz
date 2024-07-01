@@ -13,7 +13,7 @@ Error VulkanLoader::init() {
         return Error("Failed to load vulkan-1.dll");
     }
 
-    PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
+    vkGetInstanceProcAddr =
         (PFN_vkGetInstanceProcAddr)GetProcAddress(vulkan_library, "vkGetInstanceProcAddr");
     if (!vkGetInstanceProcAddr) {
         FreeLibrary(vulkan_library);
@@ -21,9 +21,11 @@ Error VulkanLoader::init() {
     }
 #endif
 
-    PFN_vkCreateInstance vkCreateInstance =
-        (PFN_vkCreateInstance)vkGetInstanceProcAddr(VK_NULL_HANDLE, "vkCreateInstance");
-
     return Error();
 }
+
+void* VulkanLoader::load_function(str name) {
+    return vkGetInstanceProcAddr(VK_NULL_HANDLE, name.c_str());
+}
+
 };  // namespace blaz
