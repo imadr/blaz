@@ -258,7 +258,21 @@ Error OpenglLoader::init(blaz::Window* window, bool debug_context) {
     i32 minor;
     glGetIntegerv(GL_MAJOR_VERSION, &major);
     glGetIntegerv(GL_MINOR_VERSION, &minor);
-    logger.info("Loaded OpenGL context ", major, ".", minor);
+
+    GLint profile;
+    str gl_profile;
+    glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
+
+    if (profile & GL_CONTEXT_CORE_PROFILE_BIT) {
+        gl_profile = "Core";
+    } else {
+        gl_profile = "Compatibility";
+    }
+
+    char* vendor = (char*)glGetString(GL_VENDOR);
+    char* renderer = (char*)glGetString(GL_RENDERER);
+    logger.info(str(vendor) + ", " + str(renderer) + ", OpenGL " + std::to_string(major) + "." + std::to_string(minor) +
+                " " + gl_profile);
 
     return Error();
 }

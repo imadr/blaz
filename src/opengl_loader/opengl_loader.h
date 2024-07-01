@@ -263,6 +263,8 @@ typedef double GLclampd;
 #define GL_RED 0x1903
 #define GL_RG8 0x822B
 #define GL_RG 0x8227
+#define GL_CONTEXT_PROFILE_MASK 0x9126
+#define GL_CONTEXT_CORE_PROFILE_BIT 0x00000001
 
 #define GL_OLD_FUNCTIONS_LIST                                                               \
     GL_FUNCTION(void, glGetIntegerv, GLenum, GLint*)                                        \
