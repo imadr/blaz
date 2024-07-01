@@ -264,16 +264,6 @@ typedef double GLclampd;
 #define GL_RG8 0x822B
 #define GL_RG 0x8227
 
-#ifdef OS_WIN32
-
-#define CALLING_CONVENTION WINAPI
-
-#elif OS_LINUX
-
-#define CALLING_CONVENTION
-
-#endif
-
 #define GL_OLD_FUNCTIONS_LIST                                                               \
     GL_FUNCTION(void, glGetIntegerv, GLenum, GLint*)                                        \
     GL_FUNCTION(void, glClear, GLbitfield)                                                  \
@@ -371,7 +361,7 @@ GL_FUNCTIONS_LIST
 
 namespace blaz {
 
-struct Opengl {
+struct OpenglLoader {
     Error init(Window* window, bool debug_context);
     void swap_buffers(Window* window);
     void set_swap_interval(u32 interval);

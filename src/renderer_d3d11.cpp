@@ -76,7 +76,7 @@ Error Renderer::init_api() {
 #endif
     Error err;
     if (err) {
-        return Error("Renderer::init ->\n" + err.message());
+        return Error(err);
     }
 
     m_game->m_window.m_d3d11_data = d3d11;

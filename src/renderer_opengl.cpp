@@ -4,7 +4,7 @@
 #include "color.h"
 #include "error.h"
 #include "game.h"
-#include "opengl.h"
+#include "opengl_loader/opengl_loader.h"
 #include "platform.h"
 #include "renderer.h"
 #include "texture.h"
@@ -58,18 +58,18 @@ static std::unordered_map<MeshPrimitive, GLenum> opengl_mesh_primitive_types = {
     {MeshPrimitive::LINES, GL_LINES},
 };
 
-Opengl* gl;
+OpenglLoader* gl;
 u32 dummy_vao;
 
 Error Renderer::init_api() {
-    gl = new Opengl();
+    gl = new OpenglLoader();
     bool debug = false;
 #ifdef DEBUG_RENDERER
     debug = true;
 #endif
     Error err = gl->init(&m_game->m_window, debug);
     if (err) {
-        return Error("Renderer::init ->\n" + err.message());
+        return err;
     }
 
     gl->glGenVertexArrays(1, &dummy_vao);
