@@ -5,15 +5,21 @@
 
 namespace blaz {
 
-VulkanLoader* vk;
+#define VULKAN_FUNCTION(name) PFN_##name name;
+VULKAN_FUNCTIONS_LIST
+#undef VULKAN_FUNCTION
 
 Error Renderer::init_api() {
-    vk = new VulkanLoader();
+    VulkanLoader vulkan_loader;
 
-    Error err = vk->init();
+    Error err = vulkan_loader.init();
     if (err) {
         return err;
     }
+
+#define VULKAN_FUNCTION(name) name = (PFN_##name)vulkan_loader.load_function(#name);
+    VULKAN_FUNCTIONS_LIST
+#undef VULKAN_FUNCTION
 
     VkInstance instance;
 
@@ -25,20 +31,19 @@ Error Renderer::init_api() {
     app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     app_info.apiVersion = VK_API_VERSION_1_0;
 
-    // VkInstanceCreateInfo instance_create_info{};
-    // instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    // instance_create_info.pApplicationInfo = &app_info;
+    VkInstanceCreateInfo instance_create_info{};
+    instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    instance_create_info.pApplicationInfo = &app_info;
 
-    // VkResult result = vk->vkCreateInstance(&instance_create_info, nullptr, &instance);
-
-    // uint32_t extension_count = 0;
-    // vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
-    // std::vector<VkExtensionProperties> extensions(extension_count);
-    // vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
-    // std::cout << "available extensions:\n";
-    // for (const auto& extension : extensions) {
-    //     std::cout << '\t' << extension.extensionName << '\n';
-    // }
+    VkResult result = vkCreateInstance(&instance_create_info, nullptr, &instance);
+    uint32_t extension_count = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
+    std::vector<VkExtensionProperties> extensions(extension_count);
+    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
+    std::cout << "available extensions:\n";
+    for (const auto& extension : extensions) {
+        std::cout << '\t' << extension.extensionName << '\n';
+    }
 
     return Error();
 }
