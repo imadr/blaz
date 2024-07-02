@@ -71,7 +71,8 @@ Error Renderer::init_api() {
                 }
             }
             if (!found) {
-                return Error(str(layer_name) + " not found");
+                enable_validation_layers = false;
+                logger.error(Error(str(layer_name) + " not found"));
             }
         }
     }
