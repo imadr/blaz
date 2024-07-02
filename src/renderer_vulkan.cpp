@@ -9,6 +9,10 @@ namespace blaz {
 VULKAN_FUNCTIONS_LIST
 #undef VULKAN_FUNCTION
 
+#define VULKAN_FUNCTION(name) PFN_##name name;
+VULKAN_INSTANCE_FUNCTIONS_LIST
+#undef VULKAN_FUNCTION
+
 Error Renderer::init_api() {
     VulkanLoader vulkan_loader;
 
@@ -31,19 +35,84 @@ Error Renderer::init_api() {
     app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     app_info.apiVersion = VK_API_VERSION_1_0;
 
+    uint32_t extension_count = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
+    vec<VkExtensionProperties> extensions(extension_count);
+    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
+    // std::cout << "available extensions:\n";
+    for (const auto& extension : extensions) {
+        // std::cout << '\t' << extension.extensionName << '\n';
+    }
+
+    bool enable_validation_layers = false;
+#ifdef DEBUG_RENDERER
+    enable_validation_layers = true;
+    const vec<const char*> validation_layers = {"VK_LAYER_KHRONOS_validation"};
+#endif
+
+    if (enable_validation_layers) {
+        uint32_t validation_layer_count;
+        vkEnumerateInstanceLayerProperties(&validation_layer_count, nullptr);
+
+        vec<VkLayerProperties> available_validation_layers(validation_layer_count);
+        vkEnumerateInstanceLayerProperties(&validation_layer_count,
+                                           available_validation_layers.data());
+        // std::cout << "available layers:\n";
+        for (const auto& layer : available_validation_layers) {
+            // std::cout << '\t' << layer.layerName << '\n';
+        }
+
+        for (const char* layer_name : validation_layers) {
+            bool found = false;
+            for (const auto& layerProperties : available_validation_layers) {
+                if (strcmp(layer_name, layerProperties.layerName) == 0) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return Error(str(layer_name) + " not found");
+            }
+        }
+    }
     VkInstanceCreateInfo instance_create_info{};
     instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instance_create_info.pApplicationInfo = &app_info;
+    if (enable_validation_layers) {
+        instance_create_info.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
+        instance_create_info.ppEnabledLayerNames = validation_layers.data();
+    } else {
+        instance_create_info.enabledLayerCount = 0;
+    }
 
     VkResult result = vkCreateInstance(&instance_create_info, nullptr, &instance);
-    uint32_t extension_count = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
-    std::vector<VkExtensionProperties> extensions(extension_count);
-    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, extensions.data());
-    std::cout << "available extensions:\n";
-    for (const auto& extension : extensions) {
-        std::cout << '\t' << extension.extensionName << '\n';
+
+#define VULKAN_FUNCTION(name) \
+    name = (PFN_##name)vulkan_loader.load_instance_function(instance, #name);
+    VULKAN_INSTANCE_FUNCTIONS_LIST
+#undef VULKAN_FUNCTION
+
+    VkPhysicalDevice physical_device = VK_NULL_HANDLE;
+    uint32_t device_count = 0;
+    vkEnumeratePhysicalDevices(instance, &device_count, nullptr);
+
+    if (device_count == 0) {
+        return Error("Failed to find GPUs with Vulkan support");
     }
+
+    vec<VkPhysicalDevice> devices(device_count);
+    vkEnumeratePhysicalDevices(instance, &device_count, devices.data());
+
+    str device_name;
+    for (auto& device : devices) {
+        VkPhysicalDeviceProperties device_propreties;
+        vkGetPhysicalDeviceProperties(device, &device_propreties);
+        device_name = device_propreties.deviceName;
+        break;  // @note taking only first device now, should expose list of devices
+    }
+
+    logger.info(device_name + ", Vulkan "); /*+ std::to_string(major) + "." + std::to_string(minor)
+                + " " + gl_profile);*/
 
     return Error();
 }
