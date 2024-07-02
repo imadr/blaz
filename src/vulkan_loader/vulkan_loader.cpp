@@ -28,4 +28,8 @@ void* VulkanLoader::load_function(str name) {
     return vkGetInstanceProcAddr(VK_NULL_HANDLE, name.c_str());
 }
 
+void* VulkanLoader::load_instance_function(VkInstance instance, str name) {
+    return vkGetInstanceProcAddr(instance, name.c_str());
+}
+
 };  // namespace blaz

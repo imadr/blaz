@@ -269,9 +269,8 @@ Error OpenglLoader::init(blaz::Window* window, bool debug_context) {
         gl_profile = "Compatibility";
     }
 
-    char* vendor = (char*)glGetString(GL_VENDOR);
     char* renderer = (char*)glGetString(GL_RENDERER);
-    logger.info(str(vendor) + ", " + str(renderer) + ", OpenGL " + std::to_string(major) + "." + std::to_string(minor) +
+    logger.info(str(renderer) + ", OpenGL " + std::to_string(major) + "." + std::to_string(minor) +
                 " " + gl_profile);
 
     return Error();
