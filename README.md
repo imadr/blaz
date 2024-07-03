@@ -21,27 +21,12 @@ You can also use **cmake-gui**
 
 ## Samples
 
-<table border="0">
-<tr>
-  <td>
-    <img src="samples/tests/01-hellotriangle.bmp" width="300"/><br>
-    01-triangle
-  </td>
-  <td>
-    <img src="samples/tests/02-cubes.bmp" width="300"/><br>
-    02-cubes
-  </td> 
-  <td>
-    <img src="samples/tests/03-pbr.bmp" width="300"/><br>
-    03-pbr
-  </td>
-  <td>
-    <img src="samples/tests/04-raymarching.bmp" width="300"/><br>
-    04-raymarching
-  </td>
-  <td>
-    <img src="samples/tests/05-physics.bmp" width="300"/><br>
-    05-physics
-  </td>
-</tr>
-</table>
+
+| <b>Sample</b>                      |<b>Screenshot</b>                                                                               |
+|-----------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| 01-triangle           | <img src="/samples/tests/01-hellotriangle.bmp" width="300"/><br>                       |
+| 02-cubes              | <img src="/samples/tests/02-cubes.bmp" width="300"/><br>                               |
+| 03-pbr                | <img src="/samples/tests/03-pbr.bmp" width="300"/><br>                                 |
+| 04-raymarching        | <img src="/samples/tests/04-raymarching.bmp" width="300"/><br>                         |
+| 05-raytracing         | <img src="/samples/tests/05-raytracing.bmp" width="300"/><br>                          |
+| 06-physics            | <img src="/samples/tests/06-physics.bmp" width="300"/><br>                             |
