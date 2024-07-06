@@ -1,5 +1,7 @@
 # 🔥 blaz
 
+3D engine with no dependencies, all code is written from scratch
+
 ## Building
 
 - [Install CMake >= 3.12](https://cmake.org/download/)
@@ -7,17 +9,7 @@
 - ```cd blaz```
 - ```mkdir build && cd build```
 - ```cmake ..``` to generate the build files
-- ```cmake --build .``` to run the build **or** use the generated visual studio project file/makefile to build
-You can also use **cmake-gui**
-
-#### Building for web
-
-- Install [emscripten](https://emscripten.org/)
-- ```emsdk_env.bat``` or ```emsdk_env.sh```
-- ```mkdir build_wasm && cd build_wasm```
-- ```emcmake cmake ..```
-- ```cmake --build .```
-- To build a specific sample ```cmake --build . --target "01-hellotriangle"```
+- ```cmake --build .``` to run the build **or** use the generated visual studio project file/makefile to build<br>You can also use **cmake-gui**
 
 ## Samples
 
@@ -30,3 +22,12 @@ You can also use **cmake-gui**
 | 04-raymarching        | <img src="/samples/tests/04-raymarching.bmp" width="300"/><br>                         |
 | 05-raytracing         | <img src="/samples/tests/05-raytracing.bmp" width="300"/><br>                          |
 | 06-physics            | <img src="/samples/tests/06-physics.bmp" width="300"/><br>                             |
+
+## Building for web
+
+- Install [emscripten](https://emscripten.org/)
+- ```emsdk_env.bat``` or ```emsdk_env.sh```
+- ```mkdir build_wasm && cd build_wasm```
+- ```emcmake cmake ..```
+- ```cmake --build .```
+- To build a specific sample ```cmake --build . --target "01-hellotriangle"```
