@@ -7,26 +7,33 @@
 using namespace blaz;
 
 int main() {
+    Window window;
+    Error err = window.init("04-raymarching");
+    if (err) {
+        logger.error(err);
+        return 1;
+    }
+
+    Renderer renderer;
+    err = renderer.init(&window);
+    if (err) {
+        logger.error(err);
+        return 1;
+    }
+
+    Scene scene;
+    init_scene(&scene);
+
     Game game;
-
-    Error err = game.load_game("data/game.cfg");
+    game.m_window = &window;
+    game.m_renderer = &renderer;
+    game.m_scene = &scene;
+    err = game.load_game("data/game.cfg");
     if (err) {
         logger.error(err);
     }
 
-    err = game.m_window.init("04-raymarching");
-    if (err) {
-        logger.error(err);
-        return 1;
-    }
-
-    err = game.m_renderer.init(&game);
-    if (err) {
-        logger.error(err);
-        return 1;
-    }
-
-    game.m_renderer.add_uniform_buffer(UniformBuffer{
+    renderer.create_uniform_buffer(UniformBuffer{
         .m_name = "u_info",
         .m_binding_point = 0,
         .m_uniforms =
@@ -47,19 +54,16 @@ int main() {
         .m_should_reload = true,
     });
 
-    UniformBuffer* info_uniform =
-        &game.m_renderer.m_uniform_buffers[game.m_renderer.m_uniform_buffers_ids["u_info"]];
-
-    auto resize_callback = [&game, &info_uniform](Window* window) {
-        game.m_renderer.set_uniform_buffer_data(
-            info_uniform, "u_resolution",
-            Vec2(f32(game.m_window.m_size.width), f32(game.m_window.m_size.height)));
+    auto resize_callback = [&game](Window* window) {
+        game.m_renderer->set_uniform_buffer_data(
+            "u_info", "u_resolution",
+            Vec2(f32(game.m_window->m_size.width), f32(game.m_window->m_size.height)));
     };
-    game.m_window.m_resize_callbacks.push_back(resize_callback);
-    resize_callback(&game.m_window);
+    window.m_resize_callbacks.push_back(resize_callback);
+    resize_callback(&window);
 
-    game.m_window.m_mouse_click_callback = [&game](Vec2I mouse_position, ButtonState left_button,
-                                                   ButtonState right_button) {
+    window.m_mouse_click_callback = [&game](Vec2I mouse_position, ButtonState left_button,
+                                            ButtonState right_button) {
         if (left_button == ButtonState::PRESSED) {
             game.main_camera->m_mouse_left_pressed = true;
         } else if (left_button == ButtonState::RELEASED) {
@@ -73,19 +77,19 @@ int main() {
         }
     };
 
-    auto update_camera_uniforms = [&game, &info_uniform]() {
-        game.m_renderer.set_uniform_buffer_data(info_uniform, "u_camera_position",
-                                                game.get_node_by_name("main_camera")->m_position);
-        game.m_renderer.set_uniform_buffer_data(info_uniform, "u_camera_target",
+    auto update_camera_uniforms = [&game]() {
+        game.m_renderer->set_uniform_buffer_data("u_info", "u_camera_position",
+                                                game.m_scene->m_nodes["main_camera"].m_position);
+        game.m_renderer->set_uniform_buffer_data("u_info", "u_camera_target",
                                                 game.main_camera->m_orbit_target);
     };
 
-    game.m_window.m_mouse_move_raw_callback = [&game, &update_camera_uniforms](Vec2I delta) {
+    window.m_mouse_move_raw_callback = [&game, &update_camera_uniforms](Vec2I delta) {
         game.main_camera->orbit_mouse_move(delta);
         update_camera_uniforms();
     };
 
-    game.m_window.m_mouse_wheel_callback = [&game, &update_camera_uniforms](i16 delta) {
+    window.m_mouse_wheel_callback = [&game, &update_camera_uniforms](i16 delta) {
         game.main_camera->orbit_mouse_wheel(delta);
         update_camera_uniforms();
     };
@@ -98,12 +102,12 @@ int main() {
     update_camera_uniforms();
 
     game.main_loop = [&game]() {
-        if (game.m_window.event_loop()) {
-            game.m_renderer.update();
+        if (game.m_window->event_loop()) {
+            game.m_renderer->update();
 
-            if (!game.took_screen_start) {
-                game.m_window.screenshot("04-raymarching.bmp");
-                game.took_screen_start = true;
+            if (!game.took_screenshot_start) {
+                game.m_window->screenshot("04-raymarching.bmp");
+                game.took_screenshot_start = true;
             }
             return true;
         }

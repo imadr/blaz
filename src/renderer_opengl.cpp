@@ -22,6 +22,8 @@ struct UniformBuffer_OPENGL {
 
 struct Shader_OPENGL {
     GLuint m_program = 0;
+    GLuint m_vertex_shader = 0;
+    GLuint m_fragment_shader = 0;
 };
 
 struct Texture_OPENGL {
@@ -67,7 +69,7 @@ Error Renderer::init_api() {
 #ifdef DEBUG_RENDERER
     debug = true;
 #endif
-    Error err = gl->init(&m_game->m_window, debug);
+    Error err = gl->init(m_window, debug);
     if (err) {
         return err;
     }
@@ -93,57 +95,23 @@ void Renderer::clear(u32 clear_flag, RGBA clear_color, float clear_depth) {
 }
 
 void Renderer::present() {
-    gl->swap_buffers(&m_game->m_window);
+    gl->swap_buffers(m_window);
 }
 
 void Renderer::set_swap_interval(u32 interval) {
     gl->set_swap_interval(interval);
 }
 
-Error Renderer::compile_shader(Shader* shader) {
+Error Renderer::create_shader_api(str shader_id) {
+    Shader* shader = &m_shaders[shader_id];
     GLuint vertex_shader;
     vertex_shader = gl->glCreateShader(GL_VERTEX_SHADER);
-
-    const char* c_str = shader->m_vertex_shader_source.c_str();
-    gl->glShaderSource(vertex_shader, 1, &c_str, NULL);
-    gl->glCompileShader(vertex_shader);
-
-    int success;
-    char info[512];
-    gl->glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        gl->glGetShaderInfoLog(vertex_shader, 512, NULL, info);
-        gl->glDeleteShader(vertex_shader);
-        return Error("Renderer::compile_shader: Failed to compile vertex shader \"" +
-                     shader->m_name + "\" : " + str(info));
-    }
-
     GLuint fragment_shader;
     fragment_shader = gl->glCreateShader(GL_FRAGMENT_SHADER);
-    c_str = shader->m_fragment_shader_source.c_str();
-    gl->glShaderSource(fragment_shader, 1, &c_str, NULL);
-    gl->glCompileShader(fragment_shader);
-    gl->glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        gl->glGetShaderInfoLog(fragment_shader, 512, NULL, info);
-        gl->glDeleteShader(fragment_shader);
-        return Error("Renderer::compile_shader: Failed to compile fragment shader \"" +
-                     shader->m_name + "\" : " + str(info));
-    }
-
     GLuint shader_program;
     shader_program = gl->glCreateProgram();
-
     gl->glAttachShader(shader_program, vertex_shader);
     gl->glAttachShader(shader_program, fragment_shader);
-    gl->glLinkProgram(shader_program);
-    gl->glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
-    if (!success) {
-        gl->glGetProgramInfoLog(shader_program, 512, NULL, info);
-        gl->glDeleteProgram(shader_program);
-        return Error("Renderer::compile_shader: Failed to link shader program \"" + shader->m_name +
-                     "\" : " + str(info));
-    }
 
 #ifdef DEBUG_RENDERER
     gl->glObjectLabel(GL_PROGRAM, shader_program, -1, shader->m_name.c_str());
@@ -151,49 +119,120 @@ Error Renderer::compile_shader(Shader* shader) {
     gl->glObjectLabel(GL_SHADER, fragment_shader, -1, (shader->m_name + "_fragment").c_str());
 #endif
 
-    gl->glDeleteShader(vertex_shader);
-    gl->glDeleteShader(fragment_shader);
-
     Shader_OPENGL* api_shader = new Shader_OPENGL;
     api_shader->m_program = shader_program;
-
+    api_shader->m_vertex_shader = vertex_shader;
+    api_shader->m_fragment_shader = fragment_shader;
     shader->m_api_data = api_shader;
 
+    return Error();
+}
+
+Error Renderer::reload_shader_api(str shader_id) {
+    Shader* shader = &m_shaders[shader_id];
+    Shader_OPENGL* api_shader = (Shader_OPENGL*)shader->m_api_data;
+
+    const char* c_str = shader->m_vertex_shader_source.c_str();
+    gl->glShaderSource(api_shader->m_vertex_shader, 1, &c_str, NULL);
+    gl->glCompileShader(api_shader->m_vertex_shader);
+
+    int success;
+    char info[512];
+    gl->glGetShaderiv(api_shader->m_vertex_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        gl->glGetShaderInfoLog(api_shader->m_vertex_shader, 512, NULL, info);
+        gl->glDeleteShader(api_shader->m_vertex_shader);
+        return Error("Renderer::compile_shader: Failed to compile vertex shader \"" +
+                     shader->m_name + "\" : " + str(info));
+    }
+
+    c_str = shader->m_fragment_shader_source.c_str();
+    gl->glShaderSource(api_shader->m_fragment_shader, 1, &c_str, NULL);
+    gl->glCompileShader(api_shader->m_fragment_shader);
+    gl->glGetShaderiv(api_shader->m_fragment_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        gl->glGetShaderInfoLog(api_shader->m_fragment_shader, 512, NULL, info);
+        gl->glDeleteShader(api_shader->m_fragment_shader);
+        return Error("Renderer::compile_shader: Failed to compile fragment shader \"" +
+                     shader->m_name + "\" : " + str(info));
+    }
+
+    gl->glLinkProgram(api_shader->m_program);
+    gl->glGetProgramiv(api_shader->m_program, GL_LINK_STATUS, &success);
+    if (!success) {
+        gl->glGetProgramInfoLog(api_shader->m_program, 512, NULL, info);
+        gl->glDeleteProgram(api_shader->m_program);
+        return Error("Renderer::compile_shader: Failed to link shader program \"" + shader->m_name +
+                     "\" : " + str(info));
+    }
+
     GLint n_uniforms, max_len;
-    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
-    gl->glGetProgramiv(shader_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
+    gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
+    gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
     GLchar* uniform_name = (GLchar*)malloc(max_len);
 
-    gl->glUseProgram(shader_program);
+    gl->glUseProgram(api_shader->m_program);
 
     if (uniform_name != NULL) {
         for (i32 i = 0; i < n_uniforms; i++) {
             GLint size = -1;
             GLenum type = -1;
-            gl->glGetActiveUniform(shader_program, i, max_len, NULL, &size, &type, uniform_name);
+            gl->glGetActiveUniform(api_shader->m_program, i, max_len, NULL, &size, &type,
+                                   uniform_name);
             if (type == GL_SAMPLER_2D) {
-                GLint location = gl->glGetUniformLocation(shader_program, uniform_name);
+                GLint location = gl->glGetUniformLocation(api_shader->m_program, uniform_name);
                 GLint binding_point;
-                gl->glGetUniformiv(shader_program, location, &binding_point);
+                gl->glGetUniformiv(api_shader->m_program, location, &binding_point);
                 shader->m_textures_binding_points[uniform_name] = binding_point;
             }
         }
     }
 
+    shader->m_should_reload = false;
     return Error();
 }
 
-Error Renderer::upload_mesh(Mesh* mesh) {
+void Renderer::set_current_shader(str shader_id) {
+    Shader* shader = &m_shaders[shader_id];
+    gl->glUseProgram(((Shader_OPENGL*)shader->m_api_data)->m_program);
+}
+
+void Renderer::set_bufferless_mesh() {
+    gl->glBindVertexArray(dummy_vao);
+}
+
+Error Renderer::create_mesh_api(str mesh_id) {
+    Mesh* mesh = &m_meshes[mesh_id];
+
     u32 vbo, vao, ebo;
     gl->glGenVertexArrays(1, &vao);
     gl->glGenBuffers(1, &vbo);
     gl->glGenBuffers(1, &ebo);
-    gl->glBindVertexArray(vao);
 
-    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    Mesh_OPENGL* api_mesh = new Mesh_OPENGL;
+    api_mesh->m_vbo = vbo;
+    api_mesh->m_ebo = ebo;
+    api_mesh->m_vao = vao;
+    mesh->m_api_data = api_mesh;
+
+#ifdef DEBUG_RENDERER
+    gl->glObjectLabel(GL_VERTEX_ARRAY, vao, -1, (mesh->m_name + "_vao").c_str());
+    gl->glObjectLabel(GL_BUFFER, vbo, -1, (mesh->m_name + "_vbo").c_str());
+    gl->glObjectLabel(GL_BUFFER, ebo, -1, (mesh->m_name + "_ebo").c_str());
+#endif
+
+    return Error();
+}
+
+Error Renderer::reload_mesh_api(str mesh_id) {
+    Mesh* mesh = &m_meshes[mesh_id];
+    Mesh_OPENGL* api_mesh = (Mesh_OPENGL*)mesh->m_api_data;
+
+    gl->glBindVertexArray(api_mesh->m_vao);
+    gl->glBindBuffer(GL_ARRAY_BUFFER, api_mesh->m_vbo);
     gl->glBufferData(GL_ARRAY_BUFFER, mesh->m_vertices.size() * sizeof(f32),
                      mesh->m_vertices.data(), GL_STATIC_DRAW);
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, api_mesh->m_ebo);
     gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->m_indices.size() * sizeof(u32),
                      mesh->m_indices.data(), GL_STATIC_DRAW);
 
@@ -210,22 +249,53 @@ Error Renderer::upload_mesh(Mesh* mesh) {
         attribs_offset += mesh->m_attribs[i].second;
     }
 
-    Mesh_OPENGL* api_mesh = new Mesh_OPENGL;
-    api_mesh->m_vbo = vbo;
-    api_mesh->m_ebo = ebo;
-    api_mesh->m_vao = vao;
-    mesh->m_api_data = api_mesh;
-
-#ifdef DEBUG_RENDERER
-    gl->glObjectLabel(GL_VERTEX_ARRAY, vao, -1, mesh->m_name.c_str());
-    gl->glObjectLabel(GL_BUFFER, vbo, -1, (mesh->m_name + "_vbo").c_str());
-    gl->glObjectLabel(GL_BUFFER, ebo, -1, (mesh->m_name + "_ebo").c_str());
-#endif
+    mesh->m_should_reload = false;
 
     return Error();
 }
 
-Error Renderer::init_uniform_buffer(UniformBuffer* uniform_buffer) {
+void Renderer::set_current_mesh(str mesh_id) {
+    Mesh* mesh = &m_meshes[mesh_id];
+    gl->glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
+}
+
+Error Renderer::create_framebuffer_api(str framebuffer_id) {
+    Framebuffer* framebuffer = &m_framebuffers[framebuffer_id];
+
+    u32 fbo;
+    gl->glGenFramebuffers(1, &fbo);
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    // todo attachements
+    // Texture texture;
+    // texture.m_name = framebuffer->m_name + "_texture";
+    // texture.m_width = framebuffer->m_width, texture.m_height = framebuffer->m_height,
+    // texture.m_texture_params = framebuffer->m_texture_params;
+    // m_textures.push_back(texture);
+    // m_textures_ids[texture.m_name] = u32(m_textures.size()) - 1;
+    // gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+    //                            ((Texture_OPENGL*)texture.m_api_data)->m_texture_name, 0);
+
+    Framebuffer_OPENGL* api_framebuffer = new Framebuffer_OPENGL;
+    api_framebuffer->m_fbo = fbo;
+    framebuffer->m_api_data = api_framebuffer;
+
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return Error();
+}
+
+void Renderer::set_current_framebuffer(str framebuffer_id) {
+    Framebuffer* framebuffer = &m_framebuffers[framebuffer_id];
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, ((Framebuffer_OPENGL*)framebuffer->m_api_data)->m_fbo);
+}
+
+void Renderer::set_default_framebuffer() {
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+Error Renderer::create_uniform_buffer_api(str uniform_buffer_id) {
+    UniformBuffer* uniform_buffer = &m_uniform_buffers[uniform_buffer_id];
     GLuint ubo;
     gl->glGenBuffers(1, &ubo);
     gl->glBindBuffer(GL_UNIFORM_BUFFER, ubo);
@@ -244,8 +314,9 @@ Error Renderer::init_uniform_buffer(UniformBuffer* uniform_buffer) {
     return Error();
 }
 
-Error Renderer::set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform_name,
+Error Renderer::set_uniform_buffer_data(str uniform_buffer_id, str uniform_name,
                                         UniformValue value) {
+    UniformBuffer* uniform_buffer = &m_uniform_buffers[uniform_buffer_id];
     gl->glBindBuffer(GL_UNIFORM_BUFFER, ((UniformBuffer_OPENGL*)uniform_buffer->m_api_data)->m_ubo);
     Uniform& uniform = uniform_buffer->m_uniforms[uniform_buffer->m_uniforms_ids[uniform_name]];
     gl->glBufferSubData(GL_UNIFORM_BUFFER, uniform.m_offset, uniform.m_size, &value);
@@ -253,21 +324,11 @@ Error Renderer::set_uniform_buffer_data(UniformBuffer* uniform_buffer, str unifo
     return Error();
 }
 
-void Renderer::set_shader(Shader* shader) {
-    gl->glUseProgram(((Shader_OPENGL*)shader->m_api_data)->m_program);
-}
+Error Renderer::create_texture_api(str texture_id) {
+    Texture* texture = &m_textures[texture_id];
 
-Error Renderer::upload_texture(Texture* texture) {
     u32 texture_name;
     gl->glGenTextures(1, &texture_name);
-    gl->glBindTexture(GL_TEXTURE_2D, texture_name);
-
-    gl->glTexImage2D(GL_TEXTURE_2D, 0,
-                     opengl_texture_formats[texture->m_texture_params.m_format].first,
-                     texture->m_width, texture->m_height, 0,
-                     opengl_texture_formats[texture->m_texture_params.m_format].second,
-                     GL_UNSIGNED_BYTE, texture->m_data.data());
-
     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
                         opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_s]);
     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
@@ -278,11 +339,27 @@ Error Renderer::upload_texture(Texture* texture) {
     gl->glTexParameteri(
         GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
         opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_mag]);
-    gl->glGenerateMipmap(GL_TEXTURE_2D);
 
     Texture_OPENGL* api_texture = new Texture_OPENGL;
     api_texture->m_texture_name = texture_name;
     texture->m_api_data = api_texture;
+
+    return Error();
+}
+
+Error Renderer::reload_texture_api(str texture_id) {
+    Texture* texture = &m_textures[texture_id];
+    Texture_OPENGL* api_texture = (Texture_OPENGL*)texture->m_api_data;
+
+    gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
+    gl->glTexImage2D(GL_TEXTURE_2D, 0,
+                     opengl_texture_formats[texture->m_texture_params.m_format].first,
+                     texture->m_width, texture->m_height, 0,
+                     opengl_texture_formats[texture->m_texture_params.m_format].second,
+                     GL_UNSIGNED_BYTE, texture->m_data.data());
+    gl->glGenerateMipmap(GL_TEXTURE_2D);
+
+    texture->m_should_reload = false;
 
     return Error();
 }
@@ -294,47 +371,10 @@ void Renderer::set_textures(Pass* pass, Shader* shader) {
             continue;
         }
         gl->glActiveTexture(GL_TEXTURE0 + texture_binding_point);
-        Texture* texture = &m_textures[m_textures_ids[texture_uniform.second]];
+        Texture* texture = &m_textures[texture_uniform.second];
         gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
     }
 }
-
-// Error Renderer::create_framebuffer(Framebuffer* framebuffer) {
-//     u32 fbo;
-//     gl->glGenFramebuffers(1, &fbo);
-//     gl->glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-//     Texture texture = {
-//         .m_width = framebuffer->m_width,
-//         .m_height = framebuffer->m_height,
-//         .m_texture_params = framebuffer->m_texture_params,
-//     };
-//     Error err = create_texture(&texture);
-//     if (err) {
-//         return err;
-//     }
-
-//     // @note change this to framebuffer type?
-//     if (framebuffer->m_texture_params.m_format == TextureFormat::DEPTH32F) {
-//         gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-//                                    ((Texture_OPENGL*)texture.m_api_data)->m_texture_name, 0);
-//         gl->glDrawBuffer(GL_NONE);
-//         gl->glReadBuffer(GL_NONE);
-//     } else {
-//         gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-//                                    ((Texture_OPENGL*)texture.m_api_data)->m_texture_name, 0);
-//     }
-
-//     Framebuffer_OPENGL* api_framebuffer = new Framebuffer_OPENGL;
-//     api_framebuffer->m_fbo = fbo;
-//     framebuffer->m_api_data = api_framebuffer;
-
-//     gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-//     m_texture_manager->m_textures[framebuffer->m_name] = std::move(texture);
-
-//     return Error();
-// }
 
 void Renderer::debug_marker_start(str name) {
     gl->glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, name.c_str());
@@ -344,16 +384,8 @@ void Renderer::debug_marker_end() {
     gl->glPopDebugGroup();
 }
 
-void Renderer::set_default_framebuffer() {
-    gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
 void Renderer::set_viewport(u32 x, u32 y, u32 width, u32 height) {
     gl->glViewport(x, y, width, height);
-}
-
-void Renderer::set_framebuffer(Framebuffer* framebuffer) {
-    gl->glBindFramebuffer(GL_FRAMEBUFFER, ((Framebuffer_OPENGL*)framebuffer->m_api_data)->m_fbo);
 }
 
 void Renderer::set_depth_test(bool enabled) {
@@ -384,15 +416,12 @@ void Renderer::set_face_culling(bool enabled, CullingMode mode, CullingOrder ord
     }
 }
 
-void Renderer::draw_mesh(Mesh* mesh) {
-    gl->glBindVertexArray(((Mesh_OPENGL*)mesh->m_api_data)->m_vao);
-    gl->glDrawElements(opengl_mesh_primitive_types[mesh->m_primitive],
-                       GLsizei(mesh->m_indices.size()), GL_UNSIGNED_INT, 0);
+void Renderer::draw(MeshPrimitive primitive, size_t count) {
+    gl->glDrawArrays(opengl_mesh_primitive_types[primitive], 0, GLsizei(count));
 }
 
-void Renderer::draw_bufferless(u32 count) {
-    gl->glBindVertexArray(dummy_vao);
-    gl->glDrawArrays(GL_TRIANGLES, 0, count);
+void Renderer::draw_indexed(MeshPrimitive primitive, size_t count) {
+    gl->glDrawElements(opengl_mesh_primitive_types[primitive], GLsizei(count), GL_UNSIGNED_INT, 0);
 }
 
 }  // namespace blaz

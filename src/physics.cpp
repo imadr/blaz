@@ -2,9 +2,8 @@
 
 namespace blaz {
 
-void Physics::add_rigidbody(Rigidbody rigidbody) {
-    m_rigidbodies.push_back(rigidbody);
-    m_rigidbodies_ids[rigidbody.m_name] = u32(m_rigidbodies.size()) - 1;
+void Physics::create_rigidbody(Rigidbody rigidbody) {
+    m_rigidbodies.add(rigidbody);
 }
 
 void Physics::init() {

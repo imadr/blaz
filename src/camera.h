@@ -17,7 +17,7 @@ enum class CameraMode { ORBIT };
 struct Camera {
     str m_name;
     Scene* m_scene = NULL;
-    u32 m_node = NULL;
+    str m_node;
 
     f32 m_fov = rad(90);
     f32 m_z_near = 0.1f;

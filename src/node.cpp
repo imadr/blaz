@@ -8,20 +8,16 @@ void init_scene(Scene* scene) {
     Node root_node = Node{.m_name = "root_node"};
     root_node.m_scene = scene;
     root_node.is_root_node = true;
-    scene->m_nodes.push_back(root_node);
-    scene->m_nodes_ids["root_node"] = 0;
+    scene->m_nodes.add(root_node);
 }
 
 void add_node(Scene* scene, Node node, str parent) {
     node.m_scene = scene;
-    if (scene->m_nodes_ids.contains(parent)) {
+    if (scene->m_nodes.contains(parent)) {
         node.update_matrix();
-        u32 parent_id = scene->m_nodes_ids[parent];
-        node.m_parent = parent_id;
-        scene->m_nodes.push_back(node);
-        u32 node_id = u32(scene->m_nodes.size()) - 1;
-        scene->m_nodes_ids[node.m_name] = node_id;
-        scene->m_nodes[node.m_parent].m_children.push_back(node_id);
+        node.m_parent = parent;
+        scene->m_nodes.add(node);
+        scene->m_nodes[parent].m_children.push_back(node.m_name);
     } else {
         logger.error("Parent node \"%s\" not found", parent);
     }
@@ -33,7 +29,7 @@ void Node::update_matrix() {
     if (!is_root_node) {
         m_global_matrix = m_local_matrix * m_scene->m_nodes[m_parent].m_global_matrix;
     }
-    for (u32 child : m_children) {
+    for (str child : m_children) {
         m_scene->m_nodes[child].update_matrix();
     }
 }
