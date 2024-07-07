@@ -11,12 +11,12 @@
 
 namespace blaz {
 
-Error load_texture(Texture* texture) {
+Error load_texture_data_from_file(Texture* texture) {
     // @todo file format check here
-    return load_texture_from_tga_file(texture);
+    return load_texture_data_from_tga_file(texture);
 }
 
-Error load_texture_from_tga_file(Texture* texture) {
+Error load_texture_data_from_tga_file(Texture* texture) {
     pair<Error, vec<u8>> file_content = read_whole_file_binary(texture->m_path);
     if (file_content.first) {
         return file_content.first;

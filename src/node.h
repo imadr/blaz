@@ -13,8 +13,8 @@ struct Node {
     str m_name;
     Scene* m_scene = NULL;
     bool is_root_node = false;
-    u32 m_parent = 0;
-    vec<u32> m_children;
+    str m_parent;
+    vec<str> m_children;
 
     Vec3 m_position = Vec3(0, 0, 0);
     Quat m_rotation = Quat(0, 0, 0, 1);
@@ -39,8 +39,7 @@ struct Node {
 };
 
 struct Scene {
-    vec<Node> m_nodes;
-    std::unordered_map<str, u32> m_nodes_ids;
+    ArrayMap<Node> m_nodes;
 };
 
 void init_scene(Scene* scene);

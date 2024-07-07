@@ -2,35 +2,43 @@
 #include "game.h"
 #include "logger.h"
 #include "my_time.h"
+
 using namespace blaz;
 
 int main() {
+    Window window;
+    Error err = window.init("01-hellotriangle");
+    if (err) {
+        logger.error(err);
+        return 1;
+    }
+
+    Renderer renderer;
+    err = renderer.init(&window);
+    if (err) {
+        logger.error(err);
+        return 1;
+    }
+
+    Scene scene;
+    init_scene(&scene);
+
     Game game;
-
-    Error err = game.load_game("data/game.cfg");
+    game.m_window = &window;
+    game.m_renderer = &renderer;
+    game.m_scene = &scene;
+    err = game.load_game("data/game.cfg");
     if (err) {
         logger.error(err);
-    }
-
-    err = game.m_window.init("01-hellotriangle");
-    if (err) {
-        logger.error(err);
-        return 1;
-    }
-
-    err = game.m_renderer.init(&game);
-    if (err) {
-        logger.error(err);
-        return 1;
     }
 
     game.main_loop = [&game]() {
-        if (game.m_window.event_loop()) {
-            game.m_renderer.update();
+        if (game.m_window->event_loop()) {
+            game.m_renderer->update();
 
-            if (!game.took_screen_start) {
-                game.m_window.screenshot("01-hellotriangle.bmp");
-                game.took_screen_start = true;
+            if (!game.took_screenshot_start) {
+                game.m_window->screenshot("01-hellotriangle.bmp");
+                game.took_screenshot_start = true;
             }
 
             return true;

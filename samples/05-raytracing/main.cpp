@@ -7,32 +7,39 @@
 using namespace blaz;
 
 int main() {
-    Game game; 
-
-    Error err = game.load_game("data/game.cfg");
-    if (err) {
-        logger.error(err);
-    }
-
-    err = game.m_window.init("05-raytracing");
+    Window window;
+    Error err = window.init("05-raytracing");
     if (err) {
         logger.error(err);
         return 1;
     }
 
-    err = game.m_renderer.init(&game);
+    Renderer renderer;
+    err = renderer.init(&window);
     if (err) {
         logger.error(err);
         return 1;
+    }
+
+    Scene scene;
+    init_scene(&scene);
+
+    Game game;
+    game.m_window = &window;
+    game.m_renderer = &renderer;
+    game.m_scene = &scene;
+    err = game.load_game("data/game.cfg");
+    if (err) {
+        logger.error(err);
     }
 
     game.main_loop = [&game]() {
-        if (game.m_window.event_loop()) {
-            game.m_renderer.update();
+        if (game.m_window->event_loop()) {
+            game.m_renderer->update();
 
-            if (!game.took_screen_start) {
-                game.m_window.screenshot("05-raytracing.bmp");
-                game.took_screen_start = true;
+            if (!game.took_screenshot_start) {
+                game.m_window->screenshot("05-raytracing.bmp");
+                game.took_screenshot_start = true;
             }
 
             return true;

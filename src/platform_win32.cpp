@@ -21,6 +21,8 @@
 
 #include "error.h"
 
+namespace blaz {
+
 struct Window_WIN32 {
     HWND window_handle;
     HDC device_context;
@@ -100,8 +102,6 @@ std::map<u64, str> win32_keycodes = {{VK_BACK, "KEY_BACKSPACE"},
                                      {VK_F10, "KEY_F10"},
                                      {VK_F11, "KEY_F11"},
                                      {VK_F12, "KEY_F12"}};
-
-namespace blaz {
 
 struct D3D11 {
     ID3D11RenderTargetView* backbuffer;

@@ -12,8 +12,6 @@
 
 namespace blaz {
 
-struct Game;
-
 enum Clear {
     NONE = 0,
     COLOR = 1 << 0,
@@ -113,7 +111,8 @@ struct Framebuffer {
     str m_name;
     u32 m_width;
     u32 m_height;
-    TextureParams m_texture_params;
+    str m_color_attachment_texture;
+    str m_depth_attachment_texture;
     void* m_api_data = NULL;
 };
 
@@ -128,10 +127,10 @@ struct Shader {
     str m_vertex_shader_path;
     str m_fragment_shader_path;
     str m_compute_shader_path;
-    void* m_api_data = NULL;
-    bool m_should_reload = true;
     bool m_is_error = false;
     std::unordered_map<str, u32> m_textures_binding_points;
+    void* m_api_data = NULL;
+    bool m_should_reload = true;
 };
 
 struct Uniform {
@@ -147,8 +146,8 @@ struct UniformBuffer {
     u32 m_binding_point;
     vec<Uniform> m_uniforms;
     std::unordered_map<str, u32> m_uniforms_ids;
-    bool m_should_reload = true;
     void* m_api_data = NULL;
+    bool m_should_reload = true;
 };
 
 struct Mesh {
@@ -172,19 +171,15 @@ struct Texture {
     u8 m_channels = 0;
     TextureParams m_texture_params;
     void* m_api_data = NULL;
-};
-
-struct Material {
-    //     str m_shader;
-    //     //@note add some uniforms values here and textures
+    bool m_should_reload = true;
 };
 
 struct Renderable {
     str m_name;
     vec<str> m_tags;
-    u32 m_material = 0;
-    u32 m_mesh = 0;
-    u32 m_node = 0;
+    str m_material;
+    str m_mesh;
+    str m_node;
 };
 
 enum class PassType { RENDER, BLITTING, COMPUTE };
@@ -201,10 +196,10 @@ struct Pass {
     u32 m_clear_flag;
     RGBA m_clear_color = RGBA(0, 0, 0, 1);
     float m_clear_depth = 1.0;
-    u32 m_shader;
+    str m_shader;
     vec<str> m_tags;
-    u32 m_framebuffer;
-    i32 m_camera = -1;
+    str m_framebuffer;
+    str m_camera;
     bool m_enabled = true;
     bool m_use_default_framebuffer = true;
     bool m_enable_depth_test = true;
@@ -217,70 +212,70 @@ struct Pass {
     std::unordered_map<str, str> m_texture_uniforms_binding;  // @tmp
 };
 
-struct Pipeline {
-    str m_name;
-    vec<Pass> m_passes;
-    vec<Framebuffer> m_framebuffers;
-};
-
-struct Game;
-
 using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
 
 struct Renderer {
-    Game* m_game = NULL;
+    Window* m_window;
     Scene* m_current_scene = NULL;
 
-    Error init(Game* game);
+    Error init(Window* window);
     Error init_api();
     void update();
-
-    vec<Pipeline> m_pipelines;
-    u32 m_current_pipeline = 0;
-    std::unordered_map<str, u32> m_pipelines_ids;
-    vec<Shader> m_shaders;
-    std::unordered_map<str, u32> m_shaders_ids;
-    Shader m_error_shader;
-    vec<Mesh> m_meshes;
-    std::unordered_map<str, u32> m_meshes_ids;
-    vec<Texture> m_textures;
-    std::unordered_map<str, u32> m_textures_ids;
-    vec<Camera> m_cameras;
-    std::unordered_map<str, u32> m_cameras_ids;
-    vec<UniformBuffer> m_uniform_buffers;
-    std::unordered_map<str, u32> m_uniform_buffers_ids;
-
-    vec<Renderable> m_renderables;
-    std::unordered_map<str, vec<u32>> m_tagged_renderables;
-
     void clear(u32 clear_flag, RGBA clear_color, float clear_depth);
     void present();
+    void draw(MeshPrimitive primitive, size_t count);
+    void draw_indexed(MeshPrimitive primitive, size_t count);
     void set_swap_interval(u32 interval);
 
-    Error reload_shader(Shader* shader);
-    Error compile_shader(Shader* shader);
-    void set_shader(Shader* shader);
-    Error upload_mesh(Mesh* mesh);
-    Error upload_texture(Texture* texture);
-    void set_textures(Pass* pass, Shader* shader);
     void debug_marker_start(str name);
     void debug_marker_end();
-    void set_default_framebuffer();
-    void set_framebuffer(Framebuffer* framebuffer);
+
     void set_viewport(u32 x, u32 y, u32 width, u32 height);
     void set_depth_test(bool enabled);
     void set_face_culling(bool enabled, CullingMode mode, CullingOrder order);
-    void draw_mesh(Mesh* mesh);
-    void draw_bufferless(u32 count);
-    Error set_uniform_buffer_data(UniformBuffer* uniform_buffer, str uniform_name,
-                                  UniformValue value);
-    Error init_uniform_buffer(UniformBuffer* uniform_buffer);
 
-    void add_mesh(Mesh mesh);
-    void add_texture(Texture texture);
-    void add_renderable(Renderable renderable);
-    void add_camera(Camera camera);
-    void add_uniform_buffer(UniformBuffer buffer);
+    vec<Pass> m_passes;
+
+    ArrayMap<Shader> m_shaders;
+    Shader m_error_shader;
+    Error create_shader(Shader shader);
+    Error create_shader_api(str shader_id);
+    Error reload_shader(str shader_id);
+    Error reload_shader_api(str shader_id);
+    void set_current_shader(str shader_id);
+
+    ArrayMap<Mesh> m_meshes;
+    Error create_mesh(Mesh mesh);
+    Error create_mesh_api(str mesh_id);
+    Error reload_mesh(str mesh_id);
+    Error reload_mesh_api(str mesh_id);
+    void set_current_mesh(str mesh_id);
+    void set_bufferless_mesh();
+
+    ArrayMap<Framebuffer> m_framebuffers;
+    Error create_framebuffer(Framebuffer framebuffer);
+    Error create_framebuffer_api(str framebuffer_id);
+    void set_current_framebuffer(str framebuffer_id);
+    void set_default_framebuffer();
+
+    ArrayMap<Texture> m_textures;
+    Error create_texture(Texture texture);
+    Error create_texture_api(str texture_id);
+    Error reload_texture(str texture_id);
+    Error reload_texture_api(str texture_id);
+    void set_textures(Pass* pass, Shader* shader);  // @todo rework texture binding
+
+    ArrayMap<Camera> m_cameras;
+    Error create_camera(Camera camera);
+
+    vec<Renderable> m_renderables;
+    std::unordered_map<str, vec<u32>> m_tagged_renderables;
+    void create_renderable(Renderable renderable);
+
+    ArrayMap<UniformBuffer> m_uniform_buffers;
+    Error create_uniform_buffer(UniformBuffer uniform_buffer);
+    Error create_uniform_buffer_api(str uniform_buffer_id);
+    Error set_uniform_buffer_data(str uniform_buffer_id, str uniform_name, UniformValue value);
 };
 
 }  // namespace blaz
