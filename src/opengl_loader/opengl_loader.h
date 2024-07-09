@@ -129,6 +129,7 @@ typedef double GLclampd;
 #define GL_COLOR_ATTACHMENT10 0x8CEA
 #define GL_FRAGMENT_SHADER 0x8B30
 #define GL_VERTEX_SHADER 0x8B31
+#define GL_COMPUTE_SHADER 0x91B9
 #define GL_COMPILE_STATUS 0x8B81
 #define GL_LINK_STATUS 0x8B82
 #define GL_TEXTURE_2D 0x0DE1
@@ -160,6 +161,7 @@ typedef double GLclampd;
 #define GL_TEXTURE_BORDER_COLOR 0x1004
 #define GL_TEXTURE_BORDER 0x1005
 #define GL_CLAMP 0x2900
+#define GL_TEXTURE 0x1702
 #define GL_TEXTURE0 0x84C0
 #define GL_TEXTURE1 0x84C1
 #define GL_TEXTURE2 0x84C2
@@ -265,6 +267,9 @@ typedef double GLclampd;
 #define GL_RG 0x8227
 #define GL_CONTEXT_PROFILE_MASK 0x9126
 #define GL_CONTEXT_CORE_PROFILE_BIT 0x00000001
+#define GL_FRAMEBUFFER_BINDING 0x8CA6
+#define GL_FRAMEBUFFER_COMPLETE 0x8CD5
+#define GL_FRAMEBUFFER_DEFAULT 0x8218
 
 #define GL_OLD_FUNCTIONS_LIST                                                               \
     GL_FUNCTION(void, glGetIntegerv, GLenum, GLint*)                                        \

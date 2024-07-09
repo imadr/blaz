@@ -33,6 +33,22 @@ int main() {
         logger.error(err);
     }
 
+    Texture texture;
+    texture.m_name = "test_texture";
+    texture.m_texture_params.m_format = TextureFormat::RGB8;
+    texture.m_width = window.m_size.width;
+    texture.m_height = window.m_size.height;
+    renderer.create_texture(texture);
+
+    Framebuffer framebuffer;
+    framebuffer.m_name = "test_framebuffer";
+    framebuffer.m_width = window.m_size.width;
+    framebuffer.m_height = window.m_size.height;
+    framebuffer.m_color_attachment_texture = "test_texture";
+    renderer.create_framebuffer(framebuffer);
+    renderer.attach_texture_to_framebuffer("test_framebuffer", "test_texture",
+                                           AttachementPoint::COLOR_ATTACHMENT);
+
     game.main_loop = [&game]() {
         if (game.m_window->event_loop()) {
             game.m_renderer->update();

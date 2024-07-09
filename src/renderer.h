@@ -107,12 +107,15 @@ struct TextureParams {
     TextureFilteringMode m_filter_mode_mag = TextureFilteringMode::LINEAR;
 };
 
+enum class AttachementPoint { COLOR_ATTACHMENT, DEPTH_ATTACHMENT, STENCIL_ATTACHMENT };
+
 struct Framebuffer {
     str m_name;
     u32 m_width;
     u32 m_height;
-    str m_color_attachment_texture;
+    str m_color_attachment_texture;  // @todo is this even needed ?
     str m_depth_attachment_texture;
+    str m_stencil_attachment_texture;
     void* m_api_data = NULL;
 };
 
@@ -120,7 +123,8 @@ enum class ShaderType { VERTEX_FRAGMENT, COMPUTE };
 
 struct Shader {
     str m_name;
-    ShaderType m_type;
+    ShaderType m_type = ShaderType::VERTEX_FRAGMENT;
+    ;
     str m_vertex_shader_source;
     str m_fragment_shader_source;
     str m_compute_shader_source;
@@ -257,6 +261,8 @@ struct Renderer {
     Error create_framebuffer_api(str framebuffer_id);
     void set_current_framebuffer(str framebuffer_id);
     void set_default_framebuffer();
+    Error attach_texture_to_framebuffer(str framebuffer_id, str texture_id,
+                                        AttachementPoint attachment_point);
 
     ArrayMap<Texture> m_textures;
     Error create_texture(Texture texture);

@@ -24,6 +24,7 @@ struct Shader_OPENGL {
     GLuint m_program = 0;
     GLuint m_vertex_shader = 0;
     GLuint m_fragment_shader = 0;
+    GLuint m_compute_shader = 0;
 };
 
 struct Texture_OPENGL {
@@ -48,6 +49,12 @@ static std::unordered_map<TextureWrapMode, GLenum> opengl_texture_wrap_modes = {
     {TextureWrapMode::REPEAT, GL_REPEAT},
     {TextureWrapMode::MIRRORED_REPEAT, GL_MIRRORED_REPEAT},
     {TextureWrapMode::CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE},
+};
+
+static std::unordered_map<AttachementPoint, GLenum> opengl_attachment_point = {
+    {AttachementPoint::COLOR_ATTACHMENT, GL_COLOR_ATTACHMENT0},
+    {AttachementPoint::DEPTH_ATTACHMENT, GL_DEPTH_ATTACHMENT},
+    {AttachementPoint::STENCIL_ATTACHMENT, GL_STENCIL_ATTACHMENT},
 };
 
 static std::unordered_map<TextureFilteringMode, GLenum> opengl_texture_filtering_modes = {
@@ -104,25 +111,42 @@ void Renderer::set_swap_interval(u32 interval) {
 
 Error Renderer::create_shader_api(str shader_id) {
     Shader* shader = &m_shaders[shader_id];
-    GLuint vertex_shader;
-    vertex_shader = gl->glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment_shader;
-    fragment_shader = gl->glCreateShader(GL_FRAGMENT_SHADER);
+
     GLuint shader_program;
     shader_program = gl->glCreateProgram();
-    gl->glAttachShader(shader_program, vertex_shader);
-    gl->glAttachShader(shader_program, fragment_shader);
+    Shader_OPENGL* api_shader = new Shader_OPENGL;
+    api_shader->m_program = shader_program;
+
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+    GLuint compute_shader;
+
+    if (shader->m_type == ShaderType::VERTEX_FRAGMENT) {
+        vertex_shader = gl->glCreateShader(GL_VERTEX_SHADER);
+        fragment_shader = gl->glCreateShader(GL_FRAGMENT_SHADER);
+        gl->glAttachShader(shader_program, vertex_shader);
+        gl->glAttachShader(shader_program, fragment_shader);
+
+        api_shader->m_vertex_shader = vertex_shader;
+        api_shader->m_fragment_shader = fragment_shader;
+    } else if (shader->m_type == ShaderType::COMPUTE) {
+        compute_shader = gl->glCreateShader(GL_COMPUTE_SHADER);
+        gl->glAttachShader(shader_program, compute_shader);
+
+        api_shader->m_compute_shader = compute_shader;
+    }
 
 #ifdef DEBUG_RENDERER
     gl->glObjectLabel(GL_PROGRAM, shader_program, -1, shader->m_name.c_str());
-    gl->glObjectLabel(GL_SHADER, vertex_shader, -1, (shader->m_name + "_vertex").c_str());
-    gl->glObjectLabel(GL_SHADER, fragment_shader, -1, (shader->m_name + "_fragment").c_str());
+
+    if (shader->m_type == ShaderType::VERTEX_FRAGMENT) {
+        gl->glObjectLabel(GL_SHADER, vertex_shader, -1, (shader->m_name + "_vertex").c_str());
+        gl->glObjectLabel(GL_SHADER, fragment_shader, -1, (shader->m_name + "_fragment").c_str());
+    } else if (shader->m_type == ShaderType::COMPUTE) {
+        gl->glObjectLabel(GL_SHADER, compute_shader, -1, (shader->m_name + "_compute").c_str());
+    }
 #endif
 
-    Shader_OPENGL* api_shader = new Shader_OPENGL;
-    api_shader->m_program = shader_program;
-    api_shader->m_vertex_shader = vertex_shader;
-    api_shader->m_fragment_shader = fragment_shader;
     shader->m_api_data = api_shader;
 
     return Error();
@@ -131,30 +155,46 @@ Error Renderer::create_shader_api(str shader_id) {
 Error Renderer::reload_shader_api(str shader_id) {
     Shader* shader = &m_shaders[shader_id];
     Shader_OPENGL* api_shader = (Shader_OPENGL*)shader->m_api_data;
-
-    const char* c_str = shader->m_vertex_shader_source.c_str();
-    gl->glShaderSource(api_shader->m_vertex_shader, 1, &c_str, NULL);
-    gl->glCompileShader(api_shader->m_vertex_shader);
-
     int success;
     char info[512];
-    gl->glGetShaderiv(api_shader->m_vertex_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        gl->glGetShaderInfoLog(api_shader->m_vertex_shader, 512, NULL, info);
-        gl->glDeleteShader(api_shader->m_vertex_shader);
-        return Error("Renderer::compile_shader: Failed to compile vertex shader \"" +
-                     shader->m_name + "\" : " + str(info));
-    }
 
-    c_str = shader->m_fragment_shader_source.c_str();
-    gl->glShaderSource(api_shader->m_fragment_shader, 1, &c_str, NULL);
-    gl->glCompileShader(api_shader->m_fragment_shader);
-    gl->glGetShaderiv(api_shader->m_fragment_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        gl->glGetShaderInfoLog(api_shader->m_fragment_shader, 512, NULL, info);
-        gl->glDeleteShader(api_shader->m_fragment_shader);
-        return Error("Renderer::compile_shader: Failed to compile fragment shader \"" +
-                     shader->m_name + "\" : " + str(info));
+    if (shader->m_type == ShaderType::VERTEX_FRAGMENT) {
+        const char* c_str = shader->m_vertex_shader_source.c_str();
+        gl->glShaderSource(api_shader->m_vertex_shader, 1, &c_str, NULL);
+        gl->glCompileShader(api_shader->m_vertex_shader);
+
+        gl->glGetShaderiv(api_shader->m_vertex_shader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            gl->glGetShaderInfoLog(api_shader->m_vertex_shader, 512, NULL, info);
+            gl->glDeleteShader(api_shader->m_vertex_shader);
+            return Error("Renderer::compile_shader: Failed to compile vertex shader \"" +
+                         shader->m_name + "\" : " + str(info));
+        }
+
+        c_str = shader->m_fragment_shader_source.c_str();
+        gl->glShaderSource(api_shader->m_fragment_shader, 1, &c_str, NULL);
+        gl->glCompileShader(api_shader->m_fragment_shader);
+        gl->glGetShaderiv(api_shader->m_fragment_shader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            gl->glGetShaderInfoLog(api_shader->m_fragment_shader, 512, NULL, info);
+            gl->glDeleteShader(api_shader->m_fragment_shader);
+            return Error("Renderer::compile_shader: Failed to compile fragment shader \"" +
+                         shader->m_name + "\" : " + str(info));
+        }
+    } else if (shader->m_type == ShaderType::COMPUTE) {
+        const char* c_str = shader->m_compute_shader_source.c_str();
+        gl->glShaderSource(api_shader->m_compute_shader, 1, &c_str, NULL);
+        gl->glCompileShader(api_shader->m_compute_shader);
+
+        int success;
+        char info[512];
+        gl->glGetShaderiv(api_shader->m_compute_shader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            gl->glGetShaderInfoLog(api_shader->m_compute_shader, 512, NULL, info);
+            gl->glDeleteShader(api_shader->m_compute_shader);
+            return Error("Renderer::compile_shader: Failed to compile compute shader \"" +
+                         shader->m_name + "\" : " + str(info));
+        }
     }
 
     gl->glLinkProgram(api_shader->m_program);
@@ -266,19 +306,43 @@ Error Renderer::create_framebuffer_api(str framebuffer_id) {
     gl->glGenFramebuffers(1, &fbo);
     gl->glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    // todo attachements
-    // Texture texture;
-    // texture.m_name = framebuffer->m_name + "_texture";
-    // texture.m_width = framebuffer->m_width, texture.m_height = framebuffer->m_height,
-    // texture.m_texture_params = framebuffer->m_texture_params;
-    // m_textures.push_back(texture);
-    // m_textures_ids[texture.m_name] = u32(m_textures.size()) - 1;
-    // gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-    //                            ((Texture_OPENGL*)texture.m_api_data)->m_texture_name, 0);
-
     Framebuffer_OPENGL* api_framebuffer = new Framebuffer_OPENGL;
     api_framebuffer->m_fbo = fbo;
     framebuffer->m_api_data = api_framebuffer;
+
+#ifdef DEBUG_RENDERER
+    gl->glObjectLabel(GL_FRAMEBUFFER, fbo, -1, framebuffer->m_name.c_str());
+#endif
+
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return Error();
+}
+
+Error Renderer::attach_texture_to_framebuffer(str framebuffer_id, str texture_id,
+                                              AttachementPoint attachment_point) {
+    Texture* texture = &m_textures[texture_id];
+    Texture_OPENGL* api_texture = (Texture_OPENGL*)texture->m_api_data;
+
+    Framebuffer* framebuffer = &m_framebuffers[framebuffer_id];
+    Framebuffer_OPENGL* api_framebuffer = (Framebuffer_OPENGL*)framebuffer->m_api_data;
+
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, api_framebuffer->m_fbo);
+    gl->glFramebufferTexture2D(GL_FRAMEBUFFER, opengl_attachment_point[attachment_point],
+                               GL_TEXTURE_2D,
+                               ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0);
+
+    if (attachment_point == AttachementPoint::COLOR_ATTACHMENT) {
+        framebuffer->m_color_attachment_texture = texture_id;
+    } else if (attachment_point == AttachementPoint::DEPTH_ATTACHMENT) {
+        framebuffer->m_depth_attachment_texture = texture_id;
+    } else if (attachment_point == AttachementPoint::STENCIL_ATTACHMENT) {
+        framebuffer->m_stencil_attachment_texture = texture_id;
+    }
+
+    if (!gl->glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+        return Error("Framebuffer not complete");
+    }
 
     gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -340,9 +404,19 @@ Error Renderer::create_texture_api(str texture_id) {
         GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
         opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_mag]);
 
+    gl->glBindTexture(GL_TEXTURE_2D, texture_name);
+    gl->glTexImage2D(
+        GL_TEXTURE_2D, 0, opengl_texture_formats[texture->m_texture_params.m_format].first,
+        texture->m_width, texture->m_height, 0,
+        opengl_texture_formats[texture->m_texture_params.m_format].second, GL_UNSIGNED_BYTE, NULL);
+
     Texture_OPENGL* api_texture = new Texture_OPENGL;
     api_texture->m_texture_name = texture_name;
     texture->m_api_data = api_texture;
+
+#ifdef DEBUG_RENDERER
+    gl->glObjectLabel(GL_TEXTURE, texture_name, -1, texture->m_name.c_str());
+#endif
 
     return Error();
 }
