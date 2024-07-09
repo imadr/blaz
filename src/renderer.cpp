@@ -79,8 +79,7 @@ void Renderer::update() {
         if (pass.m_use_default_framebuffer) {
             set_default_framebuffer();
         } else {
-            // Framebuffer* framebuffer = &m_pipeline.m_framebuffers[pass.m_framebuffer];
-            // set_framebuffer(framebuffer);
+            set_current_framebuffer(pass.m_framebuffer);
         }
 
         if (pass.m_enable_depth_test) {
@@ -187,19 +186,28 @@ Error Renderer::create_shader(Shader shader) {
 Error Renderer::reload_shader(str shader_id) {
     Shader* shader = &m_shaders[shader_id];
 
-    pair<Error, str> err = read_whole_file(shader->m_vertex_shader_path);
-    if (err.first) {
-        shader->m_is_error = true;
-        return err.first;
-    }
-    shader->m_vertex_shader_source = err.second;
+    if (shader->m_type == ShaderType::VERTEX_FRAGMENT) {
+        pair<Error, str> err = read_whole_file(shader->m_vertex_shader_path);
+        if (err.first) {
+            shader->m_is_error = true;
+            return err.first;
+        }
+        shader->m_vertex_shader_source = err.second;
 
-    err = read_whole_file(shader->m_fragment_shader_path);
-    if (err.first) {
-        shader->m_is_error = true;
-        return err.first;
+        err = read_whole_file(shader->m_fragment_shader_path);
+        if (err.first) {
+            shader->m_is_error = true;
+            return err.first;
+        }
+        shader->m_fragment_shader_source = err.second;
+    } else {
+        pair<Error, str> err = read_whole_file(shader->m_compute_shader_path);
+        if (err.first) {
+            shader->m_is_error = true;
+            return err.first;
+        }
+        shader->m_compute_shader_source = err.second;
     }
-    shader->m_fragment_shader_source = err.second;
 
     shader->m_should_reload = false;
 

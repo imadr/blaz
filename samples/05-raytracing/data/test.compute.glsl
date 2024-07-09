@@ -1,11 +1,15 @@
-#version 300 es
+#version 430 core
 
-precision highp float;
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-in vec3 v_color;
-
-layout(location = 0) out vec4 o_color;
+layout(rgba32f, binding = 0) uniform image2D output_image;
 
 void main() {
-    o_color = vec4(v_color.xyz, 1);
+    vec4 value = vec4(0.0, 0.0, 0.0, 1.0);
+    ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
+
+    value.x = float(texel_coord.x) / (gl_NumWorkGroups.x);
+    value.y = float(texel_coord.y) / (gl_NumWorkGroups.y);
+
+    imageStore(output_image, texel_coord, value);
 }
