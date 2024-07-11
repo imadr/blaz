@@ -210,10 +210,9 @@ struct Pass {
     bool m_enable_face_culling = true;
     CullingMode m_culling_mode = CullingMode::BACK;
     CullingOrder m_culling_order = CullingOrder::CCW;
-    vec<str> m_texture_uniforms;
     bool m_bufferless_draw = false;
     u32 m_bufferless_draw_count = 3;
-    std::unordered_map<str, str> m_texture_uniforms_binding;  // @tmp
+    std::unordered_map<str, str> m_sampler_uniforms_binding;
 };
 
 using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
