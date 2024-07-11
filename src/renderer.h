@@ -59,6 +59,8 @@ enum class TextureFormat {
     RG8,
     RGB8,
     RGBA8,
+    RGB32F,
+    RGBA32F,
     DEPTH32,
     DEPTH32F,
 };
@@ -132,7 +134,7 @@ struct Shader {
     str m_fragment_shader_path;
     str m_compute_shader_path;
     bool m_is_error = false;
-    std::unordered_map<str, u32> m_textures_binding_points;
+    std::unordered_map<str, u32> m_sampler_binding_points;
     void* m_api_data = NULL;
     bool m_should_reload = true;
 };
@@ -213,6 +215,7 @@ struct Pass {
     bool m_bufferless_draw = false;
     u32 m_bufferless_draw_count = 3;
     std::unordered_map<str, str> m_sampler_uniforms_binding;
+    std::unordered_map<str, str> m_image_uniforms_binding;
 };
 
 using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
@@ -228,6 +231,7 @@ struct Renderer {
     void present();
     void draw(MeshPrimitive primitive, size_t count);
     void draw_indexed(MeshPrimitive primitive, size_t count);
+    void dispatch_compute(u32 num_groups_x, u32 num_groups_y, u32 num_groups_z);
     void set_swap_interval(u32 interval);
 
     void debug_marker_start(str name);
@@ -268,7 +272,8 @@ struct Renderer {
     Error create_texture_api(str texture_id);
     Error reload_texture(str texture_id);
     Error reload_texture_api(str texture_id);
-    void set_textures(Pass* pass, Shader* shader);  // @todo rework texture binding
+    void set_samplers_bindings(Pass* pass, Shader* shader);
+    void set_images_bindings(Pass* pass, Shader* shader);
 
     ArrayMap<Camera> m_cameras;
     Error create_camera(Camera camera);

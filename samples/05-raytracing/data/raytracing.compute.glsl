@@ -2,14 +2,12 @@
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-layout(rgba32f, binding = 0) uniform image2D output_image;
+layout(rgba32f, binding = 0) uniform image2D u_image_compute_output;
 
 void main() {
-    vec4 value = vec4(0.0, 0.0, 0.0, 1.0);
     ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
-
+    vec4 value = vec4(0.0, 0.0, 0.0, 1.0);
     value.x = float(texel_coord.x) / (gl_NumWorkGroups.x);
     value.y = float(texel_coord.y) / (gl_NumWorkGroups.y);
-
-    imageStore(output_image, texel_coord, value);
+    imageStore(u_image_compute_output, texel_coord, value);
 }
