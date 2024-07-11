@@ -439,13 +439,13 @@ Error Renderer::reload_texture_api(str texture_id) {
 }
 
 void Renderer::set_textures(Pass* pass, Shader* shader) {
-    for (const auto& texture_uniform : pass->m_texture_uniforms_binding) {
-        GLint texture_binding_point = shader->m_textures_binding_points[texture_uniform.first];
+    for (const auto& sampler_uniform : pass->m_sampler_uniforms_binding) {
+        GLint texture_binding_point = shader->m_textures_binding_points[sampler_uniform.first];
         if (texture_binding_point == 0) {
             continue;
         }
         gl->glActiveTexture(GL_TEXTURE0 + texture_binding_point);
-        Texture* texture = &m_textures[texture_uniform.second];
+        Texture* texture = &m_textures[sampler_uniform.second];
         gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
     }
 }

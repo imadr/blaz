@@ -50,11 +50,11 @@ int main() {
         .m_node = "damagedhelmet",
     });
 
-    renderer.m_passes[0].m_texture_uniforms_binding = {
-        {"u_texture_albedo", "damagedhelmet_albedo"},
-        {"u_texture_metalroughness", "damagedhelmet_metalroughness"},
-        {"u_texture_normals", "damagedhelmet_normals"},
-        {"u_texture_emissive", "damagedhelmet_emissive"},
+    renderer.m_passes[0].m_sampler_uniforms_binding = {
+        {"u_sampler_albedo", "damagedhelmet_albedo"},
+        {"u_sampler_metalroughness", "damagedhelmet_metalroughness"},
+        {"u_sampler_normals", "damagedhelmet_normals"},
+        {"u_sampler_emissive", "damagedhelmet_emissive"},
     };
 
     game.main_camera->m_orbit_pan_sensitivity = 0.005f;

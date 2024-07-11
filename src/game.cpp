@@ -176,15 +176,11 @@ Error Game::load_game(str path) {
             pass.m_bufferless_draw_count = u32(pass_cfg["bufferless_draw"].float_value);
         }
 
-        for (auto texture : pass_cfg["texture_uniforms"]) {
-            pass.m_texture_uniforms.push_back(texture.str_value);
-        }
-
         m_renderer->m_passes.push_back(pass);
     }
 
     m_renderer->m_current_scene = m_scene;
-    if(m_physics != NULL) m_physics->m_current_scene = m_scene;
+    if (m_physics != NULL) m_physics->m_current_scene = m_scene;
 
     if (game_cfg["main_camera"]) {
         main_camera = &m_renderer->m_cameras[game_cfg["main_camera"].str_value];

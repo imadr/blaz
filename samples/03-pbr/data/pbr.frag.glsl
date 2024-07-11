@@ -12,10 +12,10 @@ layout(std140, binding = 1) uniform u_view {
     vec3 u_camera_position;
 };
 
-layout(binding = 2) uniform sampler2D u_texture_albedo;
-layout(binding = 3) uniform sampler2D u_texture_metalroughness;
-layout(binding = 4) uniform sampler2D u_texture_normals;
-layout(binding = 5) uniform sampler2D u_texture_emissive;
+layout(binding = 2) uniform sampler2D u_sampler_albedo;
+layout(binding = 3) uniform sampler2D u_sampler_metalroughness;
+layout(binding = 4) uniform sampler2D u_sampler_normals;
+layout(binding = 5) uniform sampler2D u_sampler_emissive;
 
 const float PI = 3.14159265359;
 
@@ -55,18 +55,18 @@ void main() {
     vec3 light_color = vec3(100);
 
     float metalness = 0.9;
-    metalness = texture(u_texture_metalroughness, v_texcoord).b;
+    metalness = texture(u_sampler_metalroughness, v_texcoord).b;
 
     float roughness = 0.3;
-    roughness = texture(u_texture_metalroughness, v_texcoord).g;
+    roughness = texture(u_sampler_metalroughness, v_texcoord).g;
 
     vec3 emissive = vec3(0.0);
-    emissive = texture(u_texture_emissive, v_texcoord).rgb;
+    emissive = texture(u_sampler_emissive, v_texcoord).rgb;
 
     float ambient_occlusion = 1.0;
 
     vec3 albedo = vec3(1.0, 0.0, 0.0);
-    albedo = texture(u_texture_albedo, v_texcoord).rgb;
+    albedo = texture(u_sampler_albedo, v_texcoord).rgb;
 
     float gamma = 2.2;
     albedo = pow(albedo, vec3(gamma));
@@ -77,7 +77,7 @@ void main() {
     vec3 bitangent = cross(tangent, normal);
     mat3 tbn_matrix = mat3(tangent, bitangent, normal);
 
-    vec3 normal_map = texture(u_texture_normals, v_texcoord).rgb;
+    vec3 normal_map = texture(u_sampler_normals, v_texcoord).rgb;
     normal_map = normal_map * 2.0 - vec3(1.0);
     normal_map = normalize(tbn_matrix * normal_map);
 
