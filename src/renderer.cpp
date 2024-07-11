@@ -75,72 +75,92 @@ void Renderer::update() {
         debug_marker_start(pass.m_name);
 #endif
 
-        set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
-        if (pass.m_use_default_framebuffer) {
-            set_default_framebuffer();
-        } else {
-            set_current_framebuffer(pass.m_framebuffer);
-        }
-
-        if (pass.m_enable_depth_test) {
-            set_depth_test(true);
-        } else {
-            set_depth_test(false);
-        }
-
-        set_face_culling(pass.m_enable_face_culling, pass.m_culling_mode, pass.m_culling_order);
-
-        clear(pass.m_clear_flag, pass.m_clear_color, pass.m_clear_depth);
-
-        Shader* pass_shader = &m_shaders[pass.m_shader];
-        if (pass_shader->m_should_reload) {
-            Error err = reload_shader(pass.m_shader);
-            if (err) {
-                logger.error(err);
+        if (pass.m_type == PassType::COMPUTE) {
+            Shader* pass_shader = &m_shaders[pass.m_shader];
+            if (pass_shader->m_should_reload) {
+                Error err = reload_shader(pass.m_shader);
+                if (err) {
+                    logger.error(err);
+                }
             }
-        }
 
-        if (pass_shader->m_is_error) {
-            pass_shader = &m_error_shader;
-        }
-
-        set_current_shader(pass.m_shader);
-
-        for (auto& texture : m_textures) {
-            if (texture.m_should_reload) {
-                reload_texture(texture.m_name);
+            if (pass_shader->m_is_error) {
+                pass_shader = &m_error_shader;
             }
-        }
-        set_textures(&pass, pass_shader);
 
-        if (pass.m_camera != "") {
-            Camera* camera = &m_cameras[pass.m_camera];
-            camera->update_projection_matrix();
-            camera->update_view_matrix();
-            set_uniform_buffer_data("u_mat", "u_projection_mat", camera->m_projection_matrix);
-            set_uniform_buffer_data("u_mat", "u_view_mat", camera->m_view_matrix);
-            set_uniform_buffer_data("u_view", "u_camera_position",
-                                    camera->m_scene->m_nodes[camera->m_node].m_position);
-        }
+            set_current_shader(pass.m_shader);
 
-        if (pass.m_bufferless_draw) {
-            set_bufferless_mesh();
-            draw(MeshPrimitive::TRIANGLES, pass.m_bufferless_draw_count);
-        } else {
-            for (const str tag : pass.m_tags) {
-                for (const u32 id : m_tagged_renderables[tag]) {
-                    Renderable* renderable = &m_renderables[id];
-                    set_uniform_buffer_data(
-                        "u_mat", "u_model_mat",
-                        m_current_scene->m_nodes[renderable->m_node].m_global_matrix);
-                    Mesh* mesh = &m_meshes[renderable->m_mesh];
+            set_images_bindings(&pass, pass_shader);
+            dispatch_compute(800, 600, 1);  // temp
 
-                    if (mesh->m_should_reload) {
-                        Error err = reload_mesh(renderable->m_mesh);
+        } else if (pass.m_type == PassType::RENDER) {
+            set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
+            if (pass.m_use_default_framebuffer) {
+                set_default_framebuffer();
+            } else {
+                set_current_framebuffer(pass.m_framebuffer);
+            }
+
+            if (pass.m_enable_depth_test) {
+                set_depth_test(true);
+            } else {
+                set_depth_test(false);
+            }
+
+            set_face_culling(pass.m_enable_face_culling, pass.m_culling_mode, pass.m_culling_order);
+
+            clear(pass.m_clear_flag, pass.m_clear_color, pass.m_clear_depth);
+
+            Shader* pass_shader = &m_shaders[pass.m_shader];
+            if (pass_shader->m_should_reload) {
+                Error err = reload_shader(pass.m_shader);
+                if (err) {
+                    logger.error(err);
+                }
+            }
+
+            if (pass_shader->m_is_error) {
+                pass_shader = &m_error_shader;
+            }
+
+            set_current_shader(pass.m_shader);
+
+            for (auto& texture : m_textures) {
+                if (texture.m_should_reload) {
+                    reload_texture(texture.m_name);
+                }
+            }
+            set_samplers_bindings(&pass, pass_shader);
+
+            if (pass.m_camera != "") {
+                Camera* camera = &m_cameras[pass.m_camera];
+                camera->update_projection_matrix();
+                camera->update_view_matrix();
+                set_uniform_buffer_data("u_mat", "u_projection_mat", camera->m_projection_matrix);
+                set_uniform_buffer_data("u_mat", "u_view_mat", camera->m_view_matrix);
+                set_uniform_buffer_data("u_view", "u_camera_position",
+                                        camera->m_scene->m_nodes[camera->m_node].m_position);
+            }
+
+            if (pass.m_bufferless_draw) {
+                set_bufferless_mesh();
+                draw(MeshPrimitive::TRIANGLES, pass.m_bufferless_draw_count);
+            } else {
+                for (const str tag : pass.m_tags) {
+                    for (const u32 id : m_tagged_renderables[tag]) {
+                        Renderable* renderable = &m_renderables[id];
+                        set_uniform_buffer_data(
+                            "u_mat", "u_model_mat",
+                            m_current_scene->m_nodes[renderable->m_node].m_global_matrix);
+                        Mesh* mesh = &m_meshes[renderable->m_mesh];
+
+                        if (mesh->m_should_reload) {
+                            Error err = reload_mesh(renderable->m_mesh);
+                        }
+
+                        set_current_mesh(renderable->m_mesh);
+                        draw_indexed(mesh->m_primitive, mesh->m_indices.size());
                     }
-
-                    set_current_mesh(renderable->m_mesh);
-                    draw_indexed(mesh->m_primitive, mesh->m_indices.size());
                 }
             }
         }
@@ -173,7 +193,7 @@ Error Renderer::create_uniform_buffer(UniformBuffer uniform_buffer) {
 void Renderer::create_renderable(Renderable renderable) {
     m_renderables.push_back(renderable);
     u32 id = u32(m_renderables.size()) - 1;
-    for (auto tag : renderable.m_tags) {
+    for (auto& tag : renderable.m_tags) {
         m_tagged_renderables[tag].push_back(id);
     }
 }

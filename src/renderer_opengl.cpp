@@ -36,13 +36,16 @@ struct Framebuffer_OPENGL {
     GLuint m_fbo;
 };
 
-static std::unordered_map<TextureFormat, std::pair<GLint, GLenum>> opengl_texture_formats = {
-    {TextureFormat::R8, {GL_R8, GL_RED}},
-    {TextureFormat::RG8, {GL_RG8, GL_RG}},
-    {TextureFormat::RGB8, {GL_RGB8, GL_RGB}},
-    {TextureFormat::RGBA8, {GL_RGBA8, GL_RGBA}},
-    {TextureFormat::DEPTH32, {GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT}},
-    {TextureFormat::DEPTH32F, {GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT}},
+static std::unordered_map<TextureFormat, std::tuple<GLint, GLenum, GLenum>> opengl_texture_formats =
+    {
+        {TextureFormat::R8, {GL_R8, GL_RED, GL_UNSIGNED_BYTE}},
+        {TextureFormat::RG8, {GL_RG8, GL_RG, GL_UNSIGNED_BYTE}},
+        {TextureFormat::RGB8, {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE}},
+        {TextureFormat::RGBA8, {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE}},
+        {TextureFormat::RGB32F, {GL_RGB32F, GL_RGB, GL_FLOAT}},
+        {TextureFormat::RGBA32F, {GL_RGBA32F, GL_RGBA, GL_FLOAT}},
+        {TextureFormat::DEPTH32, {GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE}},
+        {TextureFormat::DEPTH32F, {GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE}},
 };
 
 static std::unordered_map<TextureWrapMode, GLenum> opengl_texture_wrap_modes = {
@@ -68,7 +71,7 @@ static std::unordered_map<MeshPrimitive, GLenum> opengl_mesh_primitive_types = {
 };
 
 OpenglLoader* gl;
-u32 dummy_vao;
+GLuint dummy_vao;
 
 Error Renderer::init_api() {
     gl = new OpenglLoader();
@@ -82,6 +85,9 @@ Error Renderer::init_api() {
     }
 
     gl->glGenVertexArrays(1, &dummy_vao);
+    // #ifdef DEBUG_RENDERER
+    //     gl->glObjectLabel(GL_VERTEX_ARRAY, dummy_vao, -1, "dummy_vao");
+    // #endif
 
     return Error();
 }
@@ -223,7 +229,7 @@ Error Renderer::reload_shader_api(str shader_id) {
                 GLint location = gl->glGetUniformLocation(api_shader->m_program, uniform_name);
                 GLint binding_point;
                 gl->glGetUniformiv(api_shader->m_program, location, &binding_point);
-                shader->m_textures_binding_points[uniform_name] = binding_point;
+                shader->m_sampler_binding_points[uniform_name] = binding_point;
             }
         }
     }
@@ -340,7 +346,7 @@ Error Renderer::attach_texture_to_framebuffer(str framebuffer_id, str texture_id
         framebuffer->m_stencil_attachment_texture = texture_id;
     }
 
-    if (!gl->glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+    if (gl->glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         return Error("Framebuffer not complete");
     }
 
@@ -405,10 +411,9 @@ Error Renderer::create_texture_api(str texture_id) {
         opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_mag]);
 
     gl->glBindTexture(GL_TEXTURE_2D, texture_name);
-    gl->glTexImage2D(
-        GL_TEXTURE_2D, 0, opengl_texture_formats[texture->m_texture_params.m_format].first,
-        texture->m_width, texture->m_height, 0,
-        opengl_texture_formats[texture->m_texture_params.m_format].second, GL_UNSIGNED_BYTE, NULL);
+    auto& texture_type = opengl_texture_formats[texture->m_texture_params.m_format];
+    gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width, texture->m_height, 0,
+                     get<1>(texture_type), get<2>(texture_type), NULL);
 
     Texture_OPENGL* api_texture = new Texture_OPENGL;
     api_texture->m_texture_name = texture_name;
@@ -426,11 +431,9 @@ Error Renderer::reload_texture_api(str texture_id) {
     Texture_OPENGL* api_texture = (Texture_OPENGL*)texture->m_api_data;
 
     gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
-    gl->glTexImage2D(GL_TEXTURE_2D, 0,
-                     opengl_texture_formats[texture->m_texture_params.m_format].first,
-                     texture->m_width, texture->m_height, 0,
-                     opengl_texture_formats[texture->m_texture_params.m_format].second,
-                     GL_UNSIGNED_BYTE, texture->m_data.data());
+    auto& texture_type = opengl_texture_formats[texture->m_texture_params.m_format];
+    gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width, texture->m_height, 0,
+                     get<1>(texture_type), GL_UNSIGNED_BYTE, texture->m_data.data());
     gl->glGenerateMipmap(GL_TEXTURE_2D);
 
     texture->m_should_reload = false;
@@ -438,15 +441,23 @@ Error Renderer::reload_texture_api(str texture_id) {
     return Error();
 }
 
-void Renderer::set_textures(Pass* pass, Shader* shader) {
+void Renderer::set_samplers_bindings(Pass* pass, Shader* shader) {
     for (const auto& sampler_uniform : pass->m_sampler_uniforms_binding) {
-        GLint texture_binding_point = shader->m_textures_binding_points[sampler_uniform.first];
-        if (texture_binding_point == 0) {
+        GLint sampler_binding_point = shader->m_sampler_binding_points[sampler_uniform.first];
+        if (sampler_binding_point == 0) {
             continue;
         }
-        gl->glActiveTexture(GL_TEXTURE0 + texture_binding_point);
+        gl->glActiveTexture(GL_TEXTURE0 + sampler_binding_point);
         Texture* texture = &m_textures[sampler_uniform.second];
         gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
+    }
+}
+
+void Renderer::set_images_bindings(Pass* pass, Shader* shader) {
+    for (const auto& image_uniform : pass->m_image_uniforms_binding) {
+        Texture* texture = &m_textures[image_uniform.second];
+        gl->glBindImageTexture(0, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0,
+                               GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
     }
 }
 
@@ -496,6 +507,10 @@ void Renderer::draw(MeshPrimitive primitive, size_t count) {
 
 void Renderer::draw_indexed(MeshPrimitive primitive, size_t count) {
     gl->glDrawElements(opengl_mesh_primitive_types[primitive], GLsizei(count), GL_UNSIGNED_INT, 0);
+}
+
+void Renderer::dispatch_compute(u32 num_groups_x, u32 num_groups_y, u32 num_groups_z) {
+    gl->glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
 }
 
 }  // namespace blaz
