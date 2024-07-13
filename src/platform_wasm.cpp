@@ -14,7 +14,9 @@ Error Window::init(const str& title) {
             int height = ui_event->windowInnerHeight;
             window->m_size.width = width;
             window->m_size.height = height;
-            window->m_resize_callback(window);
+            for (auto& callback : window->m_resize_callbacks) {
+                callback(window);
+            }
             return EM_TRUE;
         });
     return Error();

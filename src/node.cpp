@@ -14,10 +14,10 @@ void init_scene(Scene* scene) {
 void add_node(Scene* scene, Node node, str parent) {
     node.m_scene = scene;
     if (scene->m_nodes.contains(parent)) {
-        node.update_matrix();
         node.m_parent = parent;
         scene->m_nodes.add(node);
         scene->m_nodes[parent].m_children.push_back(node.m_name);
+        node.update_matrix();
     } else {
         logger.error("Parent node \"%s\" not found", parent);
     }
