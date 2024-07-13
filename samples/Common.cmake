@@ -9,11 +9,15 @@ add_executable(${SAMPLE_NAME} ${SAMPLE_SOURCES})
 target_link_libraries(${SAMPLE_NAME} blaz)
 
 if (EMSCRIPTEN)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_WEBGL2=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_WEBGL2=1 -sNO_DISABLE_EXCEPTION_CATCHING")
+
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gsource-map")
+    set(CMAKE_BUILD_TYPE Debug)
+
     set_target_properties(${SAMPLE_NAME} PROPERTIES LINK_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/data/@data")
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/../index.html.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/index.html"
+        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/index.html"
     )
 else()
     set_property(TARGET ${SAMPLE_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>")

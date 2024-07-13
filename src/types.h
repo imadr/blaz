@@ -72,11 +72,11 @@ struct ArrayMap {
     }
 
     T& operator[](const str& name) {
-        return array[map[name]];
+        return array[map.at(name)];
     }
 
     const T& operator[](const str& name) const {
-        return array[map[name]];
+        return array[map.at(name)];
     }
 
     bool contains(const str& name) const {
