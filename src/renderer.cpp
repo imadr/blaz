@@ -17,13 +17,21 @@ Error Renderer::init(Window* window) {
 
     set_swap_interval(1);
 
-    auto callback = [this](Window* window) {
+    auto resize_callback = [this](Window* window) {
         for (auto& camera : m_cameras) {
             camera.set_aspect_ratio(f32(window->m_size.width) / f32(window->m_size.height));
         }
+
+        for (auto& texture : m_textures) {
+            if (texture.m_resize_to_viewport) {
+                texture.m_width = m_window->m_size.width;
+                texture.m_height = m_window->m_size.height;
+                reload_texture(texture.m_name);
+            }
+        }
     };
-    m_window->m_resize_callbacks.push_back(callback);
-    callback(m_window);
+    m_window->m_resize_callbacks.push_back(resize_callback);
+    resize_callback(m_window);
 
     m_error_shader.m_name = "internal_error_shader";
     m_error_shader.m_vertex_shader_path = "internal_data/error_shader.vert.glsl";
@@ -67,6 +75,14 @@ Error Renderer::init(Window* window) {
     return Error();
 }
 
+u32 Renderer::special_value(str name) {
+    if (name == "viewport_width") {
+        return m_window->m_size.width;
+    } else if (name == "viewport_height") {
+        return m_window->m_size.height;
+    }
+}
+
 void Renderer::update() {
     for (Pass& pass : m_passes) {
         if (!pass.m_enabled) continue;
@@ -92,7 +108,15 @@ void Renderer::update() {
 
             set_images_bindings(&pass, pass_shader);
 
-            dispatch_compute(800, 600, 1);  // temp
+            u32 work_groups[3];
+            for (u32 i = 0; i < 3; i++) {
+                if (std::holds_alternative<u32>(pass.m_compute_work_groups[i])) {
+                    work_groups[i] = std::get<u32>(pass.m_compute_work_groups[i]);
+                } else if (std::holds_alternative<str>(pass.m_compute_work_groups[i])) {
+                    work_groups[i] = special_value(std::get<str>(pass.m_compute_work_groups[i]));
+                }
+            }
+            dispatch_compute(work_groups[0], work_groups[1], work_groups[2]);
 
         } else if (pass.m_type == PassType::RENDER) {
             set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
@@ -246,15 +270,21 @@ Error Renderer::create_texture(Texture texture) {
 }
 
 Error Renderer::reload_texture(str texture_id) {
-    if (m_textures[texture_id].m_path != "") {
-        Error err = load_texture_data_from_file(&m_textures[texture_id]);
+    Texture* texture = &m_textures[texture_id];
+    if (texture->m_resize_to_viewport) {
+        texture->m_width = m_window->m_size.width;
+        texture->m_height = m_window->m_size.height;
+    }
+
+    if (texture->m_path != "") {
+        Error err = load_texture_data_from_file(texture);
         if (err) {
             return err;
         }
         return reload_texture_api(texture_id);
     }
-    m_textures[texture_id].m_should_reload = false;
-    return Error();
+    texture->m_should_reload = false;
+    return reload_texture_api(texture_id);
 }
 
 Error Renderer::create_mesh(Mesh mesh) {

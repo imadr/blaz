@@ -43,26 +43,24 @@ void main() {
     vec2 uv = texel_coord / resolution.xy - 0.5;
     uv.x *= resolution.x / resolution.y;
 
-    // vec3 camera_position = vec3(0, 0, 8);
-    // vec3 camera_target = vec3(0, 0, 0);
-    // mat3 matrix = lookat_matrix(camera_position, camera_target, 0.0);
-    // vec3 view = matrix * normalize(vec3(uv, 1.0));
+    vec3 camera_position = vec3(0, 0, 8);
+    vec3 camera_target = vec3(0, 0, 0);
+    mat3 matrix = lookat_matrix(camera_position, camera_target, 0.0);
+    vec3 view = matrix * normalize(vec3(uv, 1.0));
 
-    // vec3 ray_origin = camera_position;
-    // vec3 ray_direction = view;
+    vec3 ray_origin = camera_position;
+    vec3 ray_direction = view;
 
-    // vec3 sphere_position = vec3(0.0, 0.0, 0.0);
-    // float sphere_radius = 1.0;
+    vec3 sphere_position = vec3(0.0, 0.0, 0.0);
+    float sphere_radius = 1.0;
 
-    // vec3 intersection = vec3(0.0);
+    vec3 intersection = vec3(0.0);
 
-    // vec3 value = vec3(0.0);
-    // if (ray_sphere_intersection(ray_origin, ray_direction, sphere_position, sphere_radius,
-    //                             intersection)) {
-    //     value = vec3(1.0);
-    // }
+    vec3 value = vec3(0.0);
+    if (ray_sphere_intersection(ray_origin, ray_direction, sphere_position, sphere_radius,
+                                intersection)) {
+        value = vec3(1.0);
+    }
 
-    // imageStore(u_image_compute_output, texel_coord, vec4(value, 1.0));
-    // imageStore(u_image_compute_output, texel_coord, vec4(uv, 0.0, 1.0));
-    imageStore(u_image_compute_output, texel_coord, vec4(1.0, 0.0, 1.0, 1.0));
+    imageStore(u_image_compute_output, texel_coord, vec4(value, 1.0));
 }
