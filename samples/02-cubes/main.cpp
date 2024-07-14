@@ -23,8 +23,6 @@ int main() {
     Scene scene;
     init_scene(&scene);
 
-    renderer.create_mesh(make_cube());
-
     Game game;
     game.m_window = &window;
     game.m_renderer = &renderer;
@@ -34,18 +32,15 @@ int main() {
         logger.error(err);
     }
 
+    make_cube(&renderer.m_meshes["cube_mesh"]);
+
     f32 rotation = 1;
-    game.main_loop = [&game, &rotation]() {
+    game.m_main_loop = [&game, &rotation]() {
         if (game.m_window->event_loop()) {
             rotation += 0.01f;
             game.m_scene->m_nodes[2].set_rotation(Quat::from_axis_angle(Vec3(1, 1, 0), rotation));
 
             game.m_renderer->update();
-
-            if (!game.took_screenshot_start) {
-                game.m_window->screenshot("02-cubes.bmp");
-                game.took_screenshot_start = true;
-            }
 
             return true;
         }

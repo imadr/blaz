@@ -247,7 +247,10 @@ Error Renderer::create_texture(Texture texture) {
 
 Error Renderer::reload_texture(str texture_id) {
     if (m_textures[texture_id].m_path != "") {
-        load_texture_data_from_file(&m_textures[texture_id]);
+        Error err = load_texture_data_from_file(&m_textures[texture_id]);
+        if (err) {
+            return err;
+        }
         return reload_texture_api(texture_id);
     }
     m_textures[texture_id].m_should_reload = false;
@@ -260,6 +263,14 @@ Error Renderer::create_mesh(Mesh mesh) {
 }
 
 Error Renderer::reload_mesh(str mesh_id) {
+    if (m_meshes[mesh_id].m_path != "") {
+        Error err = load_mesh_from_obj_file(&m_meshes[mesh_id]);
+        if (err) {
+            return err;
+        }
+        return reload_mesh_api(mesh_id);
+    }
+    m_meshes[mesh_id].m_should_reload = false;
     return reload_mesh_api(mesh_id);
 }
 

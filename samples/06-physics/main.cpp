@@ -92,7 +92,7 @@ int main() {
         Quat::from_euler(Vec3(f32(-PI / 8), 0.0, 0.0)));
 
     u64 last_time = get_timestamp_microsecond();
-    game.main_loop = [&game, &last_time]() {
+    game.m_main_loop = [&game, &last_time]() {
         if (game.m_window->event_loop()) {
             u64 current_time = get_timestamp_microsecond();
             f32 delta_time = ((f32)(current_time - last_time) / 1000);
@@ -100,11 +100,6 @@ int main() {
 
             game.m_physics->update(delta_time / 1000.0f);
             game.m_renderer->update();
-
-            if (!game.took_screenshot_start) {
-                game.m_window->screenshot("06-physics.bmp");
-                game.took_screenshot_start = true;
-            }
 
             return true;
         }

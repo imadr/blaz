@@ -79,9 +79,9 @@ int main() {
 
     auto update_camera_uniforms = [&game]() {
         game.m_renderer->set_uniform_buffer_data("u_info", "u_camera_position",
-                                                game.m_scene->m_nodes["main_camera"].m_position);
+                                                 game.m_scene->m_nodes["main_camera"].m_position);
         game.m_renderer->set_uniform_buffer_data("u_info", "u_camera_target",
-                                                game.main_camera->m_orbit_target);
+                                                 game.main_camera->m_orbit_target);
     };
 
     window.m_mouse_move_raw_callback = [&game, &update_camera_uniforms](Vec2I delta) {
@@ -101,14 +101,10 @@ int main() {
 
     update_camera_uniforms();
 
-    game.main_loop = [&game]() {
+    game.m_main_loop = [&game]() {
         if (game.m_window->event_loop()) {
             game.m_renderer->update();
 
-            if (!game.took_screenshot_start) {
-                game.m_window->screenshot("04-raymarching.bmp");
-                game.took_screenshot_start = true;
-            }
             return true;
         }
         return false;

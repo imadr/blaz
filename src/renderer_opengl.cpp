@@ -399,6 +399,7 @@ Error Renderer::create_texture_api(str texture_id) {
 
     u32 texture_name;
     gl->glGenTextures(1, &texture_name);
+    gl->glBindTexture(GL_TEXTURE_2D, texture_name);
     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
                         opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_s]);
     gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
@@ -410,7 +411,6 @@ Error Renderer::create_texture_api(str texture_id) {
         GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
         opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_mag]);
 
-    gl->glBindTexture(GL_TEXTURE_2D, texture_name);
     auto& texture_type = opengl_texture_formats[texture->m_texture_params.m_format];
     gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width, texture->m_height, 0,
                      get<1>(texture_type), get<2>(texture_type), NULL);
