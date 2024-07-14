@@ -442,7 +442,7 @@ Error Renderer::reload_texture_api(str texture_id) {
 }
 
 void Renderer::set_samplers_bindings(Pass* pass, Shader* shader) {
-    for (const auto& sampler_uniform : pass->m_sampler_uniforms_binding) {
+    for (const auto& sampler_uniform : pass->m_sampler_uniforms_bindings) {
         GLint sampler_binding_point = shader->m_sampler_binding_points[sampler_uniform.first];
         if (sampler_binding_point == 0) {
             continue;
@@ -454,7 +454,7 @@ void Renderer::set_samplers_bindings(Pass* pass, Shader* shader) {
 }
 
 void Renderer::set_images_bindings(Pass* pass, Shader* shader) {
-    for (const auto& image_uniform : pass->m_image_uniforms_binding) {
+    for (const auto& image_uniform : pass->m_image_uniforms_bindings) {
         Texture* texture = &m_textures[image_uniform.second];
         gl->glBindImageTexture(0, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0,
                                GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);

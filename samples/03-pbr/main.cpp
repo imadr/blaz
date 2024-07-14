@@ -50,7 +50,7 @@ int main() {
         .m_node = "damagedhelmet",
     });
 
-    renderer.m_passes[0].m_sampler_uniforms_binding = {
+    renderer.m_passes[0].m_sampler_uniforms_bindings = {
         {"u_sampler_albedo", "damagedhelmet_albedo"},
         {"u_sampler_metalroughness", "damagedhelmet_metalroughness"},
         {"u_sampler_normals", "damagedhelmet_normals"},

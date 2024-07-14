@@ -64,7 +64,7 @@ Error Game::load_game(str path) {
         mesh.m_vertices = mesh_cfg["vertices"].buffer_f32_value;
         mesh.m_indices = mesh_cfg["indices"].buffer_u32_value;
         if (mesh_cfg["primitive"]) {
-            mesh.m_primitive = MeshPrimitiveStr[mesh_cfg["primitive"].str_value];
+            mesh.m_primitive = MeshPrimitiveStr.at(mesh_cfg["primitive"].str_value);
         }
         for (auto& attrib : mesh_cfg["attribs"]) {
             mesh.m_attribs.push_back(
@@ -76,9 +76,27 @@ Error Game::load_game(str path) {
     for (auto& texture_cfg : game_cfg["textures"]) {
         Texture texture;
         texture.m_name = texture_cfg["name"].str_value;
-        texture.m_path = texture_cfg["path"].str_value;
-        texture.m_texture_params.m_format = TextureFormatStr[texture_cfg["format"].str_value];
-        // @todo add json textureparams
+        if (texture_cfg["path"]) {
+            texture.m_path = texture_cfg["path"].str_value;
+        }
+        texture.m_texture_params.m_format = TextureFormatStr.at(texture_cfg["format"].str_value);
+
+        if (texture_cfg["width"]) {
+            if (texture_cfg["width"].str_value == "resize_to_viewport") {
+                texture.m_resize_to_viewport = true;
+            } else {
+                texture.m_width = u32(texture_cfg["width"].float_value);
+            }
+        }
+
+        if (texture_cfg["height"]) {
+            if (texture_cfg["height"].str_value == "resize_to_viewport") {
+                texture.m_resize_to_viewport = true;
+            } else {
+                texture.m_height = u32(texture_cfg["height"].float_value);
+            }
+        }
+
         m_renderer->create_texture(texture);
     }
 
@@ -133,11 +151,11 @@ Error Game::load_game(str path) {
         vec<CfgNode> clears = pass_cfg["clear"].array_value;
         u32 clear_flag = 0;
         for (auto& clear : clears) {
-            clear_flag |= ClearStr[clear.str_value];
+            clear_flag |= ClearStr.at(clear.str_value);
         }
         pass.m_clear_flag = clear_flag;
 
-        pass.m_type = PassTypeStr[pass_cfg["type"].str_value];
+        pass.m_type = PassTypeStr.at(pass_cfg["type"].str_value);
 
         if (pass_cfg["clear_color"]) {
             pass.m_clear_color = pass_cfg["clear_color"].vec4_value;
@@ -168,12 +186,29 @@ Error Game::load_game(str path) {
             pass.m_enable_face_culling = pass_cfg["enable_face_culling"].bool_value;
         }
         if (pass_cfg["culling_mode"]) {
-            pass.m_culling_mode = CullingModeStr[pass_cfg["culling_mode"].str_value];
+            pass.m_culling_mode = CullingModeStr.at(pass_cfg["culling_mode"].str_value);
         }
 
         if (pass_cfg["bufferless_draw"]) {
             pass.m_bufferless_draw = true;
             pass.m_bufferless_draw_count = u32(pass_cfg["bufferless_draw"].float_value);
+        }
+
+        if (pass_cfg["image_uniforms_bindings"]) {
+            vec<CfgNode> image_uniforms_bindings = pass_cfg["image_uniforms_bindings"].array_value;
+            for (auto& image_uniform_binding : image_uniforms_bindings) {
+                pass.m_image_uniforms_bindings[image_uniform_binding[0].str_value] =
+                    image_uniform_binding[1].str_value;
+            }
+        }
+
+        if (pass_cfg["sampler_uniforms_bindings"]) {
+            vec<CfgNode> sampler_uniforms_bindings =
+                pass_cfg["sampler_uniforms_bindings"].array_value;
+            for (auto& sampler_uniform_binding : sampler_uniforms_bindings) {
+                pass.m_sampler_uniforms_bindings[sampler_uniform_binding[0].str_value] =
+                    sampler_uniform_binding[1].str_value;
+            }
         }
 
         m_renderer->m_passes.push_back(pass);
