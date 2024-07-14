@@ -400,7 +400,7 @@ Error Renderer::reload_texture_api(str texture_id) {
 }
 
 void Renderer::set_samplers_bindings(Pass* pass, Shader* shader) {
-    for (const auto& sampler_uniform : pass->m_sampler_uniforms_binding) {
+    for (const auto& sampler_uniform : pass->m_sampler_uniforms_bindings) {
         GLint sampler_binding_point = shader->m_sampler_binding_points[sampler_uniform.first];
         if (sampler_binding_point == 0) {
             continue;

@@ -91,6 +91,7 @@ void Renderer::update() {
             set_current_shader(pass.m_shader);
 
             set_images_bindings(&pass, pass_shader);
+
             dispatch_compute(800, 600, 1);  // temp
 
         } else if (pass.m_type == PassType::RENDER) {
@@ -245,8 +246,12 @@ Error Renderer::create_texture(Texture texture) {
 }
 
 Error Renderer::reload_texture(str texture_id) {
-    load_texture_data_from_file(&m_textures[texture_id]);
-    return reload_texture_api(texture_id);
+    if (m_textures[texture_id].m_path != "") {
+        load_texture_data_from_file(&m_textures[texture_id]);
+        return reload_texture_api(texture_id);
+    }
+    m_textures[texture_id].m_should_reload = false;
+    return Error();
 }
 
 Error Renderer::create_mesh(Mesh mesh) {

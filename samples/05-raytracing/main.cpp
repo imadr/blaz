@@ -33,21 +33,6 @@ int main() {
         logger.error(err);
     }
 
-    Texture compute_output_texture;
-    compute_output_texture.m_name = "compute_output";
-    compute_output_texture.m_texture_params.m_format = TextureFormat::RGBA32F;
-    compute_output_texture.m_width = window.m_size.width;
-    compute_output_texture.m_height = window.m_size.height;
-    renderer.create_texture(compute_output_texture);
-
-    renderer.m_passes[0].m_image_uniforms_binding = {
-        {"u_image_compute_output", "compute_output"},
-    };
-
-    renderer.m_passes[1].m_sampler_uniforms_binding = {
-        {"u_sampler_compute_output", "compute_output"},
-    };
-
     game.main_loop = [&game]() {
         if (game.m_window->event_loop()) {
             game.m_renderer->update();

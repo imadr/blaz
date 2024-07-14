@@ -68,6 +68,7 @@ enum class TextureFormat {
 static std::unordered_map<str, TextureFormat> TextureFormatStr = {
     {"R8", TextureFormat::R8},           {"RG8", TextureFormat::RG8},
     {"RGB8", TextureFormat::RGB8},       {"RGBA8", TextureFormat::RGBA8},
+    {"RGB32F", TextureFormat::RGB32F},   {"RGBA32F", TextureFormat::RGBA32F},
     {"DEPTH32", TextureFormat::DEPTH32}, {"DEPTH32F", TextureFormat::DEPTH32F},
 };
 
@@ -115,7 +116,7 @@ struct Framebuffer {
     str m_name;
     u32 m_width;
     u32 m_height;
-    str m_color_attachment_texture;  // @todo is this even needed ?
+    str m_color_attachment_texture;
     str m_depth_attachment_texture;
     str m_stencil_attachment_texture;
     void* m_api_data = NULL;
@@ -178,6 +179,7 @@ struct Texture {
     TextureParams m_texture_params;
     void* m_api_data = NULL;
     bool m_should_reload = true;
+    bool m_resize_to_viewport;
 };
 
 struct Renderable {
@@ -214,8 +216,8 @@ struct Pass {
     CullingOrder m_culling_order = CullingOrder::CCW;
     bool m_bufferless_draw = false;
     u32 m_bufferless_draw_count = 3;
-    std::unordered_map<str, str> m_sampler_uniforms_binding;
-    std::unordered_map<str, str> m_image_uniforms_binding;
+    std::unordered_map<str, str> m_sampler_uniforms_bindings;
+    std::unordered_map<str, str> m_image_uniforms_bindings;
 };
 
 using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
