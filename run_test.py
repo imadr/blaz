@@ -25,7 +25,7 @@ if not os.path.exists(os.path.join(os.getcwd(), "build")):
 print(Fore.YELLOW + "building..." + Style.RESET_ALL)
 cwd = os.getcwd()
 os.chdir("build")
-# subprocess.run(["cmake", "--build", "."], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+subprocess.run(["cmake", "--build", "."], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 os.chdir(cwd)
 
 current_dir = os.getcwd()

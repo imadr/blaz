@@ -16,11 +16,11 @@
 
 | <b>Sample</b>                      |<b>Screenshot</b>                                                                               |
 |-----------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| 01-triangle           | <img src="/samples/tests/01-hellotriangle.bmp" width="300"/><br>                       |
-| 02-cubes              | <img src="/samples/tests/02-cubes.bmp" width="300"/><br>                               |
-| 03-pbr                | <img src="/samples/tests/03-pbr.bmp" width="300"/><br>                                 |
-| 04-raymarching        | <img src="/samples/tests/04-raymarching.bmp" width="300"/><br>                         |
-| 05-raytracing         | <img src="/samples/tests/05-raytracing.bmp" width="300"/><br>                          |
+| 01-triangle           | <img src="/samples/tests/01-hellotriangle.png" width="300"/><br>                       |
+| 02-cubes              | <img src="/samples/tests/02-cubes.png" width="300"/><br>                               |
+| 03-pbr                | <img src="/samples/tests/03-pbr.png" width="300"/><br>                                 |
+| 04-raymarching        | <img src="/samples/tests/04-raymarching.png" width="300"/><br>                         |
+| 05-raytracing         | <img src="/samples/tests/05-raytracing.png" width="300"/><br>                          |
 
 ## Building for web
 
