@@ -5,6 +5,18 @@ from colorama import Fore, Back, Style
 import shutil
 from PIL import Image
 from PIL import ImageChops
+from PIL import ImageGrab
+import pywinctl
+
+def screenshot(window_name, screenshot_path):
+
+    window = pywinctl.getWindowsWithTitle(window_name)[0]
+    rect = window.getClientFrame()
+    if window:
+        bbox = rect.left, rect.top, rect.right, rect.bottom
+        screenshot = ImageGrab.grab(bbox=bbox)
+        screenshot.save(screenshot_path)
+        print(Fore.GREEN + "screenshot saved in " + screenshot_path + Style.RESET_ALL)
 
 if not os.path.exists(os.path.join(os.getcwd(), "build")):
     print(Fore.RED + "build directory not found" + Style.RESET_ALL)
@@ -13,7 +25,7 @@ if not os.path.exists(os.path.join(os.getcwd(), "build")):
 print(Fore.YELLOW + "building..." + Style.RESET_ALL)
 cwd = os.getcwd()
 os.chdir("build")
-subprocess.run(["cmake", "--build", "."], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+# subprocess.run(["cmake", "--build", "."], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 os.chdir(cwd)
 
 current_dir = os.getcwd()
@@ -25,8 +37,8 @@ if not os.path.exists(bin_dir) or not os.path.isdir(bin_dir):
 tests_dir = os.path.join(bin_dir, "tests")
 
 if os.path.exists(tests_dir):
-    bmp_files = [file for file in os.listdir(tests_dir) if file.endswith(".bmp")]
-    for bmp_file in bmp_files:
+    img_files = [file for file in os.listdir(tests_dir) if file.endswith(".bmp")]
+    for bmp_file in img_files:
         os.remove(os.path.join(tests_dir, bmp_file))
 
 if len(os.listdir(bin_dir)) == 0:
@@ -36,7 +48,7 @@ if len(os.listdir(bin_dir)) == 0:
 for subdir in os.listdir(bin_dir):
     if(subdir == "tests"):
         continue
-    print(Fore.YELLOW + "running sample "+subdir + Style.RESET_ALL)
+    print(Fore.YELLOW + "running sample " + subdir + Style.RESET_ALL)
     subdir_path = os.path.join(bin_dir, subdir)
     if os.path.isdir(subdir_path):
         exe_dir = os.path.join(subdir_path, DEBUG_OR_RELEASE)
@@ -50,26 +62,19 @@ for subdir in os.listdir(bin_dir):
             continue
 
         exe_path = os.path.join(exe_dir, exe_files[0])
-        subprocess.Popen(exe_path, cwd=exe_dir, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-        time.sleep(1)
-        subprocess.run(["taskkill", "/f", "/im", exe_files[0]], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-
-        bmp_files = [file for file in os.listdir(exe_dir) if file.endswith(".bmp")]
-        if len(bmp_files) == 0:
-            print(Fore.RED + f"no screenshot generated" + Style.RESET_ALL)
-            exit()
-
         if not os.path.exists(tests_dir):
             os.makedirs(tests_dir)
-        for bmp_file in bmp_files:
-            shutil.copy2(os.path.join(exe_dir, bmp_file), tests_dir)
-            os.remove(os.path.join(exe_dir, bmp_file))
 
-bmp_files = [file for file in os.listdir(os.path.join(os.path.join(current_dir, "bin"), "tests")) if file.endswith(".bmp")]
+        exe_window_name = exe_files[0].replace(".exe", "")
+        subprocess.Popen(exe_path, cwd=exe_dir, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        time.sleep(1)
+        screenshot(exe_window_name, os.path.join(tests_dir, exe_window_name+".png"))
+        subprocess.run(["taskkill", "/f", "/im", exe_files[0]], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
+img_files = [file for file in os.listdir(os.path.join(os.path.join(current_dir, "bin"), "tests")) if file.endswith(".png")]
 tests_passed = 0
 tests_failed = 0
-for bmp_file in bmp_files:
+for bmp_file in img_files:
     generated_image_path = os.path.join(tests_dir, bmp_file)
     reference_image_path = os.path.join(os.path.join(os.path.join(current_dir, "samples"), "tests"), bmp_file)
     if(not os.path.isfile(reference_image_path)):

@@ -25,7 +25,7 @@ void Game::run() {
     void* arg = (void*)(this);
     emscripten_set_main_loop_arg(emscripten_main_loop, arg, 0, true);
 #else
-    while (main_loop()) {
+    while (m_main_loop()) {
     }
 #endif
 }
@@ -61,6 +61,9 @@ Error Game::load_game(str path) {
     for (auto& mesh_cfg : game_cfg["meshes"]) {
         Mesh mesh;
         mesh.m_name = mesh_cfg["name"].str_value;
+        if (mesh_cfg["path"]) {
+            mesh.m_path = mesh_cfg["path"].str_value;
+        }
         mesh.m_vertices = mesh_cfg["vertices"].buffer_f32_value;
         mesh.m_indices = mesh_cfg["indices"].buffer_u32_value;
         if (mesh_cfg["primitive"]) {
@@ -80,6 +83,23 @@ Error Game::load_game(str path) {
             texture.m_path = texture_cfg["path"].str_value;
         }
         texture.m_texture_params.m_format = TextureFormatStr.at(texture_cfg["format"].str_value);
+
+        if (texture_cfg["wrap_mode_s"]) {
+            texture.m_texture_params.m_wrap_mode_s =
+                TextureWrapModeStr.at(texture_cfg["wrap_mode_s"].str_value);
+        }
+        if (texture_cfg["wrap_mode_t"]) {
+            texture.m_texture_params.m_wrap_mode_t =
+                TextureWrapModeStr.at(texture_cfg["wrap_mode_t"].str_value);
+        }
+        if (texture_cfg["filter_mode_min"]) {
+            texture.m_texture_params.m_filter_mode_min =
+                TextureFilteringModeStr.at(texture_cfg["filter_mode_min"].str_value);
+        }
+        if (texture_cfg["filter_mode_mag"]) {
+            texture.m_texture_params.m_filter_mode_mag =
+                TextureFilteringModeStr.at(texture_cfg["filter_mode_mag"].str_value);
+        }
 
         if (texture_cfg["width"]) {
             if (texture_cfg["width"].str_value == "resize_to_viewport") {
@@ -113,7 +133,7 @@ Error Game::load_game(str path) {
     for (auto& renderable_cfg : game_cfg["renderables"]) {
         Renderable renderable;
         renderable.m_name = renderable_cfg["name"].str_value;
-        for (auto tag : renderable_cfg["tags"]) {
+        for (auto& tag : renderable_cfg["tags"]) {
             renderable.m_tags.push_back(tag.str_value);
         }
         renderable.m_mesh = renderable_cfg["mesh"].str_value;
@@ -121,7 +141,7 @@ Error Game::load_game(str path) {
 
         m_renderer->m_renderables.push_back(renderable);
         u32 id = u32(m_renderer->m_renderables.size()) - 1;
-        for (auto tag : renderable_cfg["tags"]) {
+        for (auto& tag : renderable_cfg["tags"]) {
             m_renderer->m_tagged_renderables[tag.str_value].push_back(id);
         }
     }
@@ -166,7 +186,7 @@ Error Game::load_game(str path) {
 
         pass.m_shader = pass_cfg["shader"].str_value;
 
-        for (auto tag : pass_cfg["tags"]) {
+        for (auto& tag : pass_cfg["tags"]) {
             pass.m_tags.push_back(tag.str_value);
         }
 

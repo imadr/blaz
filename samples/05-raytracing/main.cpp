@@ -33,14 +33,9 @@ int main() {
         logger.error(err);
     }
 
-    game.main_loop = [&game]() {
+    game.m_main_loop = [&game]() {
         if (game.m_window->event_loop()) {
             game.m_renderer->update();
-
-            if (!game.took_screenshot_start) {
-                game.m_window->screenshot("05-raytracing.bmp");
-                game.took_screenshot_start = true;
-            }
 
             return true;
         }

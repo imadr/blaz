@@ -1,15 +1,18 @@
 #pragma once
 
-#include "renderer.h"
+#include "error.h"
+#include "types.h"
 
 namespace blaz {
 
-Mesh make_cube();
-Mesh make_cube_wireframe();
-Mesh make_plane();
-Mesh make_uv_sphere(u32 slices, u32 stacks);
-Mesh make_wireframe_sphere(u32 vertices);
+struct Mesh;
 
-pair<Error, Mesh> load_mesh_from_obj_file(str mesh_path);
+Error make_cube(Mesh* mesh);
+Error make_cube_wireframe(Mesh* mesh);
+Error make_plane(Mesh* mesh);
+Error make_uv_sphere(Mesh* mesh, u32 slices, u32 stacks);
+Error make_wireframe_sphere(Mesh* mesh, u32 vertices);
+
+Error load_mesh_from_obj_file(Mesh* mesh);
 
 }  // namespace blaz

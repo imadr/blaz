@@ -18,10 +18,8 @@ struct Game {
 
     Error load_game(str path);
 
-    std::function<bool()> main_loop;
+    std::function<bool()> m_main_loop;
     void run();
-
-    bool took_screenshot_start = false;
 };
 
 }  // namespace blaz

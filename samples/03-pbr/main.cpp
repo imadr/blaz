@@ -34,8 +34,6 @@ int main() {
         logger.error(err);
     }
 
-    renderer.create_mesh(load_mesh_from_obj_file("data/damagedhelmet.obj").second);
-
     add_node(&scene,
              Node{
                  .m_name = "damagedhelmet",
@@ -82,14 +80,9 @@ int main() {
         game.main_camera->orbit_mouse_wheel(delta);
     };
 
-    game.main_loop = [&game]() {
+    game.m_main_loop = [&game]() {
         if (game.m_window->event_loop()) {
             game.m_renderer->update();
-
-            if (!game.took_screenshot_start) {
-                game.m_window->screenshot("03-pbr.bmp");
-                game.took_screenshot_start = true;
-            }
 
             return true;
         }

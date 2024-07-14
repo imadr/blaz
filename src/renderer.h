@@ -6,6 +6,7 @@
 #include "camera.h"
 #include "color.h"
 #include "error.h"
+#include "mesh.h"
 #include "platform.h"
 #include "texture.h"
 #include "types.h"
@@ -78,9 +79,20 @@ enum class TextureWrapMode {
     CLAMP_TO_EDGE,
 };
 
+static std::unordered_map<str, TextureWrapMode> TextureWrapModeStr = {
+    {"REPEAT", TextureWrapMode::REPEAT},
+    {"MIRRORED_REPEAT", TextureWrapMode::MIRRORED_REPEAT},
+    {"CLAMP_TO_EDGE", TextureWrapMode::CLAMP_TO_EDGE},
+};
+
 enum class TextureFilteringMode {
     NEAREST,
     LINEAR,
+};
+
+static std::unordered_map<str, TextureFilteringMode> TextureFilteringModeStr = {
+    {"NEAREST", TextureFilteringMode::NEAREST},
+    {"LINEAR", TextureFilteringMode::LINEAR},
 };
 
 enum UniformType {
@@ -159,10 +171,11 @@ struct UniformBuffer {
 
 struct Mesh {
     str m_name;
+    str m_path;
     vec<f32> m_vertices;
     vec<u32> m_indices;
     vec<pair<str, u32>> m_attribs;
-    u32 m_vertex_stride;
+    u32 m_vertex_stride = 0;
     MeshPrimitive m_primitive = MeshPrimitive::TRIANGLES;
     void* m_api_data = NULL;
     bool m_should_reload = true;
@@ -201,7 +214,7 @@ static std::unordered_map<str, PassType> PassTypeStr = {
 struct Pass {
     str m_name;
     PassType m_type;
-    u32 m_clear_flag;
+    u32 m_clear_flag = 0;
     RGBA m_clear_color = RGBA(0, 0, 0, 1);
     float m_clear_depth = 1.0;
     str m_shader;
