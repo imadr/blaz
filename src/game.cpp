@@ -102,7 +102,7 @@ Error Game::load_game(str path) {
         }
 
         if (texture_cfg["width"]) {
-            if (texture_cfg["width"].str_value == "resize_to_viewport") {
+            if (texture_cfg["width"].str_value == "viewport_width") {
                 texture.m_resize_to_viewport = true;
             } else {
                 texture.m_width = u32(texture_cfg["width"].float_value);
@@ -110,7 +110,7 @@ Error Game::load_game(str path) {
         }
 
         if (texture_cfg["height"]) {
-            if (texture_cfg["height"].str_value == "resize_to_viewport") {
+            if (texture_cfg["height"].str_value == "viewport_height") {
                 texture.m_resize_to_viewport = true;
             } else {
                 texture.m_height = u32(texture_cfg["height"].float_value);
@@ -228,6 +228,17 @@ Error Game::load_game(str path) {
             for (auto& sampler_uniform_binding : sampler_uniforms_bindings) {
                 pass.m_sampler_uniforms_bindings[sampler_uniform_binding[0].str_value] =
                     sampler_uniform_binding[1].str_value;
+            }
+        }
+
+        if (pass_cfg["compute_work_groups"]) {
+            for (u32 i = 0; i < 3; i++) {
+                if (pass_cfg["compute_work_groups"][i].str_value != "") {
+                    pass.m_compute_work_groups[i] = pass_cfg["compute_work_groups"][i].str_value;
+                } else {
+                    pass.m_compute_work_groups[i] =
+                        u32(pass_cfg["compute_work_groups"][i].float_value);
+                }
             }
         }
 

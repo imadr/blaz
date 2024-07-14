@@ -192,7 +192,7 @@ struct Texture {
     TextureParams m_texture_params;
     void* m_api_data = NULL;
     bool m_should_reload = true;
-    bool m_resize_to_viewport;
+    bool m_resize_to_viewport = false;
 };
 
 struct Renderable {
@@ -210,6 +210,8 @@ static std::unordered_map<str, PassType> PassTypeStr = {
     {"BLITTING", PassType::BLITTING},
     {"COMPUTE", PassType::COMPUTE},
 };
+
+using IntOrStr = std::variant<u32, str>;
 
 struct Pass {
     str m_name;
@@ -231,6 +233,7 @@ struct Pass {
     u32 m_bufferless_draw_count = 3;
     std::unordered_map<str, str> m_sampler_uniforms_bindings;
     std::unordered_map<str, str> m_image_uniforms_bindings;
+    IntOrStr m_compute_work_groups[3];
 };
 
 using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
@@ -301,6 +304,8 @@ struct Renderer {
     Error create_uniform_buffer(UniformBuffer uniform_buffer);
     Error create_uniform_buffer_api(str uniform_buffer_id);
     Error set_uniform_buffer_data(str uniform_buffer_id, str uniform_name, UniformValue value);
+
+    u32 special_value(str name);
 };
 
 }  // namespace blaz
