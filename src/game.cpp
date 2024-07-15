@@ -42,12 +42,15 @@ Error Game::load_game(str path) {
         shader.m_name = shader_cfg["name"].str_value;
         if (shader_cfg["vertex_shader_path"]) {
             shader.m_vertex_shader_path = shader_cfg["vertex_shader_path"].str_value;
+            m_shader_file_dependencies[shader.m_vertex_shader_path].push_back(shader.m_name);
         }
         if (shader_cfg["fragment_shader_path"]) {
             shader.m_fragment_shader_path = shader_cfg["fragment_shader_path"].str_value;
+            m_shader_file_dependencies[shader.m_fragment_shader_path].push_back(shader.m_name);
         }
         if (shader_cfg["compute_shader_path"]) {
             shader.m_compute_shader_path = shader_cfg["compute_shader_path"].str_value;
+            m_shader_file_dependencies[shader.m_compute_shader_path].push_back(shader.m_name);
         }
         if (shader_cfg["type"].str_value == "VERTEX_FRAGMENT") {
             shader.m_type = ShaderType::VERTEX_FRAGMENT;
@@ -251,6 +254,15 @@ Error Game::load_game(str path) {
     if (game_cfg["main_camera"]) {
         main_camera = &m_renderer->m_cameras[game_cfg["main_camera"].str_value];
     }
+
+    m_filewatcher.init("data", [this](str filename) {
+        str filepath = "data/" + filename;
+        if (m_shader_file_dependencies.contains(filepath)) {
+            for (auto& shader_id : m_shader_file_dependencies.at(filepath)) {
+                m_renderer->m_shaders[shader_id].m_should_reload = true;
+            }
+        }
+    });
 
     return Error();
 }

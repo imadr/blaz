@@ -117,42 +117,7 @@ void Renderer::set_swap_interval(u32 interval) {
 
 Error Renderer::create_shader_api(str shader_id) {
     Shader* shader = &m_shaders[shader_id];
-
-    GLuint shader_program;
-    shader_program = gl->glCreateProgram();
     Shader_OPENGL* api_shader = new Shader_OPENGL;
-    api_shader->m_program = shader_program;
-
-    GLuint vertex_shader;
-    GLuint fragment_shader;
-    GLuint compute_shader;
-
-    if (shader->m_type == ShaderType::VERTEX_FRAGMENT) {
-        vertex_shader = gl->glCreateShader(GL_VERTEX_SHADER);
-        fragment_shader = gl->glCreateShader(GL_FRAGMENT_SHADER);
-        gl->glAttachShader(shader_program, vertex_shader);
-        gl->glAttachShader(shader_program, fragment_shader);
-
-        api_shader->m_vertex_shader = vertex_shader;
-        api_shader->m_fragment_shader = fragment_shader;
-    } else if (shader->m_type == ShaderType::COMPUTE) {
-        compute_shader = gl->glCreateShader(GL_COMPUTE_SHADER);
-        gl->glAttachShader(shader_program, compute_shader);
-
-        api_shader->m_compute_shader = compute_shader;
-    }
-
-#ifdef DEBUG_RENDERER
-    gl->glObjectLabel(GL_PROGRAM, shader_program, -1, shader->m_name.c_str());
-
-    if (shader->m_type == ShaderType::VERTEX_FRAGMENT) {
-        gl->glObjectLabel(GL_SHADER, vertex_shader, -1, (shader->m_name + "_vertex").c_str());
-        gl->glObjectLabel(GL_SHADER, fragment_shader, -1, (shader->m_name + "_fragment").c_str());
-    } else if (shader->m_type == ShaderType::COMPUTE) {
-        gl->glObjectLabel(GL_SHADER, compute_shader, -1, (shader->m_name + "_compute").c_str());
-    }
-#endif
-
     shader->m_api_data = api_shader;
 
     return Error();
@@ -163,6 +128,45 @@ Error Renderer::reload_shader_api(str shader_id) {
     Shader_OPENGL* api_shader = (Shader_OPENGL*)shader->m_api_data;
     int success;
     char info[512];
+
+    if (api_shader->m_vertex_shader) {
+        gl->glDeleteShader(api_shader->m_vertex_shader);
+    }
+    if (api_shader->m_fragment_shader) {
+        gl->glDeleteShader(api_shader->m_fragment_shader);
+    }
+    if (api_shader->m_compute_shader) {
+        gl->glDeleteShader(api_shader->m_compute_shader);
+    }
+    if (api_shader->m_program) {
+        gl->glDeleteProgram(api_shader->m_program);
+    }
+
+    api_shader->m_program = gl->glCreateProgram();
+
+    if (shader->m_type == ShaderType::VERTEX_FRAGMENT) {
+        api_shader->m_vertex_shader = gl->glCreateShader(GL_VERTEX_SHADER);
+        api_shader->m_fragment_shader = gl->glCreateShader(GL_FRAGMENT_SHADER);
+        gl->glAttachShader(api_shader->m_program, api_shader->m_vertex_shader);
+        gl->glAttachShader(api_shader->m_program, api_shader->m_fragment_shader);
+    } else if (shader->m_type == ShaderType::COMPUTE) {
+        api_shader->m_compute_shader = gl->glCreateShader(GL_COMPUTE_SHADER);
+        gl->glAttachShader(api_shader->m_program, api_shader->m_compute_shader);
+    }
+
+#ifdef DEBUG_RENDERER
+    gl->glObjectLabel(GL_PROGRAM, api_shader->m_program, -1, shader->m_name.c_str());
+
+    if (shader->m_type == ShaderType::VERTEX_FRAGMENT) {
+        gl->glObjectLabel(GL_SHADER, api_shader->m_vertex_shader, -1,
+                          (shader->m_name + "_vertex").c_str());
+        gl->glObjectLabel(GL_SHADER, api_shader->m_fragment_shader, -1,
+                          (shader->m_name + "_fragment").c_str());
+    } else if (shader->m_type == ShaderType::COMPUTE) {
+        gl->glObjectLabel(GL_SHADER, api_shader->m_compute_shader, -1,
+                          (shader->m_name + "_compute").c_str());
+    }
+#endif
 
     if (shader->m_type == ShaderType::VERTEX_FRAGMENT) {
         const char* c_str = shader->m_vertex_shader_source.c_str();
@@ -192,8 +196,6 @@ Error Renderer::reload_shader_api(str shader_id) {
         gl->glShaderSource(api_shader->m_compute_shader, 1, &c_str, NULL);
         gl->glCompileShader(api_shader->m_compute_shader);
 
-        int success;
-        char info[512];
         gl->glGetShaderiv(api_shader->m_compute_shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             gl->glGetShaderInfoLog(api_shader->m_compute_shader, 512, NULL, info);

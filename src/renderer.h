@@ -239,7 +239,7 @@ struct Pass {
 using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
 
 struct Renderer {
-    Window* m_window;
+    Window* m_window = NULL;
     Scene* m_current_scene = NULL;
 
     Error init(Window* window);
