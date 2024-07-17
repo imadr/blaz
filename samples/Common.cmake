@@ -6,6 +6,11 @@ file(GLOB SAMPLE_SOURCES
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${SAMPLE_NAME})
 add_executable(${SAMPLE_NAME} ${SAMPLE_SOURCES})
 
+if(ADDRESS_SANITIZED)
+    target_compile_options(${SAMPLE_NAME} PRIVATE -fsanitize=address)
+    target_link_options(${SAMPLE_NAME} PRIVATE -fsanitize=address)
+endif()
+
 target_link_libraries(${SAMPLE_NAME} blaz)
 
 if (EMSCRIPTEN)
@@ -32,5 +37,6 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/../internal_shaders/" ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/internal_data
     )
     set_target_properties(${SAMPLE_NAME}_INTERNAL_DATA PROPERTIES FOLDER ${MISC_TARGET_FOLDER})
+
     add_dependencies(${SAMPLE_NAME} ${SAMPLE_NAME}_INTERNAL_DATA)
 endif()

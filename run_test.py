@@ -9,7 +9,6 @@ from PIL import ImageGrab
 import pywinctl
 
 def screenshot(window_name, screenshot_path):
-
     window = pywinctl.getWindowsWithTitle(window_name)[0]
     rect = window.getClientFrame()
     if window:

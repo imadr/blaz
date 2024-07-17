@@ -26,6 +26,7 @@ endif()
 set_property(CACHE GRAPHICS_API PROPERTY STRINGS ${GRAPHICS_APIS})
 
 option(DEBUG_RENDERER "Debug Renderer" ON)
+option(ADDRESS_SANITIZED "Address sanitizer (kinda buggy)" OFF)
 
 if(DEBUG_RENDERER)
     add_definitions(-D DEBUG_RENDERER)
@@ -119,6 +120,11 @@ add_library(blaz
     ${PLATFORM_SOURCES})
 
 target_include_directories(blaz PUBLIC src)
+
+if(ADDRESS_SANITIZED)
+    target_compile_options(blaz PRIVATE -fsanitize=address)
+    target_link_options(blaz PRIVATE -fsanitize=address)
+endif()
 
 option(UNITY_BUILD "Unity Build" OFF)
 
