@@ -24,6 +24,10 @@ struct Game {
 
     std::function<bool()> m_main_loop;
     void run();
+
+    ~Game(){
+        m_filewatcher.stop();
+    }
 };
 
 }  // namespace blaz
