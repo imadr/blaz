@@ -15,6 +15,14 @@ Vec2I operator-(Vec2I a, Vec2I b) {
     return Vec2I(a.x() - b.x(), a.y() - b.y());
 }
 
+Vec3I operator+(Vec3I a, Vec3I b) {
+    return Vec3I(a.x() + b.x(), a.y() + b.y(), a.z() + b.z());
+}
+
+Vec3I operator-(Vec3I a, Vec3I b) {
+    return Vec3I(a.x() - b.x(), a.y() - b.y(), a.z() - b.z());
+}
+
 Vec3 operator+(Vec3 a, Vec3 b) {
     return Vec3(a.x() + b.x(), a.y() + b.y(), a.z() + b.z());
 }
@@ -341,6 +349,15 @@ str Vec2I::to_str() {
     std::stringstream stream;
     stream << v[0] << " ";
     stream << v[1];
+    str s = stream.str();
+    return s;
+}
+
+str Vec3I::to_str() {
+    std::stringstream stream;
+    stream << v[0] << " ";
+    stream << v[1] << " ";
+    stream << v[2];
     str s = stream.str();
     return s;
 }

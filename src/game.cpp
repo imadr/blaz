@@ -221,7 +221,8 @@ Error Game::load_game(str path) {
             vec<CfgNode> image_uniforms_bindings = pass_cfg["image_uniforms_bindings"].array_value;
             for (auto& image_uniform_binding : image_uniforms_bindings) {
                 pass.m_image_uniforms_bindings[image_uniform_binding[0].str_value] =
-                    image_uniform_binding[1].str_value;
+                    std::make_pair(image_uniform_binding[1].str_value,
+                                   AccessTypeStr.at(image_uniform_binding[2].str_value));
             }
         }
 
@@ -243,6 +244,11 @@ Error Game::load_game(str path) {
                         u32(pass_cfg["compute_work_groups"][i].float_value);
                 }
             }
+        }
+
+        if (pass_cfg["copy_src_texture"]) {
+            pass.m_copy_src_texture = pass_cfg["copy_src_texture"].str_value;
+            pass.m_copy_dst_texture = pass_cfg["copy_dst_texture"].str_value;
         }
 
         m_renderer->m_passes.push_back(pass);

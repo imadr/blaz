@@ -91,7 +91,12 @@ void Renderer::update() {
         debug_marker_start(pass.m_name);
 #endif
 
-        if (pass.m_type == PassType::COMPUTE) {
+        if (pass.m_type == PassType::COPY) {
+            copy_texture(pass.m_copy_src_texture, pass.m_copy_dst_texture, Vec3I(0, 0, 0),
+                         Vec2I(m_textures[pass.m_copy_src_texture].m_width,
+                               m_textures[pass.m_copy_src_texture].m_height),
+                         Vec3I(0, 0, 0));
+        } else if (pass.m_type == PassType::COMPUTE) {
             Shader* pass_shader = &m_shaders[pass.m_shader];
             if (pass_shader->m_should_reload) {
                 Error err = reload_shader(pass.m_shader);
