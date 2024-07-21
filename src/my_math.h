@@ -66,6 +66,69 @@ Vec2I operator*(f32 s, Vec2I v);
 Vec2I operator+(Vec2I a, Vec2I b);
 Vec2I operator-(Vec2I a, Vec2I b);
 
+struct Vec3I {
+    i32 v[3];
+    i32 &operator[](int i) {
+        return v[i];
+    }
+
+    void *ptr(Vec3I &v) {
+        return v.v;
+    }
+
+    i32 &x() {
+        return v[0];
+    }
+    i32 &y() {
+        return v[1];
+    }
+    i32 &z() {
+        return v[2];
+    }
+
+    Vec3I() : v{0, 0, 0} {
+    }
+    Vec3I(i32 x, i32 y, i32 z) : v{x, y, z} {
+    }
+
+    Vec3I operator=(Vec3I other) {
+        v[0] = other.v[0];
+        v[1] = other.v[1];
+        v[2] = other.v[2];
+        return *this;
+    }
+
+    Vec3I(const Vec3I &other) {
+        v[0] = other.v[0];
+        v[1] = other.v[1];
+        v[2] = other.v[2];
+    }
+
+    Vec3I operator-() {
+        return Vec3I(-v[0], -v[1], -v[2]);
+    }
+
+    Vec3I operator+=(Vec3I other) {
+        v[0] += other.v[0];
+        v[1] += other.v[1];
+        v[2] += other.v[2];
+        return *this;
+    }
+
+    Vec3I operator-=(Vec3I other) {
+        v[0] -= other.v[0];
+        v[1] -= other.v[1];
+        v[2] -= other.v[2];
+        return *this;
+    }
+
+    str to_str();
+};
+
+Vec3I operator*(f32 s, Vec3I v);
+Vec3I operator+(Vec3I a, Vec3I b);
+Vec3I operator-(Vec3I a, Vec3I b);
+
 struct Vec3 {
     f32 v[3];
     f32 &operator[](int i) {

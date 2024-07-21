@@ -139,7 +139,6 @@ enum class ShaderType { VERTEX_FRAGMENT, COMPUTE };
 struct Shader {
     str m_name;
     ShaderType m_type = ShaderType::VERTEX_FRAGMENT;
-    ;
     str m_vertex_shader_source;
     str m_fragment_shader_source;
     str m_compute_shader_source;
@@ -147,7 +146,7 @@ struct Shader {
     str m_fragment_shader_path;
     str m_compute_shader_path;
     bool m_is_error = false;
-    std::unordered_map<str, u32> m_sampler_binding_points;
+    std::unordered_map<str, u32> m_uniform_binding_points;
     void* m_api_data = NULL;
     bool m_should_reload = true;
 };
@@ -203,15 +202,23 @@ struct Renderable {
     str m_node;
 };
 
-enum class PassType { RENDER, BLITTING, COMPUTE };
+enum class PassType { RENDER, COPY, COMPUTE };
 
 static std::unordered_map<str, PassType> PassTypeStr = {
     {"RENDER", PassType::RENDER},
-    {"BLITTING", PassType::BLITTING},
+    {"COPY", PassType::COPY},
     {"COMPUTE", PassType::COMPUTE},
 };
 
 using IntOrStr = std::variant<u32, str>;
+
+enum class AccessType { READ_ONLY, WRITE_ONLY, READ_WRITE };
+
+static std::unordered_map<str, AccessType> AccessTypeStr = {
+    {"READ_ONLY", AccessType::READ_ONLY},
+    {"WRITE_ONLY", AccessType::WRITE_ONLY},
+    {"READ_WRITE", AccessType::READ_WRITE},
+};
 
 struct Pass {
     str m_name;
@@ -232,8 +239,10 @@ struct Pass {
     bool m_bufferless_draw = false;
     u32 m_bufferless_draw_count = 3;
     std::unordered_map<str, str> m_sampler_uniforms_bindings;
-    std::unordered_map<str, str> m_image_uniforms_bindings;
+    std::unordered_map<str, pair<str, AccessType>> m_image_uniforms_bindings;
     IntOrStr m_compute_work_groups[3];
+    str m_copy_src_texture;
+    str m_copy_dst_texture;
 };
 
 using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
@@ -251,6 +260,7 @@ struct Renderer {
     void draw_indexed(MeshPrimitive primitive, size_t count);
     void dispatch_compute(u32 num_groups_x, u32 num_groups_y, u32 num_groups_z);
     void set_swap_interval(u32 interval);
+    void copy_texture(str src, str dst, Vec3I src_pos, Vec2I src_size, Vec3I dst_pos);
 
     void debug_marker_start(str name);
     void debug_marker_end();

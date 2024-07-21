@@ -3,6 +3,11 @@
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 layout(rgba32f, binding = 0) uniform image2D u_image_compute_output;
+layout(rgba32f, binding = 1) uniform image2D u_image_accumulation;
+
+layout(std140, binding = 2) uniform u_time {
+    uint u_frame;
+};
 
 mat3 lookat_matrix(vec3 origin, vec3 target, float roll) {
     vec3 rr = vec3(sin(roll), cos(roll), 0.0);
@@ -154,5 +159,12 @@ void main() {
 
     final_color /= SAMPLE_PER_RAY;
 
+    // vec4 accumluation_texture = imageLoad(u_image_accumulation, ivec2(texel_coord /
+    // resolution.xy));
+
+    // imageStore(u_image_compute_output, texel_coord,
+
+    //            vec4(sqrt((accumluation_texture.rgb + final_color) /
+    //            accumluation_texture.w), 1.0));
     imageStore(u_image_compute_output, texel_coord, vec4(final_color, 1.0));
 }
