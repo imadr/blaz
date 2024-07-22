@@ -3,6 +3,7 @@
 #include "filesystem.h"
 #include "game.h"
 #include "logger.h"
+#include "my_time.h"
 #include "types.h"
 
 namespace blaz {
@@ -39,7 +40,6 @@ Error Renderer::init(Window* window) {
     create_shader(m_error_shader);
     create_uniform_buffer(UniformBuffer{
         .m_name = "u_mat",
-        .m_binding_point = 0,
         .m_uniforms =
             {
                 Uniform{
@@ -61,7 +61,6 @@ Error Renderer::init(Window* window) {
     });
     create_uniform_buffer(UniformBuffer{
         .m_name = "u_view",
-        .m_binding_point = 1,
         .m_uniforms =
             {
                 Uniform{
@@ -84,8 +83,11 @@ u32 Renderer::special_value(str name) {
 }
 
 void Renderer::update() {
+    u64 frame_start_cpu_time = get_timestamp_microsecond();
     for (Pass& pass : m_passes) {
         if (!pass.m_enabled) continue;
+
+        u64 pass_start_cpu_time = get_timestamp_microsecond();
 
 #ifdef DEBUG_RENDERER
         debug_marker_start(pass.m_name);
@@ -111,7 +113,7 @@ void Renderer::update() {
 
             set_current_shader(pass.m_shader);
 
-            set_images_bindings(&pass, pass_shader);
+            bind_uniforms(&pass, pass_shader);
 
             u32 work_groups[3];
             for (u32 i = 0; i < 3; i++) {
@@ -160,7 +162,6 @@ void Renderer::update() {
                     reload_texture(texture.m_name);
                 }
             }
-            set_samplers_bindings(&pass, pass_shader);
 
             if (pass.m_camera != "") {
                 Camera* camera = &m_cameras[pass.m_camera];
@@ -171,6 +172,8 @@ void Renderer::update() {
                 set_uniform_buffer_data("u_view", "u_camera_position",
                                         camera->m_scene->m_nodes[camera->m_node].m_position);
             }
+
+            bind_uniforms(&pass, pass_shader);
 
             if (pass.m_bufferless_draw) {
                 set_bufferless_mesh();
@@ -198,7 +201,12 @@ void Renderer::update() {
 #ifdef DEBUG_RENDERER
         debug_marker_end();
 #endif
+
+        u64 pass_cpu_time = get_timestamp_microsecond() - pass_start_cpu_time;
     }
+
+    u64 frame_cpu_time = get_timestamp_microsecond() - frame_start_cpu_time;
+    m_framenumber++;
 
     present();
 }

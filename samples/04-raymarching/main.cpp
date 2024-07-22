@@ -35,7 +35,6 @@ int main() {
 
     renderer.create_uniform_buffer(UniformBuffer{
         .m_name = "u_info",
-        .m_binding_point = 0,
         .m_uniforms =
             {
                 Uniform{
