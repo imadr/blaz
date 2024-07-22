@@ -1611,6 +1611,8 @@ GL_OLD_FUNCTIONS_LIST
     GL_FUNCTION(void, glObjectLabel, GLenum identifier, GLuint name, GLsizei length,              \
                 const GLchar* label)                                                              \
     GL_FUNCTION(void, glDeleteProgram, GLuint program)                                            \
+    GL_FUNCTION(void, glGetUniformIndices, GLuint program, GLsizei uniformCount,                  \
+                const GLchar** uniformNames, GLuint* uniformIndices)                              \
     GL_FUNCTION(void, glCopyImageSubData, GLuint srcName, GLenum srcTarget, GLint srcLevel,       \
                 GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget,             \
                 GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth,             \

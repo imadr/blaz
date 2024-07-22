@@ -136,6 +136,13 @@ struct Framebuffer {
 
 enum class ShaderType { VERTEX_FRAGMENT, COMPUTE };
 
+enum class UniformBindingType { BLOCK, SAMPLER, IMAGE };
+
+struct UniformBinding {
+    u32 m_binding_point;
+    UniformBindingType m_type;
+};
+
 struct Shader {
     str m_name;
     ShaderType m_type = ShaderType::VERTEX_FRAGMENT;
@@ -146,7 +153,7 @@ struct Shader {
     str m_fragment_shader_path;
     str m_compute_shader_path;
     bool m_is_error = false;
-    std::unordered_map<str, u32> m_uniform_binding_points;
+    std::unordered_map<str, UniformBinding> m_uniform_bindings;
     void* m_api_data = NULL;
     bool m_should_reload = true;
 };
@@ -161,7 +168,6 @@ struct Uniform {
 struct UniformBuffer {
     str m_name;
     u32 m_size;
-    u32 m_binding_point;
     vec<Uniform> m_uniforms;
     std::unordered_map<str, u32> m_uniforms_ids;
     void* m_api_data = NULL;
@@ -237,7 +243,7 @@ struct Pass {
     CullingMode m_culling_mode = CullingMode::BACK;
     CullingOrder m_culling_order = CullingOrder::CCW;
     bool m_bufferless_draw = false;
-    u32 m_bufferless_draw_count = 3;
+    u32 m_bufferless_draw_count = 0;
     std::unordered_map<str, str> m_sampler_uniforms_bindings;
     std::unordered_map<str, pair<str, AccessType>> m_image_uniforms_bindings;
     IntOrStr m_compute_work_groups[3];
@@ -250,6 +256,8 @@ using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
 struct Renderer {
     Window* m_window = NULL;
     Scene* m_current_scene = NULL;
+
+    u32 m_framenumber = 0;
 
     Error init(Window* window);
     Error init_api();
@@ -300,8 +308,6 @@ struct Renderer {
     Error create_texture_api(str texture_id);
     Error reload_texture(str texture_id);
     Error reload_texture_api(str texture_id);
-    void set_samplers_bindings(Pass* pass, Shader* shader);
-    void set_images_bindings(Pass* pass, Shader* shader);
 
     ArrayMap<Camera> m_cameras;
     Error create_camera(Camera camera);
@@ -314,6 +320,8 @@ struct Renderer {
     Error create_uniform_buffer(UniformBuffer uniform_buffer);
     Error create_uniform_buffer_api(str uniform_buffer_id);
     Error set_uniform_buffer_data(str uniform_buffer_id, str uniform_name, UniformValue value);
+
+    void bind_uniforms(Pass* pass, Shader* shader);
 
     u32 special_value(str name);
 };

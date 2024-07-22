@@ -220,25 +220,55 @@ Error Renderer::reload_shader_api(str shader_id) {
                      "\" : " + str(info));
     }
 
+    gl->glUseProgram(api_shader->m_program);
+
     GLint n_uniforms, max_len;
     gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
     gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
     GLchar* uniform_name = (GLchar*)malloc(max_len);
 
-    gl->glUseProgram(api_shader->m_program);
+    for (GLint i = 0; i < n_uniforms; i++) {
+        GLint size = -1;
+        GLenum type = -1;
+        gl->glGetActiveUniform(api_shader->m_program, i, max_len, NULL, &size, &type, uniform_name);
 
-    if (uniform_name != NULL) {
-        for (i32 i = 0; i < n_uniforms; i++) {
-            GLint size = -1;
-            GLenum type = -1;
-            gl->glGetActiveUniform(api_shader->m_program, i, max_len, NULL, &size, &type,
-                                   uniform_name);
+        GLint binding_point;
+        if (type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE || type == GL_SAMPLER_2D_ARRAY ||
+            type == GL_SAMPLER_3D) {
             GLint location = gl->glGetUniformLocation(api_shader->m_program, uniform_name);
-            GLint binding_point;
             gl->glGetUniformiv(api_shader->m_program, location, &binding_point);
-            shader->m_uniform_binding_points[uniform_name] = binding_point;
+            shader->m_uniform_bindings[uniform_name] =
+                UniformBinding(binding_point, UniformBindingType::SAMPLER);
+        } else if (type == GL_IMAGE_2D) {
+            GLint location = gl->glGetUniformLocation(api_shader->m_program, uniform_name);
+            gl->glGetUniformiv(api_shader->m_program, location, &binding_point);
+            shader->m_uniform_bindings[uniform_name] =
+                UniformBinding(binding_point, UniformBindingType::IMAGE);
         }
     }
+
+    free(uniform_name);
+
+    GLint n_uniform_blocks;
+    gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_BLOCKS, &n_uniform_blocks);
+    gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &max_len);
+    GLchar* uniform_block_name = (GLchar*)malloc(max_len);
+
+    for (GLint i = 0; i < n_uniform_blocks; i++) {
+        GLint name_len;
+        GLint binding_point;
+        gl->glGetActiveUniformBlockName(api_shader->m_program, i, max_len, &name_len,
+                                        uniform_block_name);
+        uniform_block_name[name_len] = '\0';
+
+        gl->glGetActiveUniformBlockiv(api_shader->m_program, i, GL_UNIFORM_BLOCK_BINDING,
+                                      &binding_point);
+
+        shader->m_uniform_bindings[uniform_block_name] =
+            UniformBinding(binding_point, UniformBindingType::BLOCK);
+    }
+
+    free(uniform_block_name);
 
     shader->m_should_reload = false;
     return Error();
@@ -376,8 +406,6 @@ Error Renderer::create_uniform_buffer_api(str uniform_buffer_id) {
     gl->glGenBuffers(1, &ubo);
     gl->glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     gl->glBufferData(GL_UNIFORM_BUFFER, uniform_buffer->m_size, NULL, GL_STATIC_DRAW);
-    gl->glBindBufferRange(GL_UNIFORM_BUFFER, uniform_buffer->m_binding_point, ubo, 0,
-                          uniform_buffer->m_size);
 
     UniformBuffer_OPENGL* api_uniform_buffer = new UniformBuffer_OPENGL;
     api_uniform_buffer->m_ubo = ubo;
@@ -447,28 +475,30 @@ Error Renderer::reload_texture_api(str texture_id) {
     return Error();
 }
 
-void Renderer::set_samplers_bindings(Pass* pass, Shader* shader) {
-    for (const auto& sampler_uniform : pass->m_sampler_uniforms_bindings) {
-        if (!shader->m_uniform_binding_points.contains(sampler_uniform.first)) {
-            continue;
-        }
-        GLint uniform_binding_point = shader->m_uniform_binding_points.at(sampler_uniform.first);
-        gl->glActiveTexture(GL_TEXTURE0 + uniform_binding_point);
-        Texture* texture = &m_textures[sampler_uniform.second];
-        gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
-    }
-}
+void Renderer::bind_uniforms(Pass* pass, Shader* shader) {
+    for (const auto& uniform_binding : shader->m_uniform_bindings) {
+        u32 binding_point = uniform_binding.second.m_binding_point;
+        if (uniform_binding.second.m_type == UniformBindingType::BLOCK) {
+            UniformBuffer* uniform_buffer = &m_uniform_buffers[uniform_binding.first];
+            gl->glBindBufferRange(GL_UNIFORM_BUFFER, binding_point,
+                                  ((UniformBuffer_OPENGL*)uniform_buffer->m_api_data)->m_ubo, 0,
+                                  uniform_buffer->m_size);
+        } else if (uniform_binding.second.m_type == UniformBindingType::SAMPLER) {
+            str texture_id = pass->m_sampler_uniforms_bindings.at(uniform_binding.first);
+            gl->glActiveTexture(GL_TEXTURE0 + binding_point);
+            Texture* texture = &m_textures[texture_id];
+            gl->glBindTexture(GL_TEXTURE_2D,
+                              ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
 
-void Renderer::set_images_bindings(Pass* pass, Shader* shader) {
-    for (const auto& image_uniform : pass->m_image_uniforms_bindings) {
-        if (!shader->m_uniform_binding_points.contains(image_uniform.first)) {
-            continue;
+        } else if (uniform_binding.second.m_type == UniformBindingType::IMAGE) {
+            pair<str, AccessType> image_uniform_binding =
+                pass->m_image_uniforms_bindings.at(uniform_binding.first);
+            str texture_id = image_uniform_binding.first;
+            Texture* texture = &m_textures[texture_id];
+            gl->glBindImageTexture(
+                binding_point, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0, GL_FALSE,
+                0, opengl_access_types[image_uniform_binding.second], GL_RGBA32F);
         }
-        GLint uniform_binding_point = shader->m_uniform_binding_points.at(image_uniform.first);
-        Texture* texture = &m_textures[image_uniform.second.first];
-        gl->glBindImageTexture(uniform_binding_point,
-                               ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0, GL_FALSE,
-                               0, opengl_access_types[image_uniform.second.second], GL_RGBA32F);
     }
 }
 
