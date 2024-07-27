@@ -70,6 +70,17 @@ Error Renderer::init(Window* window) {
             },
         .m_should_reload = true,
     });
+    create_uniform_buffer(UniformBuffer{
+        .m_name = "u_time",
+        .m_uniforms =
+            {
+                Uniform{
+                    .m_name = "u_frame_number",
+                    .m_type = UNIFORM_UINT,
+                },
+            },
+        .m_should_reload = true,
+    });
 
     return Error();
 }
@@ -98,6 +109,7 @@ void Renderer::update() {
                          Vec2I(m_textures[pass.m_copy_src_texture].m_width,
                                m_textures[pass.m_copy_src_texture].m_height),
                          Vec3I(0, 0, 0));
+
         } else if (pass.m_type == PassType::COMPUTE) {
             Shader* pass_shader = &m_shaders[pass.m_shader];
             if (pass_shader->m_should_reload) {
@@ -112,6 +124,8 @@ void Renderer::update() {
             }
 
             set_current_shader(pass.m_shader);
+
+            set_uniform_buffer_data("u_time", "u_frame_number", m_frame_number);
 
             bind_uniforms(&pass, pass_shader);
 
@@ -157,12 +171,6 @@ void Renderer::update() {
 
             set_current_shader(pass.m_shader);
 
-            for (auto& texture : m_textures) {
-                if (texture.m_should_reload) {
-                    reload_texture(texture.m_name);
-                }
-            }
-
             if (pass.m_camera != "") {
                 Camera* camera = &m_cameras[pass.m_camera];
                 camera->update_projection_matrix();
@@ -172,6 +180,8 @@ void Renderer::update() {
                 set_uniform_buffer_data("u_view", "u_camera_position",
                                         camera->m_scene->m_nodes[camera->m_node].m_position);
             }
+
+            set_uniform_buffer_data("u_time", "u_frame_number", m_frame_number);
 
             bind_uniforms(&pass, pass_shader);
 
@@ -206,7 +216,7 @@ void Renderer::update() {
     }
 
     u64 frame_cpu_time = get_timestamp_microsecond() - frame_start_cpu_time;
-    m_framenumber++;
+    m_frame_number++;
 
     present();
 }
@@ -278,6 +288,10 @@ Error Renderer::reload_shader(str shader_id) {
 }
 
 Error Renderer::create_texture(Texture texture) {
+    if (texture.m_resize_to_viewport) {
+        texture.m_width = m_window->m_size.width;
+        texture.m_height = m_window->m_size.height;
+    }
     m_textures.add(texture);
     return create_texture_api(texture.m_name);
 }

@@ -1547,12 +1547,17 @@ typedef double GLclampd;
     GL_FUNCTION(void, glReadBuffer, GLenum mode)                                            \
     GL_FUNCTION(void, glFrontFace, GLenum mode)                                             \
     GL_FUNCTION(void, glPolygonMode, GLenum face, GLenum mode)                              \
+    GL_FUNCTION(void, glGetTexLevelParameteriv, GLenum target, GLint level, GLenum pname,   \
+                GLint* params)                                                              \
     GL_FUNCTION(void, glCullFace, GLenum mode)
 
 #define GL_FUNCTION(return_type, name, ...) typedef return_type name##Type(__VA_ARGS__);
 
 GL_OLD_FUNCTIONS_LIST
 #undef GL_FUNCTION
+
+typedef void (*GLDEBUGPROC)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+                            const GLchar* message, const void* userParam);
 
 #define GL_FUNCTIONS_LIST                                                                         \
     GL_FUNCTION(void, glActiveTexture, GLenum texture)                                            \
@@ -1618,10 +1623,13 @@ GL_OLD_FUNCTIONS_LIST
                 GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth,             \
                 GLsizei srcHeight, GLsizei srcDepth)                                              \
     GL_FUNCTION(void, glGetUniformiv, GLuint program, GLint location, GLint* params)              \
+    GL_FUNCTION(void, glMemoryBarrier, GLbitfield barriers)                                       \
+    GL_FUNCTION(void, glDebugMessageCallback, GLDEBUGPROC callback, void* userParam)              \
     GL_FUNCTION(void, glBindImageTexture, GLuint unit, GLuint texture, GLint level,               \
                 GLboolean layered, GLint layer, GLenum access, GLenum format)                     \
     GL_FUNCTION(void, glDispatchCompute, GLuint num_groups_x, GLuint num_groups_y,                \
                 GLuint num_groups_z)                                                              \
+    GL_FUNCTION(void, glGetTexParameterIiv, GLenum target, GLenum pname, GLint* params)           \
     GL_FUNCTION(void, glBindBufferRange, GLenum, GLuint, GLuint, GLintptr, GLsizeiptr)
 
 #define GL_FUNCTION(return_type, name, ...) typedef return_type name##Type(__VA_ARGS__);

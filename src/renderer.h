@@ -102,16 +102,18 @@ enum UniformType {
     UNIFORM_VEC2,
     UNIFORM_FLOAT,
     UNIFORM_BOOL,
+    UNIFORM_UINT,
+    UNIFORM_INT,
 };
 
 static std::unordered_map<UniformType, u32> UniformTypeAlignment = {
-    {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16},
-    {UNIFORM_VEC2, 16}, {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},
+    {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16}, {UNIFORM_VEC2, 16},
+    {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},  {UNIFORM_UINT, 4},  {UNIFORM_INT, 4},
 };
 
 static std::unordered_map<UniformType, u32> UniformTypeSize = {
-    {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16},
-    {UNIFORM_VEC2, 16}, {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},
+    {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16}, {UNIFORM_VEC2, 16},
+    {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},  {UNIFORM_UINT, 4},  {UNIFORM_INT, 4},
 };
 
 struct TextureParams {
@@ -251,13 +253,13 @@ struct Pass {
     str m_copy_dst_texture;
 };
 
-using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool>;
+using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool, u32, i32>;
 
 struct Renderer {
     Window* m_window = NULL;
     Scene* m_current_scene = NULL;
 
-    u32 m_framenumber = 0;
+    u32 m_frame_number = 1;
 
     Error init(Window* window);
     Error init_api();
