@@ -79,6 +79,106 @@ static std::unordered_map<AccessType, GLenum> opengl_access_types = {
 OpenglLoader* gl;
 GLuint dummy_vao;
 
+void gl_error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+                       const GLchar* message, const void* userParam) {
+    if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
+        return;
+    }
+
+    str _source;
+    str _type;
+    str _severity;
+
+    switch (source) {
+        case GL_DEBUG_SOURCE_API:
+            _source = "API";
+            break;
+
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+            _source = "WINDOW SYSTEM";
+            break;
+
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            _source = "SHADER COMPILER";
+            break;
+
+        case GL_DEBUG_SOURCE_THIRD_PARTY:
+            _source = "THIRD PARTY";
+            break;
+
+        case GL_DEBUG_SOURCE_APPLICATION:
+            _source = "APPLICATION";
+            break;
+
+        case GL_DEBUG_SOURCE_OTHER:
+            _source = "UNKNOWN";
+            break;
+
+        default:
+            _source = "UNKNOWN";
+            break;
+    }
+
+    switch (type) {
+        case GL_DEBUG_TYPE_ERROR:
+            _type = "ERROR";
+            break;
+
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            _type = "DEPRECATED BEHAVIOR";
+            break;
+
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            _type = "UNDEFINED BEHAVIOR";
+            break;
+
+        case GL_DEBUG_TYPE_PORTABILITY:
+            _type = "PORTABILITY";
+            break;
+
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            _type = "PERFORMANCE";
+            break;
+
+        case GL_DEBUG_TYPE_OTHER:
+            _type = "OTHER";
+            break;
+
+        case GL_DEBUG_TYPE_MARKER:
+            _type = "MARKER";
+            break;
+
+        default:
+            _type = "UNKNOWN";
+            break;
+    }
+
+    switch (severity) {
+        case GL_DEBUG_SEVERITY_HIGH:
+            _severity = "HIGH";
+            break;
+
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            _severity = "MEDIUM";
+            break;
+
+        case GL_DEBUG_SEVERITY_LOW:
+            _severity = "LOW";
+            break;
+
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+            _severity = "NOTIFICATION";
+            break;
+
+        default:
+            _severity = "UNKNOWN";
+            break;
+    }
+
+    // logger.error("OpenGL error id: " + std::to_string(id) + " type: " + _type +
+    //              " severity: " + _severity + " source: " + _source + " message: " + message);
+}
+
 Error Renderer::init_api() {
     gl = new OpenglLoader();
     bool debug = false;
@@ -90,10 +190,13 @@ Error Renderer::init_api() {
         return err;
     }
 
+#ifdef DEBUG_RENDERER
+    gl->glEnable(GL_DEBUG_OUTPUT);
+    gl->glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    gl->glDebugMessageCallback(gl_error_callback, 0);
+#endif
+
     gl->glGenVertexArrays(1, &dummy_vao);
-    // #ifdef DEBUG_RENDERER
-    //     gl->glObjectLabel(GL_VERTEX_ARRAY, dummy_vao, -1, "dummy_vao");
-    // #endif
 
     return Error();
 }
@@ -227,6 +330,10 @@ Error Renderer::reload_shader_api(str shader_id) {
     gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
     GLchar* uniform_name = (GLchar*)malloc(max_len);
 
+    if (uniform_name == NULL) {
+        return Error("Renderer::compile_shader: Failed to allocate memory for uniform name");
+    }
+
     for (GLint i = 0; i < n_uniforms; i++) {
         GLint size = -1;
         GLenum type = -1;
@@ -254,6 +361,10 @@ Error Renderer::reload_shader_api(str shader_id) {
     gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &max_len);
     GLchar* uniform_block_name = (GLchar*)malloc(max_len);
 
+    if (uniform_block_name == NULL) {
+        return Error("Renderer::compile_shader: Failed to allocate memory for uniform block name");
+    }
+
     for (GLint i = 0; i < n_uniform_blocks; i++) {
         GLint name_len;
         GLint binding_point;
@@ -264,7 +375,7 @@ Error Renderer::reload_shader_api(str shader_id) {
         gl->glGetActiveUniformBlockiv(api_shader->m_program, i, GL_UNIFORM_BLOCK_BINDING,
                                       &binding_point);
 
-        shader->m_uniform_bindings[uniform_block_name] =
+        shader->m_uniform_bindings[str(uniform_block_name)] =
             UniformBinding(binding_point, UniformBindingType::BLOCK);
     }
 
@@ -448,6 +559,7 @@ Error Renderer::create_texture_api(str texture_id) {
     auto& texture_type = opengl_texture_formats[texture->m_texture_params.m_format];
     gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width, texture->m_height, 0,
                      get<1>(texture_type), get<2>(texture_type), NULL);
+    gl->glGenerateMipmap(GL_TEXTURE_2D);
 
     Texture_OPENGL* api_texture = new Texture_OPENGL;
     api_texture->m_texture_name = texture_name;
@@ -552,6 +664,7 @@ void Renderer::draw_indexed(MeshPrimitive primitive, size_t count) {
 
 void Renderer::dispatch_compute(u32 num_groups_x, u32 num_groups_y, u32 num_groups_z) {
     gl->glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
+    gl->glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
 }
 
 void Renderer::copy_texture(str src, str dst, Vec3I src_pos, Vec2I src_size, Vec3I dst_pos) {

@@ -202,7 +202,7 @@ Error OpenglLoader::init(blaz::Window* window, bool debug_context) {
     i32 context_attributes[] = {WGL_CONTEXT_MAJOR_VERSION_ARB,
                                 4,
                                 WGL_CONTEXT_MINOR_VERSION_ARB,
-                                3,
+                                4,
                                 WGL_CONTEXT_FLAGS_ARB,
                                 debug,
                                 WGL_CONTEXT_PROFILE_MASK_ARB,
