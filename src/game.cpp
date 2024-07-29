@@ -296,6 +296,12 @@ Error Game::load_game(str path) {
         }
     });
 
+    for (auto& texture : m_renderer->m_textures) {
+        if (texture.m_should_reload) {
+            m_renderer->reload_texture(texture.m_name);
+        }
+    }
+
     return Error();
 }
 

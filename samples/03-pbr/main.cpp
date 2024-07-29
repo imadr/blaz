@@ -34,27 +34,6 @@ int main() {
         logger.error(err);
     }
 
-    add_node(&scene,
-             Node{
-                 .m_name = "damagedhelmet",
-                 .m_position = Vec3(0, 0, 0),
-                 .m_rotation = Quat::from_euler(Vec3(0, 0, 0)),
-             },
-             "root_node");
-    renderer.create_renderable(Renderable{
-        .m_name = "damagedhelmet",
-        .m_tags = {"pbr"},
-        .m_mesh = "damagedhelmet",
-        .m_node = "damagedhelmet",
-    });
-
-    renderer.m_passes[0].m_sampler_uniforms_bindings = {
-        {"u_sampler_albedo", "damagedhelmet_albedo"},
-        {"u_sampler_metalroughness", "damagedhelmet_metalroughness"},
-        {"u_sampler_normals", "damagedhelmet_normals"},
-        {"u_sampler_emissive", "damagedhelmet_emissive"},
-    };
-
     game.main_camera->m_orbit_pan_sensitivity = 0.005f;
 
     window.m_mouse_click_callback = [&game](Vec2I mouse_position, ButtonState left_button,
