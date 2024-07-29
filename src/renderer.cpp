@@ -338,7 +338,17 @@ Error Renderer::create_camera(Camera camera) {
 
 Error Renderer::create_framebuffer(Framebuffer framebuffer) {
     m_framebuffers.add(framebuffer);
-    return create_framebuffer_api(framebuffer.m_name);
+    Error err = create_framebuffer_api(framebuffer.m_name);
+    if (err) {
+        return err;
+    }
+
+    err = attach_texture_to_framebuffer(framebuffer.m_name);
+    if (err) {
+        return err;
+    }
+
+    return Error();
 }
 
 }  // namespace blaz

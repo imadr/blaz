@@ -54,12 +54,6 @@ static std::unordered_map<TextureWrapMode, GLenum> opengl_texture_wrap_modes = {
     {TextureWrapMode::CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE},
 };
 
-static std::unordered_map<AttachementPoint, GLenum> opengl_attachment_point = {
-    {AttachementPoint::COLOR_ATTACHMENT, GL_COLOR_ATTACHMENT0},
-    {AttachementPoint::DEPTH_ATTACHMENT, GL_DEPTH_ATTACHMENT},
-    {AttachementPoint::STENCIL_ATTACHMENT, GL_STENCIL_ATTACHMENT},
-};
-
 static std::unordered_map<TextureFilteringMode, GLenum> opengl_texture_filtering_modes = {
     {TextureFilteringMode::NEAREST, GL_NEAREST},
     {TextureFilteringMode::LINEAR, GL_LINEAR},
@@ -472,25 +466,42 @@ Error Renderer::create_framebuffer_api(str framebuffer_id) {
     return Error();
 }
 
-Error Renderer::attach_texture_to_framebuffer(str framebuffer_id, str texture_id,
-                                              AttachementPoint attachment_point) {
-    Texture* texture = &m_textures[texture_id];
-    Texture_OPENGL* api_texture = (Texture_OPENGL*)texture->m_api_data;
-
+Error Renderer::attach_texture_to_framebuffer(str framebuffer_id) {
     Framebuffer* framebuffer = &m_framebuffers[framebuffer_id];
     Framebuffer_OPENGL* api_framebuffer = (Framebuffer_OPENGL*)framebuffer->m_api_data;
 
     gl->glBindFramebuffer(GL_FRAMEBUFFER, api_framebuffer->m_fbo);
-    gl->glFramebufferTexture2D(GL_FRAMEBUFFER, opengl_attachment_point[attachment_point],
-                               GL_TEXTURE_2D,
-                               ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0);
 
-    if (attachment_point == AttachementPoint::COLOR_ATTACHMENT) {
-        framebuffer->m_color_attachment_texture = texture_id;
-    } else if (attachment_point == AttachementPoint::DEPTH_ATTACHMENT) {
-        framebuffer->m_depth_attachment_texture = texture_id;
-    } else if (attachment_point == AttachementPoint::STENCIL_ATTACHMENT) {
-        framebuffer->m_stencil_attachment_texture = texture_id;
+    Texture* texture;
+    Texture_OPENGL* api_texture;
+
+    bool no_color_attachment = true;
+
+    if (framebuffer->m_color_attachment_texture != "") {
+        texture = &m_textures[framebuffer->m_color_attachment_texture];
+        api_texture = (Texture_OPENGL*)texture->m_api_data;
+        gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                                   ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0);
+        no_color_attachment = false;
+    }
+
+    if (framebuffer->m_depth_attachment_texture != "") {
+        texture = &m_textures[framebuffer->m_depth_attachment_texture];
+        api_texture = (Texture_OPENGL*)texture->m_api_data;
+        gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                                   ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0);
+    }
+
+    if (framebuffer->m_stencil_attachment_texture != "") {
+        texture = &m_textures[framebuffer->m_stencil_attachment_texture];
+        api_texture = (Texture_OPENGL*)texture->m_api_data;
+        gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+                                   ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0);
+    }
+
+    if (no_color_attachment) {
+        gl->glDrawBuffer(GL_NONE);
+        gl->glReadBuffer(GL_NONE);
     }
 
     if (gl->glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {

@@ -123,6 +123,28 @@ Error Game::load_game(str path) {
         m_renderer->create_texture(texture);
     }
 
+    for (auto& framebuffer_cfg : game_cfg["framebuffers"]) {
+        Framebuffer framebuffer;
+        framebuffer.m_name = framebuffer_cfg["name"].str_value;
+
+        if (framebuffer_cfg["color_attachment_texture"]) {
+            framebuffer.m_color_attachment_texture =
+                framebuffer_cfg["color_attachment_texture"].str_value;
+        }
+
+        if (framebuffer_cfg["depth_attachment_texture"]) {
+            framebuffer.m_depth_attachment_texture =
+                framebuffer_cfg["depth_attachment_texture"].str_value;
+        }
+
+        if (framebuffer_cfg["stencil_attachment_texture"]) {
+            framebuffer.m_stencil_attachment_texture =
+                framebuffer_cfg["stencil_attachment_texture"].str_value;
+        }
+
+        m_renderer->create_framebuffer(framebuffer);
+    }
+
     for (auto& node_cfg : game_cfg["nodes"]) {
         Node node;
         node.m_name = node_cfg["name"].str_value;
@@ -201,6 +223,10 @@ Error Game::load_game(str path) {
         }
         if (pass_cfg["use_default_framebuffer"]) {
             pass.m_use_default_framebuffer = pass_cfg["use_default_framebuffer"].bool_value;
+        } else {
+            if (pass_cfg["framebuffer"]) {
+                pass.m_framebuffer = pass_cfg["framebuffer"].str_value;
+            }
         }
         if (pass_cfg["enable_depth_test"]) {
             pass.m_enable_depth_test = pass_cfg["enable_depth_test"].bool_value;

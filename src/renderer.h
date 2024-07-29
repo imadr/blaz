@@ -124,12 +124,8 @@ struct TextureParams {
     TextureFilteringMode m_filter_mode_mag = TextureFilteringMode::LINEAR;
 };
 
-enum class AttachementPoint { COLOR_ATTACHMENT, DEPTH_ATTACHMENT, STENCIL_ATTACHMENT };
-
 struct Framebuffer {
     str m_name;
-    u32 m_width;
-    u32 m_height;
     str m_color_attachment_texture;
     str m_depth_attachment_texture;
     str m_stencil_attachment_texture;
@@ -302,8 +298,7 @@ struct Renderer {
     Error create_framebuffer_api(str framebuffer_id);
     void set_current_framebuffer(str framebuffer_id);
     void set_default_framebuffer();
-    Error attach_texture_to_framebuffer(str framebuffer_id, str texture_id,
-                                        AttachementPoint attachment_point);
+    Error attach_texture_to_framebuffer(str framebuffer_id);
 
     ArrayMap<Texture> m_textures;
     Error create_texture(Texture texture);
