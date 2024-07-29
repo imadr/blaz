@@ -225,6 +225,7 @@ Error Game::load_game(str path) {
             pass.m_use_default_framebuffer = pass_cfg["use_default_framebuffer"].bool_value;
         } else {
             if (pass_cfg["framebuffer"]) {
+                pass.m_use_default_framebuffer = false;
                 pass.m_framebuffer = pass_cfg["framebuffer"].str_value;
             }
         }

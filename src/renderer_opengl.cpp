@@ -169,8 +169,8 @@ void gl_error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, G
             break;
     }
 
-    // logger.error("OpenGL error id: " + std::to_string(id) + " type: " + _type +
-    //              " severity: " + _severity + " source: " + _source + " message: " + message);
+    logger.error("OpenGL error id: " + std::to_string(id) + " type: " + _type +
+                  " severity: " + _severity + " source: " + _source + " message: " + message);
 }
 
 Error Renderer::init_api() {
@@ -393,8 +393,15 @@ Error Renderer::create_mesh_api(str mesh_id) {
 
     u32 vbo, vao, ebo;
     gl->glGenVertexArrays(1, &vao);
+	gl->glBindVertexArray(vao);
+
     gl->glGenBuffers(1, &vbo);
-    gl->glGenBuffers(1, &ebo);
+	gl->glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+	gl->glGenBuffers(1, &ebo);
+	gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+	gl->glBindVertexArray(0);
 
     Mesh_OPENGL* api_mesh = new Mesh_OPENGL;
     api_mesh->m_vbo = vbo;
