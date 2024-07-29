@@ -44,16 +44,26 @@ int main() {
                     .m_type = UNIFORM_VEC3,
                 },
                 Uniform{
-                    .m_name = "u_light_rotation",
-                    .m_type = UNIFORM_VEC4,
+                    .m_name = "u_light_view_mat",
+                    .m_type = UNIFORM_MAT4,
+                },
+                Uniform{
+                    .m_name = "u_light_projection_mat",
+                    .m_type = UNIFORM_MAT4,
                 },
             },
         .m_should_reload = true,
     });
 
-    str node = renderer.m_cameras["light_camera"].m_node;
-    renderer.set_uniform_buffer_data("u_light", "u_light_position", scene.m_nodes[node].m_position);
-    renderer.set_uniform_buffer_data("u_light", "u_light_rotation", scene.m_nodes[node].m_rotation);
+    Camera* light_camera = &renderer.m_cameras["light_camera"];
+    light_camera->update_projection_matrix();
+    light_camera->update_view_matrix();
+    renderer.set_uniform_buffer_data("u_light", "u_light_position",
+                                     scene.m_nodes[light_camera->m_node].m_position);
+    renderer.set_uniform_buffer_data("u_light", "u_light_view_mat",
+                                     light_camera->m_projection_matrix);
+    renderer.set_uniform_buffer_data("u_light", "u_light_projection_mat",
+                                     light_camera->m_projection_matrix);
 
     game.main_camera->m_orbit_pan_sensitivity = 0.005f;
 
