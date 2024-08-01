@@ -169,8 +169,8 @@ void gl_error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, G
             break;
     }
 
-    logger.error("OpenGL error id: " + std::to_string(id) + " type: " + _type +
-                  " severity: " + _severity + " source: " + _source + " message: " + message);
+    // logger.error("OpenGL error id: " + std::to_string(id) + " type: " + _type +
+    // " severity: " + _severity + " source: " + _source + " message: " + message);
 }
 
 Error Renderer::init_api() {
@@ -393,15 +393,15 @@ Error Renderer::create_mesh_api(str mesh_id) {
 
     u32 vbo, vao, ebo;
     gl->glGenVertexArrays(1, &vao);
-	gl->glBindVertexArray(vao);
+    gl->glBindVertexArray(vao);
 
     gl->glGenBuffers(1, &vbo);
-	gl->glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-	gl->glGenBuffers(1, &ebo);
-	gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    gl->glGenBuffers(1, &ebo);
+    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
-	gl->glBindVertexArray(0);
+    gl->glBindVertexArray(0);
 
     Mesh_OPENGL* api_mesh = new Mesh_OPENGL;
     api_mesh->m_vbo = vbo;
@@ -547,13 +547,16 @@ Error Renderer::create_uniform_buffer_api(str uniform_buffer_id) {
     return Error();
 }
 
-Error Renderer::set_uniform_buffer_data(str uniform_buffer_id, str uniform_name,
-                                        UniformValue value) {
+Error Renderer::set_uniform_buffer_data(str uniform_buffer_id,
+                                        vec<pair<str, UniformValue>> uniform_values) {
     UniformBuffer* uniform_buffer = &m_uniform_buffers[uniform_buffer_id];
     gl->glBindBuffer(GL_UNIFORM_BUFFER, ((UniformBuffer_OPENGL*)uniform_buffer->m_api_data)->m_ubo);
-    Uniform& uniform = uniform_buffer->m_uniforms[uniform_buffer->m_uniforms_ids[uniform_name]];
-    gl->glBufferSubData(GL_UNIFORM_BUFFER, uniform.m_offset, uniform.m_size, &value);
-    gl->glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    for (auto& uniform_value : uniform_values) {
+        Uniform& uniform =
+            uniform_buffer->m_uniforms[uniform_buffer->m_uniforms_ids[uniform_value.first]];
+        gl->glBufferSubData(GL_UNIFORM_BUFFER, uniform.m_offset, uniform.m_size,
+                            &uniform_value.second);
+    }
     return Error();
 }
 

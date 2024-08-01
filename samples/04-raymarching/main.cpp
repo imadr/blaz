@@ -55,8 +55,8 @@ int main() {
 
     auto resize_callback = [&game](Window* window) {
         game.m_renderer->set_uniform_buffer_data(
-            "u_info", "u_resolution",
-            Vec2(f32(game.m_window->m_size.width), f32(game.m_window->m_size.height)));
+            "u_info", {{"u_resolution",
+            Vec2(f32(game.m_window->m_size.width), f32(game.m_window->m_size.height))}});
     };
     window.m_resize_callbacks.push_back(resize_callback);
     resize_callback(&window);
@@ -77,10 +77,10 @@ int main() {
     };
 
     auto update_camera_uniforms = [&game]() {
-        game.m_renderer->set_uniform_buffer_data("u_info", "u_camera_position",
-                                                 game.m_scene->m_nodes["main_camera"].m_position);
-        game.m_renderer->set_uniform_buffer_data("u_info", "u_camera_target",
-                                                 game.main_camera->m_orbit_target);
+        game.m_renderer->set_uniform_buffer_data("u_info", {{"u_camera_position",
+                                                 game.m_scene->m_nodes["main_camera_node"].m_position}});
+        game.m_renderer->set_uniform_buffer_data("u_info", {{"u_camera_target",
+                                                 game.main_camera->m_orbit_target}});
     };
 
     window.m_mouse_move_raw_callback = [&game, &update_camera_uniforms](Vec2I delta) {

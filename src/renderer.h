@@ -316,7 +316,8 @@ struct Renderer {
     ArrayMap<UniformBuffer> m_uniform_buffers;
     Error create_uniform_buffer(UniformBuffer uniform_buffer);
     Error create_uniform_buffer_api(str uniform_buffer_id);
-    Error set_uniform_buffer_data(str uniform_buffer_id, str uniform_name, UniformValue value);
+    Error set_uniform_buffer_data(str uniform_buffer_id,
+                                  vec<pair<str, UniformValue>> uniform_values);
 
     void bind_uniforms(Pass* pass, Shader* shader);
 
