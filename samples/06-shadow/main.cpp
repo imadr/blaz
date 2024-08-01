@@ -56,16 +56,19 @@ int main() {
     });
 
     Camera* light_camera = &renderer.m_cameras["light_camera"];
+    Vec3 light_pos = Vec3(3, 4, 6);
+    scene.m_nodes["light_camera_node"].set_position(light_pos);
+    scene.m_nodes["light_camera_node"].set_rotation(
+        Quat::look_at(light_pos, Vec3(0, 0, 0), Vec3(0, 1, 0)));
     light_camera->update_projection_matrix();
     light_camera->update_view_matrix();
-    renderer.set_uniform_buffer_data("u_light", "u_light_position",
-                                     scene.m_nodes[light_camera->m_node].m_position);
-    renderer.set_uniform_buffer_data("u_light", "u_light_view_mat",
-                                     light_camera->m_projection_matrix);
-    renderer.set_uniform_buffer_data("u_light", "u_light_projection_mat",
-                                     light_camera->m_projection_matrix);
+    renderer.set_uniform_buffer_data(
+        "u_light", {{"u_light_position", scene.m_nodes[light_camera->m_node].m_position},
+                    {"u_light_view_mat", light_camera->m_view_matrix},
+                    {"u_light_projection_mat", light_camera->m_projection_matrix}});
 
     game.main_camera->m_orbit_pan_sensitivity = 0.005f;
+    game.main_camera->m_orbit_spherical_angles = Vec2(f32(PI_HALF), f32(PI_HALF) / 2.0);
 
     window.m_mouse_click_callback = [&game](Vec2I mouse_position, ButtonState left_button,
                                             ButtonState right_button) {
@@ -89,6 +92,8 @@ int main() {
     window.m_mouse_wheel_callback = [&game](i16 delta) {
         game.main_camera->orbit_mouse_wheel(delta);
     };
+
+    game.main_camera->update_orbit_camera();
 
     game.m_main_loop = [&game]() {
         if (game.m_window->event_loop()) {

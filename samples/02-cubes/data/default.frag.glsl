@@ -2,7 +2,6 @@
 
 precision highp float;
 
-in vec4 v_position;
 in vec3 v_normal;
 
 layout(location = 0) out vec4 o_color;

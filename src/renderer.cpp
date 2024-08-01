@@ -125,7 +125,7 @@ void Renderer::update() {
 
             set_current_shader(pass.m_shader);
 
-            set_uniform_buffer_data("u_time", "u_frame_number", m_frame_number);
+            set_uniform_buffer_data("u_time", {{"u_frame_number", m_frame_number}});
 
             bind_uniforms(&pass, pass_shader);
 
@@ -140,11 +140,22 @@ void Renderer::update() {
             dispatch_compute(work_groups[0], work_groups[1], work_groups[2]);
 
         } else if (pass.m_type == PassType::RENDER) {
-            set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
+			float framebuffer_aspect_ratio = 1.0;
             if (pass.m_use_default_framebuffer) {
                 set_default_framebuffer();
+                set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
             } else {
                 set_current_framebuffer(pass.m_framebuffer);
+
+                Texture* texture;
+                u32 width, height;
+                if (m_framebuffers[pass.m_framebuffer].m_color_attachment_texture != "") {
+                    texture = &m_textures[m_framebuffers[pass.m_framebuffer].m_color_attachment_texture];
+                } else if (m_framebuffers[pass.m_framebuffer].m_depth_attachment_texture != "") {
+                    texture = &m_textures[m_framebuffers[pass.m_framebuffer].m_depth_attachment_texture];
+                }
+                framebuffer_aspect_ratio = texture->m_height / texture->m_width;
+                set_viewport(0, 0, texture->m_width, texture->m_height);
             }
 
             if (pass.m_enable_depth_test) {
@@ -173,15 +184,19 @@ void Renderer::update() {
 
             if (pass.m_camera != "") {
                 Camera* camera = &m_cameras[pass.m_camera];
+                if (!pass.m_use_default_framebuffer) {
+                    camera->m_aspect_ratio = framebuffer_aspect_ratio;
+                }
                 camera->update_projection_matrix();
                 camera->update_view_matrix();
-                set_uniform_buffer_data("u_mat", "u_projection_mat", camera->m_projection_matrix);
-                set_uniform_buffer_data("u_mat", "u_view_mat", camera->m_view_matrix);
-                set_uniform_buffer_data("u_view", "u_camera_position",
-                                        camera->m_scene->m_nodes[camera->m_node].m_position);
+                set_uniform_buffer_data("u_mat", {{"u_projection_mat", camera->m_projection_matrix},
+                                                  {"u_view_mat", camera->m_view_matrix}});
+                set_uniform_buffer_data(
+                    "u_view",
+                    {{"u_camera_position", camera->m_scene->m_nodes[camera->m_node].m_position}});
             }
 
-            set_uniform_buffer_data("u_time", "u_frame_number", m_frame_number);
+            set_uniform_buffer_data("u_time", {{"u_frame_number", m_frame_number}});
 
             bind_uniforms(&pass, pass_shader);
 
@@ -193,8 +208,9 @@ void Renderer::update() {
                     for (const u32 id : m_tagged_renderables[tag]) {
                         Renderable* renderable = &m_renderables[id];
                         set_uniform_buffer_data(
-                            "u_mat", "u_model_mat",
-                            m_current_scene->m_nodes[renderable->m_node].m_global_matrix);
+                            "u_mat",
+                            {{"u_model_mat",
+                              m_current_scene->m_nodes[renderable->m_node].m_global_matrix}});
                         Mesh* mesh = &m_meshes[renderable->m_mesh];
 
                         if (mesh->m_should_reload) {

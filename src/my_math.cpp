@@ -438,4 +438,53 @@ Vec4::Vec4(Quat q) {
     }
 }
 
+Quat Quat::look_at(Vec3 source, Vec3 target, Vec3 up) {
+    Vec3 forward = (source - target).normalize();
+    Vec3 right = vec3_cross(up, forward).normalize();
+    up = vec3_cross(forward, right);
+
+    float m00 = right.x();
+    float m01 = right.y();
+    float m02 = right.z();
+    float m10 = up.x();
+    float m11 = up.y();
+    float m12 = up.z();
+    float m20 = forward.x();
+    float m21 = forward.y();
+    float m22 = forward.z();
+
+    float trace = m00 + m11 + m22;
+
+    Quat q;
+    if (trace > 0.0f) {
+        float s = 0.5f / std::sqrt(trace + 1.0f);
+        q[3] = 0.25f / s;
+        q[0] = (m21 - m12) * s;
+        q[1] = (m02 - m20) * s;
+        q[2] = (m10 - m01) * s;
+    } else {
+        if (m00 > m11 && m00 > m22) {
+            float s = 2.0f * std::sqrt(1.0f + m00 - m11 - m22);
+            q[3] = (m21 - m12) / s;
+            q[0] = 0.25f * s;
+            q[1] = (m01 + m10) / s;
+            q[2] = (m02 + m20) / s;
+        } else if (m11 > m22) {
+            float s = 2.0f * std::sqrt(1.0f + m11 - m00 - m22);
+            q[3] = (m02 - m20) / s;
+            q[0] = (m01 + m10) / s;
+            q[1] = 0.25f * s;
+            q[2] = (m12 + m21) / s;
+        } else {
+            float s = 2.0f * std::sqrt(1.0f + m22 - m00 - m11);
+            q[3] = (m10 - m01) / s;
+            q[0] = (m02 + m20) / s;
+            q[1] = (m12 + m21) / s;
+            q[2] = 0.25f * s;
+        }
+    }
+
+    return q.normalize();
+}
+
 }  // namespace blaz

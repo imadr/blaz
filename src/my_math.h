@@ -415,7 +415,8 @@ Mat4 operator*(f32 s, Mat4 v);
 
 struct Quat {
     f32 v[4];
-    const f32 &operator[](int i) const {
+
+    f32 &operator[](int i) {
         return v[i];
     }
 
@@ -468,6 +469,7 @@ struct Quat {
     static Quat from_euler(Vec3 euler);
     static Quat from_axis_angle(Vec3 axis, f32 angle);
     static Quat from_rotation_matrix(const Mat4 &m);
+    static Quat look_at(Vec3 source, Vec3 target, Vec3 up);
 };
 
 Quat operator*(Quat a, Quat b);
