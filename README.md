@@ -21,6 +21,7 @@
 | 03-pbr                | <img src="/samples/tests/03-pbr.png" width="300"/><br>                                 |
 | 04-raymarching        | <img src="/samples/tests/04-raymarching.png" width="300"/><br>                         |
 | 05-raytracing         | <img src="/samples/tests/05-raytracing.png" width="300"/><br>                          |
+| 06-raytracing         | <img src="/samples/tests/06-shadow.png" width="300"/><br>                          |
 
 ## Building for web
 
