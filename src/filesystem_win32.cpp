@@ -20,7 +20,7 @@ struct FileWatch_WIN32 {
     OVERLAPPED overlapped_buffer{0};
 };
 
-Error FileWatcher::init(str path, std::function<void(str)> callback) {
+Error FileWatcher::init(const str& path, std::function<void(const str&)> callback) {
     FileWatch_WIN32* win32_file_watch = new FileWatch_WIN32();
     m_os_data = win32_file_watch;
 
@@ -88,7 +88,7 @@ void FileWatcher::stop() {
     watch_thread.join();
 }
 
-pair<Error, str> read_whole_file(str path) {
+pair<Error, str> read_whole_file(const str& path) {
     std::wstring path_wstr = narrow_to_wide_str(path);
     HANDLE file_handle = CreateFileW(path_wstr.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
                                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -122,7 +122,7 @@ pair<Error, str> read_whole_file(str path) {
     return std::make_pair(Error(), file_content);
 }
 
-pair<Error, vec<u8>> read_whole_file_binary(str path) {
+pair<Error, vec<u8>> read_whole_file_binary(const str& path) {
     std::wstring path_wstr = narrow_to_wide_str(path);
     HANDLE file_handle = CreateFileW(path_wstr.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
                                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);

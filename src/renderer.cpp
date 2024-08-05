@@ -19,10 +19,6 @@ Error Renderer::init(Window* window) {
     set_swap_interval(1);
 
     auto resize_callback = [this](Window* window) {
-        for (auto& camera : m_cameras) {
-            camera.set_aspect_ratio(f32(window->m_size.width) / f32(window->m_size.height));
-        }
-
         for (auto& texture : m_textures) {
             if (texture.m_resize_to_viewport) {
                 texture.m_width = m_window->m_size.width;
@@ -85,11 +81,13 @@ Error Renderer::init(Window* window) {
     return Error();
 }
 
-u32 Renderer::special_value(str name) {
+u32 Renderer::special_value(const str& name) {
     if (name == "viewport_width") {
         return m_window->m_size.width;
     } else if (name == "viewport_height") {
         return m_window->m_size.height;
+    } else {
+        return 0;
     }
 }
 
@@ -140,22 +138,30 @@ void Renderer::update() {
             dispatch_compute(work_groups[0], work_groups[1], work_groups[2]);
 
         } else if (pass.m_type == PassType::RENDER) {
-			float framebuffer_aspect_ratio = 1.0;
+            f32 framebuffer_aspect_ratio = 1.0;
             if (pass.m_use_default_framebuffer) {
                 set_default_framebuffer();
+                framebuffer_aspect_ratio =
+                    f32(m_window->m_size.width) / f32(m_window->m_size.height);
                 set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
             } else {
                 set_current_framebuffer(pass.m_framebuffer);
 
-                Texture* texture;
-                u32 width, height;
-                if (m_framebuffers[pass.m_framebuffer].m_color_attachment_texture != "") {
-                    texture = &m_textures[m_framebuffers[pass.m_framebuffer].m_color_attachment_texture];
-                } else if (m_framebuffers[pass.m_framebuffer].m_depth_attachment_texture != "") {
-                    texture = &m_textures[m_framebuffers[pass.m_framebuffer].m_depth_attachment_texture];
+                Texture* texture = NULL;
+                Framebuffer* framebuffer = &m_framebuffers[pass.m_framebuffer];
+                if (framebuffer->m_color_attachment_texture != "") {
+                    texture = &m_textures[framebuffer->m_color_attachment_texture];
+                } else if (framebuffer->m_depth_attachment_texture != "") {
+                    texture = &m_textures[framebuffer->m_depth_attachment_texture];
                 }
-                framebuffer_aspect_ratio = texture->m_height / texture->m_width;
-                set_viewport(0, 0, texture->m_width, texture->m_height);
+
+                if (texture != NULL) {
+                    framebuffer_aspect_ratio = f32(texture->m_height) / f32(texture->m_width);
+                    set_viewport(0, 0, texture->m_width, texture->m_height);
+                } else {
+                    logger.error("Framebuffer " + framebuffer->m_name +
+                                 " doesn't have any attachment");
+                }
             }
 
             if (pass.m_enable_depth_test) {
@@ -184,9 +190,7 @@ void Renderer::update() {
 
             if (pass.m_camera != "") {
                 Camera* camera = &m_cameras[pass.m_camera];
-                if (!pass.m_use_default_framebuffer) {
-                    camera->m_aspect_ratio = framebuffer_aspect_ratio;
-                }
+                camera->set_aspect_ratio(framebuffer_aspect_ratio);
                 camera->update_projection_matrix();
                 camera->update_view_matrix();
                 set_uniform_buffer_data("u_mat", {{"u_projection_mat", camera->m_projection_matrix},

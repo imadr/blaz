@@ -45,7 +45,7 @@ Error load_texture_data_from_tga_file(Texture* texture) {
             u8 g = data[pixel_data_offset++];
             u8 r = data[pixel_data_offset++];
             (texture->m_data)[i + 0] = r;
-            (texture->m_data)[i + 0] = g;
+            (texture->m_data)[i + 1] = g;
 
         } else if (texture->m_channels == 3) {
             u8 b = data[pixel_data_offset++];

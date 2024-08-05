@@ -29,14 +29,14 @@
 #define ERROR_INVALID_VERSION_ARB 0x2095
 #define ERROR_INVALID_PROFILE_ARB 0x2096
 
+namespace blaz {
+
 struct Window_WIN32_Opengl {
     HWND window_handle;
     HDC device_context;
 };
 
 static Window_WIN32_Opengl* m_win32_opengl;
-
-namespace blaz {
 
 typedef const char*(APIENTRY* wglGetExtensionsStringARB_TYPE)(HDC);
 typedef HGLRC(APIENTRY* wglCreateContextAttribsARB_TYPE)(HDC, HGLRC, const int*);

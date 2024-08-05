@@ -57,6 +57,8 @@ pair<Error, vec<u8>> read_whole_file_binary(str path) {
     file_content.assign(buffer, buffer + file_size);
     free(buffer);
 
+    fclose(file);
+
     return std::make_pair(Error(), file_content);
 }
 

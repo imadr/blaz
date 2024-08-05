@@ -11,7 +11,7 @@ struct Error {
     Error() : m_message(""), m_is_error(false) {
     }
 
-    Error(str message) : m_message(message), m_is_error(true) {
+    Error(const str& message) : m_message(message), m_is_error(true) {
     }
 
     str message() {

@@ -151,7 +151,6 @@ bool check_single_token(TokenizerState* state) {
 }
 
 str fill(TokenizerState* state, bool (*condition)(char)) {
-    u32 count = 0;
     str buffer = "";
     while (condition(peek_char(state, 1)) && !end_of_file(state)) {
         buffer += str(1, current_char(state));
@@ -162,7 +161,7 @@ str fill(TokenizerState* state, bool (*condition)(char)) {
     return buffer;
 }
 
-TokenizerState tokenize(str text, str path) {
+TokenizerState tokenize(const str& text, const str& path) {
     TokenizerState state = {.path = path,
                             .text = text,
                             .text_length = text.length(),
@@ -559,7 +558,7 @@ CfgNode generic_node(ParserState* state) {
     }
 }
 
-ParserState parse(vec<Token> tokens, str path) {
+ParserState parse(const vec<Token>& tokens, const str& path) {
     ParserState state = {.tokens = tokens, .path = path};
 
     Token peeked_token = peek_token(&state, 0);
@@ -578,7 +577,7 @@ ParserState parse(vec<Token> tokens, str path) {
     return state;
 }
 
-pair<Error, CfgNode> read_cfg_file(str path) {
+pair<Error, CfgNode> read_cfg_file(const str& path) {
     pair<Error, str> file_content = read_whole_file(path);
     if (file_content.first) {
         return std::make_pair(file_content.first, CfgNode());

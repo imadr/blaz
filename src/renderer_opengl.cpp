@@ -169,8 +169,19 @@ void gl_error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, G
             break;
     }
 
-    // logger.error("OpenGL error id: " + std::to_string(id) + " type: " + _type +
-    // " severity: " + _severity + " source: " + _source + " message: " + message);
+    str message_str(message);
+
+    if (message_str.find("object is not successfully linked, or is not a program object") !=
+        std::string::npos) {
+        return;
+    }
+    if (message_str.find("has not been linked, or is not a program object.") !=
+        std::string::npos) {
+        return;
+    }
+
+    logger.error("OpenGL error id: " + std::to_string(id) + " type: " + _type +
+                 " severity: " + _severity + " source: " + _source + " message: " + message);
 }
 
 Error Renderer::init_api() {
@@ -480,13 +491,11 @@ Error Renderer::attach_texture_to_framebuffer(str framebuffer_id) {
     gl->glBindFramebuffer(GL_FRAMEBUFFER, api_framebuffer->m_fbo);
 
     Texture* texture;
-    Texture_OPENGL* api_texture;
 
     bool no_color_attachment = true;
 
     if (framebuffer->m_color_attachment_texture != "") {
         texture = &m_textures[framebuffer->m_color_attachment_texture];
-        api_texture = (Texture_OPENGL*)texture->m_api_data;
         gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                                    ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0);
         no_color_attachment = false;
@@ -494,14 +503,12 @@ Error Renderer::attach_texture_to_framebuffer(str framebuffer_id) {
 
     if (framebuffer->m_depth_attachment_texture != "") {
         texture = &m_textures[framebuffer->m_depth_attachment_texture];
-        api_texture = (Texture_OPENGL*)texture->m_api_data;
         gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
                                    ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0);
     }
 
     if (framebuffer->m_stencil_attachment_texture != "") {
         texture = &m_textures[framebuffer->m_stencil_attachment_texture];
-        api_texture = (Texture_OPENGL*)texture->m_api_data;
         gl->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
                                    ((Texture_OPENGL*)texture->m_api_data)->m_texture_name, 0);
     }

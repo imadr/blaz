@@ -321,7 +321,7 @@ struct Renderer {
 
     void bind_uniforms(Pass* pass, Shader* shader);
 
-    u32 special_value(str name);
+    u32 special_value(const str& name);
 };
 
 }  // namespace blaz

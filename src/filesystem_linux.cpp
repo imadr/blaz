@@ -2,7 +2,7 @@
 
 namespace blaz {
 
-Error FileWatcher::init(str path, std::function<void(str)> callback) {
+Error FileWatcher::init(const str& path, std::function<void(str)> callback) {
     watch_thread = std::thread([this, callback]() {
 
     });
