@@ -8,6 +8,8 @@
 
 #include "platform.h"
 
+namespace blaz {
+
 struct Window_X11 {
     Display* display;
     Screen* screen;
@@ -35,8 +37,6 @@ std::map<int, str> x11_keycodes = {
     {67, "KEY_F1"},         {68, "KEY_F2"},        {69, "KEY_F3"},         {70, "KEY_F4"},
     {71, "KEY_F5"},         {72, "KEY_F6"},        {73, "KEY_F7"},         {74, "KEY_F8"},
     {75, "KEY_F9"},         {76, "KEY_F10"},       {95, "KEY_F11"},        {96, "KEY_F12"}};
-
-namespace blaz {
 
 Error Window::init() {
     m_x11 = new Window_X11();

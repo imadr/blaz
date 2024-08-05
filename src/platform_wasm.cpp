@@ -29,7 +29,7 @@ bool Window::event_loop() {
 void Window::close() {
 }
 
-void Window::screenshot(str filename) {
+void Window::screenshot(const str& filename) {
 }
 
 }  // namespace blaz

@@ -29,7 +29,7 @@ struct CfgNode {
     }
 
     CfgNode operator[](int index) {
-        if (type == CfgNodeType::ARRAY && index <= array_value.size()) {
+        if (type == CfgNodeType::ARRAY && index < array_value.size()) {
             return array_value[index];
         }
         return CfgNode{.type = CfgNodeType::NONE};
@@ -124,6 +124,6 @@ struct CfgNode {
 };
 using Cfg = CfgNode;
 
-pair<Error, CfgNode> read_cfg_file(str path);
+pair<Error, CfgNode> read_cfg_file(const str& path);
 
 }  // namespace blaz

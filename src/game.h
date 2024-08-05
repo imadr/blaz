@@ -17,7 +17,7 @@ struct Game {
     Scene* m_scene = NULL;
     Camera* main_camera = NULL;
 
-    Error load_game(str path);
+    Error load_game(const str& path);
 
     FileWatcher m_filewatcher;
     std::unordered_map<str, vec<str>> m_shader_file_dependencies;

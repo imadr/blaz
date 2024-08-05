@@ -30,7 +30,7 @@ void Game::run() {
 #endif
 }
 
-Error Game::load_game(str path) {
+Error Game::load_game(const str& path) {
     pair<Error, Cfg> cfg = read_cfg_file(path);
     if (cfg.first) {
         return cfg.first;
@@ -184,7 +184,6 @@ Error Game::load_game(str path) {
         if (camera_cfg["fov"]) {
             camera.m_fov = rad(camera_cfg["fov"].float_value);
         }
-        camera.set_aspect_ratio(f32(m_window->m_size.width) / f32(m_window->m_size.height));
         m_renderer->create_camera(camera);
     }
 
@@ -288,7 +287,7 @@ Error Game::load_game(str path) {
         main_camera = &m_renderer->m_cameras[game_cfg["main_camera"].str_value];
     }
 
-    m_filewatcher.init("data", [this](str filename) {
+    m_filewatcher.init("data", [this](const str& filename) {
         str filepath = "data/" + filename;
         if (m_shader_file_dependencies.contains(filepath)) {
             for (auto& shader_id : m_shader_file_dependencies.at(filepath)) {
