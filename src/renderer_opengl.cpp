@@ -615,8 +615,8 @@ Error Renderer::reload_texture_api(str texture_id) {
     return Error();
 }
 
-void Renderer::bind_uniforms(Pass* pass, Shader* shader) {
-    for (const auto& uniform_binding : shader->m_uniform_bindings) {
+void Renderer::bind_uniforms(Pass* pass, str shader_id) {
+    for (const auto& uniform_binding : m_shaders[shader_id].m_uniform_bindings) {
         u32 binding_point = uniform_binding.second.m_binding_point;
         if (uniform_binding.second.m_type == UniformBindingType::BLOCK) {
             UniformBuffer* uniform_buffer = &m_uniform_buffers[uniform_binding.first];

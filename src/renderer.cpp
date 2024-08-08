@@ -30,10 +30,12 @@ Error Renderer::init(Window* window) {
     m_window->m_resize_callbacks.push_back(resize_callback);
     resize_callback(m_window);
 
-    m_error_shader.m_name = "internal_error_shader";
-    m_error_shader.m_vertex_shader_path = "internal_data/error_shader.vert.glsl";
-    m_error_shader.m_fragment_shader_path = "internal_data/error_shader.frag.glsl";
-    create_shader(m_error_shader);
+    Shader internal_error_shader;
+    internal_error_shader.m_name = "internal_error_shader";
+    internal_error_shader.m_vertex_shader_path = "internal_data/error_shader.vert.glsl";
+    internal_error_shader.m_fragment_shader_path = "internal_data/error_shader.frag.glsl";
+    create_shader(internal_error_shader);
+    reload_shader("internal_error_shader");
     create_uniform_buffer(UniformBuffer{
         .m_name = "u_mat",
         .m_uniforms =
@@ -109,23 +111,24 @@ void Renderer::update() {
                          Vec3I(0, 0, 0));
 
         } else if (pass.m_type == PassType::COMPUTE) {
-            Shader* pass_shader = &m_shaders[pass.m_shader];
-            if (pass_shader->m_should_reload) {
+            Shader pass_shader = m_shaders[pass.m_shader];
+            if (pass_shader.m_should_reload) {
                 Error err = reload_shader(pass.m_shader);
                 if (err) {
                     logger.error(err);
                 }
             }
 
-            if (pass_shader->m_is_error) {
-                pass_shader = &m_error_shader;
+            str shader_to_use = pass.m_shader;
+            if (pass_shader.m_is_error) {
+                shader_to_use = "internal_error_shader";
             }
 
-            set_current_shader(pass.m_shader);
+            set_current_shader(shader_to_use);
 
             set_uniform_buffer_data("u_time", {{"u_frame_number", m_frame_number}});
 
-            bind_uniforms(&pass, pass_shader);
+            bind_uniforms(&pass, shader_to_use);
 
             u32 work_groups[3];
             for (u32 i = 0; i < 3; i++) {
@@ -174,19 +177,20 @@ void Renderer::update() {
 
             clear(pass.m_clear_flag, pass.m_clear_color, pass.m_clear_depth);
 
-            Shader* pass_shader = &m_shaders[pass.m_shader];
-            if (pass_shader->m_should_reload) {
+            Shader pass_shader = m_shaders[pass.m_shader];
+            if (pass_shader.m_should_reload) {
                 Error err = reload_shader(pass.m_shader);
                 if (err) {
                     logger.error(err);
                 }
             }
 
-            if (pass_shader->m_is_error) {
-                pass_shader = &m_error_shader;
+            str shader_to_use = pass.m_shader;
+            if (pass_shader.m_is_error) {
+                shader_to_use = "internal_error_shader";
             }
 
-            set_current_shader(pass.m_shader);
+            set_current_shader(shader_to_use);
 
             if (pass.m_camera != "") {
                 Camera* camera = &m_cameras[pass.m_camera];
@@ -202,7 +206,7 @@ void Renderer::update() {
 
             set_uniform_buffer_data("u_time", {{"u_frame_number", m_frame_number}});
 
-            bind_uniforms(&pass, pass_shader);
+            bind_uniforms(&pass, shader_to_use);
 
             if (pass.m_bufferless_draw) {
                 set_bufferless_mesh();
@@ -302,6 +306,8 @@ Error Renderer::reload_shader(str shader_id) {
     Error err2 = reload_shader_api(shader_id);
     if (err2) {
         shader->m_is_error = true;
+    } else {
+        shader->m_is_error = false;
     }
 
     return err2;
