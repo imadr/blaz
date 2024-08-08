@@ -278,7 +278,6 @@ struct Renderer {
     vec<Pass> m_passes;
 
     ArrayMap<Shader> m_shaders;
-    Shader m_error_shader;
     Error create_shader(Shader shader);
     Error create_shader_api(str shader_id);
     Error reload_shader(str shader_id);
@@ -319,7 +318,7 @@ struct Renderer {
     Error set_uniform_buffer_data(str uniform_buffer_id,
                                   vec<pair<str, UniformValue>> uniform_values);
 
-    void bind_uniforms(Pass* pass, Shader* shader);
+    void bind_uniforms(Pass* pass, str shader_id);
 
     u32 special_value(const str& name);
 };

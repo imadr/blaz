@@ -137,7 +137,8 @@ pair<Error, vec<u8>> read_whole_file_binary(const str& path) {
     if (!GetFileSizeEx(file_handle, &file_size)) {
         CloseHandle(file_handle);
         return std::make_pair(
-            Error("Failed to get file size '" + path + "' : " + win32_get_last_error()), file_content);
+            Error("Failed to get file size '" + path + "' : " + win32_get_last_error()),
+            file_content);
     }
 
     file_content.resize(static_cast<size_t>(file_size.QuadPart));
@@ -154,6 +155,14 @@ pair<Error, vec<u8>> read_whole_file_binary(const str& path) {
     file_content.resize(static_cast<size_t>(bytes_read));
 
     return std::make_pair(Error(), file_content);
+}
+
+str get_current_directory() {
+    DWORD buffer_length = GetCurrentDirectory(0, NULL);
+    std::string buffer(buffer_length, '\0');
+    DWORD current_directory = GetCurrentDirectory(buffer_length, &buffer[0]);
+    buffer.resize(current_directory);
+    return buffer;
 }
 
 }  // namespace blaz

@@ -30,8 +30,6 @@ os.chdir(cwd)
 current_dir = os.getcwd()
 DEBUG_OR_RELEASE = "Debug"
 bin_dir = os.path.join(current_dir, "bin")
-if os.path.exists(bin_dir) or not os.path.isdir(bin_dir):
-    shutil.rmtree(bin_dir)
 
 tests_dir = os.path.join(bin_dir, "tests")
 

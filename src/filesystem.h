@@ -18,5 +18,6 @@ struct FileWatcher {
 
 pair<Error, str> read_whole_file(const str& path);
 pair<Error, vec<u8>> read_whole_file_binary(const str& path);
+str get_current_directory();
 
 }  // namespace blaz
