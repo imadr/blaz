@@ -175,8 +175,10 @@ void gl_error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, G
         std::string::npos) {
         return;
     }
-    if (message_str.find("has not been linked, or is not a program object.") !=
-        std::string::npos) {
+    if (message_str.find("has not been linked, or is not a program object.") != std::string::npos) {
+        return;
+    }
+    if (message_str.find("No active compute shader.") != std::string::npos) {
         return;
     }
 

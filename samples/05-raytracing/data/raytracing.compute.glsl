@@ -79,9 +79,7 @@ vec2 hash(vec2 p) {
 
 // [0, 1]
 float random(vec2 uv) {
-    float frame = float(u_frame_number);
-
-    return fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453123 * sin(frame));
+    return fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453123 * hash(u_frame_number));
 }
 
 vec3 random_unit_vector(vec2 uv) {
@@ -149,11 +147,9 @@ void main() {
             if (hit_anything) {
                 vec3 direction = random_unit_vector_on_hemisphere(uv, hit.normal);
                 ray = Ray(hit.point, direction);
-                // color *= 0.5;
-                color = vec3(1.0);
+                color *= 0.5;
             } else {
-                color = vec3(0.0);
-                // color *= vec3(0.5, 0.7, 1.0);
+                color *= vec3(0.5, 0.7, 1.0);
                 break;
             }
         }
@@ -163,9 +159,7 @@ void main() {
 
     final_color /= SAMPLE_PER_RAY;
 
-    vec3 old_render = imageLoad(u_image_old_render, ivec2(texel_coord)).xyz;
-    // float weight = 1.0 / (u_frame_number);
-    vec3 average = (final_color + old_render);
+    vec4 old_render = imageLoad(u_image_old_render, ivec2(texel_coord));
 
-    imageStore(u_image_render, texel_coord, vec4(final_color, 1.0));
+    imageStore(u_image_render, texel_coord, vec4(final_color, 1.0) + old_render);
 }

@@ -120,9 +120,6 @@ void Renderer::update() {
             }
 
             str shader_to_use = pass.m_shader;
-            if (pass_shader.m_is_error) {
-                shader_to_use = "internal_error_shader";
-            }
 
             set_current_shader(shader_to_use);
 
