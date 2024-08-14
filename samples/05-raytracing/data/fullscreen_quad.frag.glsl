@@ -6,6 +6,11 @@ layout(location = 0) out vec4 o_color;
 
 layout(binding = 0) uniform sampler2D u_sampler_render;
 
+layout(std140, binding = 1) uniform u_time {
+    uint u_frame_number;
+};
+
 void main() {
-    o_color = texture2D(u_sampler_render, v_texcoord);
+    vec4 accumulated = texture2D(u_sampler_render, v_texcoord);
+    o_color = vec4(accumulated.xyz / float(accumulated.w), 1.0);
 }

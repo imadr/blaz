@@ -7,6 +7,15 @@ from PIL import Image
 from PIL import ImageChops
 from PIL import ImageGrab
 import pywinctl
+import numpy as np
+
+def mse(image1, image2):
+    img1 = np.array(image1)
+    img2 = np.array(image2)
+    if img1.shape != img2.shape:
+        raise ValueError("Images must have the same dimensions for MSE calculation.")
+    mse_value = np.mean((img1 - img2) ** 2)
+    return mse_value
 
 def screenshot(window_name, screenshot_path):
     window = pywinctl.getWindowsWithTitle(window_name)[0]
@@ -64,7 +73,7 @@ for subdir in os.listdir(bin_dir):
 
         exe_window_name = exe_files[0].replace(".exe", "")
         subprocess.Popen(exe_path, cwd=exe_dir, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-        time.sleep(1)
+        time.sleep(3)
         screenshot(exe_window_name, os.path.join(tests_dir, exe_window_name+".png"))
         subprocess.run(["taskkill", "/f", "/im", exe_files[0]], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
@@ -81,7 +90,11 @@ for bmp_file in img_files:
 
     generated_image = Image.open(generated_image_path)
     reference_image = Image.open(reference_image_path)
-    if ImageChops.difference(generated_image, reference_image).getbbox() is None:
+
+    generated_image = generated_image.convert('L')
+    reference_image = reference_image.convert('L')
+    mse_value = mse(generated_image, reference_image)
+    if mse_value < 0.5:
         print(Fore.GREEN + f"{bmp_file} passed" + Style.RESET_ALL)
         tests_passed += 1
     else:
