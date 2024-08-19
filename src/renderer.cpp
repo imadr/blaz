@@ -249,9 +249,12 @@ Error Renderer::create_uniform_buffer(UniformBuffer uniform_buffer) {
         Uniform& uniform = uniform_buffer.m_uniforms[i];
         uniform_buffer.m_uniforms_ids[uniform.m_name] = i;
         uniform.m_size = UniformTypeSize[uniform.m_type];
-        total_size += uniform.m_size;
+
+        u32 alignment = UniformTypeAlignment[uniform.m_type];
+        aligned_offset = (aligned_offset + alignment - 1) & ~(alignment - 1);
         uniform.m_offset = aligned_offset;
-        aligned_offset += UniformTypeAlignment[uniform.m_type];
+        aligned_offset += uniform.m_size;
+        total_size = aligned_offset;
     }
     uniform_buffer.m_size = total_size;
 
