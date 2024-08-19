@@ -9,6 +9,12 @@ layout(std140, binding = 2) uniform u_time {
     uint u_frame_number;
 };
 
+layout(std140, binding = 3) uniform u_info {
+    vec3 u_camera_position;
+    vec3 u_camera_target;
+    float u_reset_accumulation;
+};
+
 mat3 lookat_matrix(vec3 origin, vec3 target, float roll) {
     vec3 rr = vec3(sin(roll), cos(roll), 0.0);
     vec3 ww = normalize(target - origin);
@@ -117,9 +123,7 @@ void main() {
     float fov = 2.0;
     uv *= fov;
 
-    vec3 camera_position = vec3(0.0, 0.0, 0);
-    vec3 camera_target = vec3(0, 0, 1.0);
-    mat3 matrix = lookat_matrix(camera_position, camera_target, 0.0);
+    mat3 matrix = lookat_matrix(u_camera_position, u_camera_target, 0.0);
 
     vec3 final_color = vec3(0.0);
     for (int i = 0; i < SAMPLE_PER_RAY; i++) {
@@ -127,7 +131,7 @@ void main() {
         offset /= resolution.xy;
 
         vec3 view = matrix * normalize(vec3(uv + offset, 1.0));
-        Ray ray = Ray(camera_position, view);
+        Ray ray = Ray(u_camera_position, view);
 
         vec3 color = vec3(1.0);
         for (int j = 0; j < MAX_BOUNCES; j++) {
@@ -145,7 +149,8 @@ void main() {
             }
 
             if (hit_anything) {
-                vec3 direction = random_unit_vector_on_hemisphere(uv, hit.normal);
+                vec3 direction = hit.normal + random_unit_vector(uv);
+
                 ray = Ray(hit.point, direction);
                 color *= 0.5;
             } else {
@@ -158,8 +163,11 @@ void main() {
     }
 
     final_color /= SAMPLE_PER_RAY;
+    final_color = pow(final_color, vec3(1.0 / 2.2));
 
     vec4 old_render = imageLoad(u_image_old_render, ivec2(texel_coord));
-
+    if (u_reset_accumulation == 1.0) {
+        old_render = vec4(0.0);
+    }
     imageStore(u_image_render, texel_coord, vec4(final_color, 1.0) + old_render);
 }
