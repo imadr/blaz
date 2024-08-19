@@ -107,12 +107,12 @@ enum UniformType {
 };
 
 static std::unordered_map<UniformType, u32> UniformTypeAlignment = {
-    {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16}, {UNIFORM_VEC2, 16},
+    {UNIFORM_MAT4, 16}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16}, {UNIFORM_VEC2, 8},
     {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},  {UNIFORM_UINT, 4},  {UNIFORM_INT, 4},
 };
 
 static std::unordered_map<UniformType, u32> UniformTypeSize = {
-    {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 16}, {UNIFORM_VEC2, 16},
+    {UNIFORM_MAT4, 64}, {UNIFORM_VEC4, 16}, {UNIFORM_VEC3, 12}, {UNIFORM_VEC2, 8},
     {UNIFORM_FLOAT, 4}, {UNIFORM_BOOL, 4},  {UNIFORM_UINT, 4},  {UNIFORM_INT, 4},
 };
 
