@@ -23,37 +23,49 @@ mat3 lookat_matrix(vec3 origin, vec3 target, float roll) {
     return mat3(uu, vv, ww);
 }
 
-struct Hit {
-    float t;
-    vec3 point;
-    vec3 normal;
-};
-
 struct Ray {
     vec3 origin;
     vec3 direction;
 };
 
-#define SPHERE 0
+struct Material {
+    vec3 albedo;
+    bool metal;
+    float roughness;
+};
+
+struct Hit {
+    bool did_hit;
+    float t;
+    vec3 point;
+    vec3 normal;
+    uint material_id;
+};
 
 struct Hittable {
-    int primitive;
     vec3 position;
+
+    uint material_id;
+
+    uint primitive_id;
     float sphere_radius;
+    vec3 plane_normal;
 };
 
 vec3 at(Ray r, float t) {
     return r.origin + r.direction * t;
 }
 
-bool ray_sphere_intersection(Ray ray, float ray_min, float ray_max, Hittable sphere, out Hit hit) {
+void ray_sphere_intersection(Ray ray, float ray_min, float ray_max, Hittable sphere, out Hit hit) {
+    hit.did_hit = false;
+
     vec3 oc = sphere.position - ray.origin;
     float a = dot(ray.direction, ray.direction);
     float b = -2.0 * dot(ray.direction, oc);
     float c = dot(oc, oc) - sphere.sphere_radius * sphere.sphere_radius;
     float discriminant = b * b - 4 * a * c;
     if (discriminant < 0) {
-        return false;
+        return;
     }
 
     float sqrt_discriminant = sqrt(discriminant);
@@ -61,17 +73,33 @@ bool ray_sphere_intersection(Ray ray, float ray_min, float ray_max, Hittable sph
     if (root <= ray_min || root >= ray_max) {
         root = (-b + sqrt_discriminant) / (2 * a);
         if (root <= ray_min || root >= ray_max) {
-            return false;
+            return;
         }
     }
 
+    hit.did_hit = true;
     hit.t = root;
     hit.point = at(ray, hit.t);
     hit.normal = (hit.point - sphere.position) / sphere.sphere_radius;
-    return true;
 }
 
-#define RAY_MAX 9999
+void ray_plane_intersection(Ray ray, float ray_min, float ray_max, Hittable plane, out Hit hit) {
+    hit.did_hit = false;
+    float denom = dot(ray.direction, plane.plane_normal);
+    if (abs(denom) > 0.0001) {
+        float t = dot(plane.position - ray.origin, plane.plane_normal) / denom;
+        if (t >= ray_min && t <= ray_max) {
+            hit.t = t;
+            hit.point = at(ray, hit.t);
+            hit.normal = plane.plane_normal;
+            hit.did_hit = true;
+            return;
+        }
+    }
+}
+
+#define RAY_MIN 0.0001
+#define RAY_MAX 999999
 #define SAMPLE_PER_RAY 10
 #define MAX_BOUNCES 10
 
@@ -111,9 +139,29 @@ vec3 random_unit_vector_on_hemisphere(vec2 uv, vec3 normal) {
     }
 }
 
-const int num_hittables = 2;
-const Hittable hittables[num_hittables] = Hittable[](Hittable(SPHERE, vec3(0.0, 0.0, 1.0), 0.5),
-                                                     Hittable(SPHERE, vec3(0.0, -100.5, 0.0), 100));
+bool near_zero(vec3 v) {
+    float s = 1e-8;
+    return (abs(v.x) < s) && (abs(v.y) < s) && (abs(v.z) < s);
+}
+
+#define PRIMITIVE_SPHERE 0
+#define PRIMITIVE_PLANE 1
+
+const uint num_materials = 4;
+const Material materials[num_materials] = Material[](
+    Material(vec3(0.5, 0.5, 0.5), false, 0.0), Material(vec3(1.0, 0.0, 0.0), false, 0.0),
+    Material(vec3(0.0, 1.0, 0.0), false, 0.0), Material(vec3(0.0, 0.0, 1.0), false, 0.0));
+#define MATERIAL_GROUND 0
+#define MATERIAL_1 1
+#define MATERIAL_2 2
+#define MATERIAL_3 3
+
+const uint num_hittables = 4;
+const Hittable hittables[num_hittables] = Hittable[](
+    Hittable(vec3(0.0, 0.0, 1.0), MATERIAL_1, PRIMITIVE_SPHERE, 0.5, vec3(0.0)),
+    Hittable(vec3(1.05, 0.0, 1.0), MATERIAL_2, PRIMITIVE_SPHERE, 0.5, vec3(0.0)),
+    Hittable(vec3(-1.05, 0.0, 1.0), MATERIAL_3, PRIMITIVE_SPHERE, 0.5, vec3(0.0)),
+    Hittable(vec3(0.0, -0.5, 0.0), MATERIAL_GROUND, PRIMITIVE_PLANE, 0, vec3(0.0, 1.0, 0.0)));
 
 void main() {
     ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
@@ -135,24 +183,43 @@ void main() {
 
         vec3 color = vec3(1.0);
         for (int j = 0; j < MAX_BOUNCES; j++) {
-            float ray_min = 0.0001;
-            float closest_t = RAY_MAX;
-            Hit hit = Hit(0.0, vec3(0.0), vec3(0.0));
-            bool hit_anything = false;
+            Hit hit = Hit(false, RAY_MAX, vec3(0.0), vec3(0.0), 0);
+
             for (int k = 0; k < num_hittables; k++) {
-                if (hittables[k].primitive == SPHERE) {
-                    if (ray_sphere_intersection(ray, ray_min, closest_t, hittables[k], hit)) {
-                        closest_t = hit.t;
-                        hit_anything = true;
-                    }
+                Hit tmp_hit = Hit(false, 0.0, vec3(0.0), vec3(0.0), 0);
+
+                if (hittables[k].primitive_id == PRIMITIVE_SPHERE) {
+                    ray_sphere_intersection(ray, RAY_MIN, hit.t, hittables[k], tmp_hit);
+                } else if (hittables[k].primitive_id == PRIMITIVE_PLANE) {
+                    ray_plane_intersection(ray, RAY_MIN, hit.t, hittables[k], tmp_hit);
+                }
+
+                if (tmp_hit.did_hit) {
+                    tmp_hit.material_id = hittables[k].material_id;
+                    hit = tmp_hit;
                 }
             }
 
-            if (hit_anything) {
-                vec3 direction = hit.normal + random_unit_vector(uv);
+            if (hit.did_hit) {
+                Material hit_material = materials[hit.material_id];
+                if (hit_material.metal) {
+                    vec3 reflected_direction = normalize(reflect(ray.direction, hit.normal)) +
+                                               hit_material.roughness * random_unit_vector(uv);
+                    ray = Ray(hit.point, reflected_direction);
 
-                ray = Ray(hit.point, direction);
-                color *= 0.5;
+                    if (dot(ray.direction, hit.normal) > 0) {
+                        color *= hit_material.albedo;
+                    }
+                } else {
+                    vec3 scatter_direction = hit.normal + random_unit_vector(uv);
+
+                    if (near_zero(scatter_direction)) {
+                        scatter_direction = hit.normal;
+                    }
+
+                    ray = Ray(hit.point, scatter_direction);
+                    color *= hit_material.albedo;
+                }
             } else {
                 color *= vec3(0.5, 0.7, 1.0);
                 break;
