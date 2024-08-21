@@ -28,10 +28,14 @@ struct Ray {
     vec3 direction;
 };
 
+#define METAL true
+#define NON_METAL false
+
 struct Material {
     vec3 albedo;
     bool metal;
     float roughness;
+    vec3 emissive;
 };
 
 struct Hit {
@@ -42,6 +46,12 @@ struct Hit {
     uint material_id;
 };
 
+struct Triangle {
+    vec3 v1;
+    vec3 v2;
+    vec3 v3;
+};
+
 struct Hittable {
     vec3 position;
 
@@ -49,7 +59,8 @@ struct Hittable {
 
     uint primitive_id;
     float sphere_radius;
-    vec3 plane_normal;
+    vec3 triangle_normal;
+    Triangle triangle;
 };
 
 vec3 at(Ray r, float t) {
@@ -83,25 +94,54 @@ void ray_sphere_intersection(Ray ray, float ray_min, float ray_max, Hittable sph
     hit.normal = (hit.point - sphere.position) / sphere.sphere_radius;
 }
 
-void ray_plane_intersection(Ray ray, float ray_min, float ray_max, Hittable plane, out Hit hit) {
+void ray_triangle_intersection(Ray ray, float ray_min, float ray_max, Hittable triangle,
+                               out Hit hit) {
     hit.did_hit = false;
-    float denom = dot(ray.direction, plane.plane_normal);
-    if (abs(denom) > 0.0001) {
-        float t = dot(plane.position - ray.origin, plane.plane_normal) / denom;
-        if (t >= ray_min && t <= ray_max) {
-            hit.t = t;
-            hit.point = at(ray, hit.t);
-            hit.normal = plane.plane_normal;
-            hit.did_hit = true;
-            return;
-        }
+
+    vec3 v0 = triangle.triangle.v1 + triangle.position;
+    vec3 v1 = triangle.triangle.v2 + triangle.position;
+    vec3 v2 = triangle.triangle.v3 + triangle.position;
+
+    vec3 edge1 = v1 - v0;
+    vec3 edge2 = v2 - v0;
+
+    vec3 h = cross(ray.direction, edge2);
+    float a = dot(edge1, h);
+
+    if (abs(a) < 1e-8) {
+        return;
     }
+
+    float f = 1.0 / a;
+    vec3 s = ray.origin - v0;
+    float u = f * dot(s, h);
+
+    if (u < 0.0 || u > 1.0) {
+        return;
+    }
+
+    vec3 q = cross(s, edge1);
+    float v = f * dot(ray.direction, q);
+
+    if (v < 0.0 || u + v > 1.0) {
+        return;
+    }
+
+    float t = f * dot(edge2, q);
+    if (t < ray_min || t > ray_max) {
+        return;
+    }
+
+    hit.did_hit = true;
+    hit.t = t;
+    hit.point = ray.origin + t * ray.direction;
+    hit.normal = triangle.triangle_normal;
 }
 
 #define RAY_MIN 0.0001
 #define RAY_MAX 999999
-#define SAMPLE_PER_RAY 10
-#define MAX_BOUNCES 10
+#define SAMPLE_PER_RAY 1
+#define MAX_BOUNCES 30
 
 float hash(float n) {
     return fract(sin(n) * 43758.5453);
@@ -145,23 +185,54 @@ bool near_zero(vec3 v) {
 }
 
 #define PRIMITIVE_SPHERE 0
-#define PRIMITIVE_PLANE 1
+#define PRIMITIVE_TRIANGLE 1
 
 const uint num_materials = 4;
 const Material materials[num_materials] = Material[](
-    Material(vec3(0.5, 0.5, 0.5), false, 0.0), Material(vec3(1.0, 0.0, 0.0), false, 0.0),
-    Material(vec3(0.0, 1.0, 0.0), false, 0.0), Material(vec3(0.0, 0.0, 1.0), false, 0.0));
-#define MATERIAL_GROUND 0
-#define MATERIAL_1 1
-#define MATERIAL_2 2
-#define MATERIAL_3 3
+    Material(vec3(0), NON_METAL, 0, vec3(10)), Material(vec3(0, 1, 0), NON_METAL, 0, vec3(0)),
+    Material(vec3(1, 0, 0), NON_METAL, 0, vec3(0)), Material(vec3(1), NON_METAL, 0, vec3(0)));
+#define MATERIAL_WHITE_EMISSIVE 0
+#define MATERIAL_GREEN 1
+#define MATERIAL_RED 2
+#define MATERIAL_WHITE 3
 
-const uint num_hittables = 4;
+const Triangle default_triangle = Triangle(vec3(0), vec3(0), vec3(0));
+
+const uint num_hittables = 13;
 const Hittable hittables[num_hittables] = Hittable[](
-    Hittable(vec3(0.0, 0.0, 1.0), MATERIAL_1, PRIMITIVE_SPHERE, 0.5, vec3(0.0)),
-    Hittable(vec3(1.05, 0.0, 1.0), MATERIAL_2, PRIMITIVE_SPHERE, 0.5, vec3(0.0)),
-    Hittable(vec3(-1.05, 0.0, 1.0), MATERIAL_3, PRIMITIVE_SPHERE, 0.5, vec3(0.0)),
-    Hittable(vec3(0.0, -0.5, 0.0), MATERIAL_GROUND, PRIMITIVE_PLANE, 0, vec3(0.0, 1.0, 0.0)));
+    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 1, 0),
+             Triangle(vec3(-1, -0.5, -0.5), vec3(1, -0.5, -0.5), vec3(1, -0.5, 1.5))),
+    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 1, 0),
+             Triangle(vec3(-1.0, -0.5, -0.5), vec3(-1, -0.5, 1.5), vec3(1, -0.5, 1.5))),
+
+    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 0, 1),
+             Triangle(vec3(-1, -0.5, -0.5), vec3(1, -0.5, -0.5), vec3(-1, 1.5, -0.5))),
+    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 0, 1),
+             Triangle(vec3(1, 1.5, -0.5), vec3(1, -0.5, -0.5), vec3(-1, 1.5, -0.5))),
+
+    Hittable(vec3(0, 0, 0), MATERIAL_RED, PRIMITIVE_TRIANGLE, 0, vec3(1, 0, 0),
+             Triangle(vec3(-1, -0.5, -0.5), vec3(-1, -0.5, 1.5), vec3(-1, 1.5, -0.5))),
+    Hittable(vec3(0, 0, 0), MATERIAL_RED, PRIMITIVE_TRIANGLE, 0, vec3(1, 0, 0),
+             Triangle(vec3(-1, 1.5, 1.5), vec3(-1, -0.5, 1.5), vec3(-1, 1.5, -0.5))),
+
+    Hittable(vec3(0, 0, 0), MATERIAL_GREEN, PRIMITIVE_TRIANGLE, 0, vec3(-1, 0, 0),
+             Triangle(vec3(1, -0.5, -0.5), vec3(1, -0.5, 1.5), vec3(1, 1.5, -0.5))),
+    Hittable(vec3(0, 0, 0), MATERIAL_GREEN, PRIMITIVE_TRIANGLE, 0, vec3(-1, 0, 0),
+             Triangle(vec3(1, 1.5, 1.5), vec3(1, -0.5, 1.5), vec3(1, 1.5, -0.5))),
+
+    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
+             Triangle(vec3(-1, 1.5, -0.5), vec3(1, 1.5, -0.5), vec3(-1, 1.5, 1.5))),
+    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
+             Triangle(vec3(1, 1.5, 1.5), vec3(1, 1.5, -0.5), vec3(-1, 1.5, 1.5))),
+
+    Hittable(vec3(0, 0.5, 0), MATERIAL_WHITE_EMISSIVE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
+             Triangle(vec3(-0.5, 0.99, -0.5), vec3(0.5, 0.99, -0.5), vec3(-0.5, 0.99, 1))),
+    Hittable(vec3(0, 0.5, 0), MATERIAL_WHITE_EMISSIVE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
+             Triangle(vec3(0.5, 0.99, 1), vec3(0.5, 0.99, -0.5), vec3(-0.5, 0.99, 1))),
+
+    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_SPHERE, 0.5, vec3(0), default_triangle)
+
+);
 
 void main() {
     ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
@@ -181,7 +252,8 @@ void main() {
         vec3 view = matrix * normalize(vec3(uv + offset, 1.0));
         Ray ray = Ray(u_camera_position, view);
 
-        vec3 color = vec3(1.0);
+        vec3 incoming_light = vec3(0);
+        vec3 ray_color = vec3(1);
         for (int j = 0; j < MAX_BOUNCES; j++) {
             Hit hit = Hit(false, RAY_MAX, vec3(0.0), vec3(0.0), 0);
 
@@ -190,8 +262,8 @@ void main() {
 
                 if (hittables[k].primitive_id == PRIMITIVE_SPHERE) {
                     ray_sphere_intersection(ray, RAY_MIN, hit.t, hittables[k], tmp_hit);
-                } else if (hittables[k].primitive_id == PRIMITIVE_PLANE) {
-                    ray_plane_intersection(ray, RAY_MIN, hit.t, hittables[k], tmp_hit);
+                } else if (hittables[k].primitive_id == PRIMITIVE_TRIANGLE) {
+                    ray_triangle_intersection(ray, RAY_MIN, hit.t, hittables[k], tmp_hit);
                 }
 
                 if (tmp_hit.did_hit) {
@@ -202,13 +274,15 @@ void main() {
 
             if (hit.did_hit) {
                 Material hit_material = materials[hit.material_id];
+
+                vec3 material_color;
                 if (hit_material.metal) {
                     vec3 reflected_direction = normalize(reflect(ray.direction, hit.normal)) +
                                                hit_material.roughness * random_unit_vector(uv);
                     ray = Ray(hit.point, reflected_direction);
 
                     if (dot(ray.direction, hit.normal) > 0) {
-                        color *= hit_material.albedo;
+                        material_color = hit_material.albedo;
                     }
                 } else {
                     vec3 scatter_direction = hit.normal + random_unit_vector(uv);
@@ -218,15 +292,17 @@ void main() {
                     }
 
                     ray = Ray(hit.point, scatter_direction);
-                    color *= hit_material.albedo;
+                    material_color = hit_material.albedo;
                 }
+
+                incoming_light += hit_material.emissive * ray_color;
+                ray_color *= material_color;
             } else {
-                color *= vec3(0.5, 0.7, 1.0);
                 break;
             }
         }
 
-        final_color += color;
+        final_color += incoming_light;
     }
 
     final_color /= SAMPLE_PER_RAY;
