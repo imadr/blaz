@@ -9,6 +9,7 @@ from PIL import ImageGrab
 import pywinctl
 import numpy as np
 
+
 def mse(image1, image2):
     img1 = np.array(image1)
     img2 = np.array(image2)
@@ -51,6 +52,8 @@ if len(os.listdir(bin_dir)) == 0:
     print(Fore.RED + f"bin dir empty" + Style.RESET_ALL)
     exit()
 
+sleep_time = [1, 1, 1, 1, 10, 1]
+i = 0
 for subdir in os.listdir(bin_dir):
     if(subdir == "tests"):
         continue
@@ -73,7 +76,8 @@ for subdir in os.listdir(bin_dir):
 
         exe_window_name = exe_files[0].replace(".exe", "")
         subprocess.Popen(exe_path, cwd=exe_dir, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-        time.sleep(3)
+        time.sleep(sleep_time[i])
+        i += 1
         screenshot(exe_window_name, os.path.join(tests_dir, exe_window_name+".png"))
         subprocess.run(["taskkill", "/f", "/im", exe_files[0]], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 

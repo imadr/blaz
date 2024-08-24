@@ -102,9 +102,9 @@ int main() {
         reset_accumulation();
     };
 
-    game.main_camera->m_orbit_zoom = 2.0f;
-    game.main_camera->m_orbit_target = Vec3(0.0, 0.0, 1.0);
-    game.main_camera->m_orbit_spherical_angles = Vec2(f32(PI_HALF), f32(PI) / 10.0);
+    game.main_camera->m_orbit_zoom = 1.0f;
+    game.main_camera->m_orbit_target = Vec3(0.0, 0.5, 1.0);
+    game.main_camera->m_orbit_spherical_angles = Vec2(f32(PI_HALF), 0);
 
     game.main_camera->update_orbit_camera();
 
