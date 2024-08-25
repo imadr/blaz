@@ -108,7 +108,7 @@ void ray_triangle_intersection(Ray ray, float ray_min, float ray_max, Hittable t
     vec3 h = cross(ray.direction, edge2);
     float a = dot(edge1, h);
 
-    if (abs(a) < 1e-8) {
+    if (a < 1e-8) {
         return;
     }
 
@@ -201,34 +201,34 @@ const Triangle default_triangle = Triangle(vec3(0), vec3(0), vec3(0));
 const uint num_hittables = 14;
 const Hittable hittables[num_hittables] = Hittable[](
     Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 1, 0),
-             Triangle(vec3(-1, -0.5, -0.5), vec3(1, -0.5, -0.5), vec3(1, -0.5, 1.5))),
+             Triangle(vec3(1, -0.5, 1.5), vec3(1, -0.5, -0.5), vec3(-1, -0.5, -0.5))),
     Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 1, 0),
              Triangle(vec3(-1.0, -0.5, -0.5), vec3(-1, -0.5, 1.5), vec3(1, -0.5, 1.5))),
 
     Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 0, 1),
              Triangle(vec3(-1, -0.5, -0.5), vec3(1, -0.5, -0.5), vec3(-1, 1.5, -0.5))),
     Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 0, 1),
-             Triangle(vec3(1, 1.5, -0.5), vec3(1, -0.5, -0.5), vec3(-1, 1.5, -0.5))),
+             Triangle(vec3(-1, 1.5, -0.5), vec3(1, -0.5, -0.5), vec3(1, 1.5, -0.5))),
 
     Hittable(vec3(0, 0, 0), MATERIAL_RED, PRIMITIVE_TRIANGLE, 0, vec3(1, 0, 0),
-             Triangle(vec3(-1, -0.5, -0.5), vec3(-1, -0.5, 1.5), vec3(-1, 1.5, -0.5))),
+             Triangle(vec3(-1, 1.5, -0.5), vec3(-1, -0.5, 1.5), vec3(-1, -0.5, -0.5))),
     Hittable(vec3(0, 0, 0), MATERIAL_RED, PRIMITIVE_TRIANGLE, 0, vec3(1, 0, 0),
              Triangle(vec3(-1, 1.5, 1.5), vec3(-1, -0.5, 1.5), vec3(-1, 1.5, -0.5))),
 
     Hittable(vec3(0, 0, 0), MATERIAL_GREEN, PRIMITIVE_TRIANGLE, 0, vec3(-1, 0, 0),
              Triangle(vec3(1, -0.5, -0.5), vec3(1, -0.5, 1.5), vec3(1, 1.5, -0.5))),
     Hittable(vec3(0, 0, 0), MATERIAL_GREEN, PRIMITIVE_TRIANGLE, 0, vec3(-1, 0, 0),
-             Triangle(vec3(1, 1.5, 1.5), vec3(1, -0.5, 1.5), vec3(1, 1.5, -0.5))),
+             Triangle(vec3(1, 1.5, -0.5), vec3(1, -0.5, 1.5), vec3(1, 1.5, 1.5))),
 
     Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
              Triangle(vec3(-1, 1.5, -0.5), vec3(1, 1.5, -0.5), vec3(-1, 1.5, 1.5))),
     Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
-             Triangle(vec3(1, 1.5, 1.5), vec3(1, 1.5, -0.5), vec3(-1, 1.5, 1.5))),
+             Triangle(vec3(-1, 1.5, 1.5), vec3(1, 1.5, -0.5), vec3(1, 1.5, 1.5))),
 
     Hittable(vec3(0, 0.5, 0), MATERIAL_WHITE_EMISSIVE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
              Triangle(vec3(-0.5, 0.99, 0), vec3(0.5, 0.99, 0), vec3(-0.5, 0.99, 1))),
     Hittable(vec3(0, 0.5, 0), MATERIAL_WHITE_EMISSIVE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
-             Triangle(vec3(0.5, 0.99, 1), vec3(0.5, 0.99, 0), vec3(-0.5, 0.99, 1))),
+             Triangle(vec3(-0.5, 0.99, 1), vec3(0.5, 0.99, 0), vec3(0.5, 0.99, 1))),
 
     Hittable(vec3(0.4, -0.2, 0), MATERIAL_MIRROR, PRIMITIVE_SPHERE, 0.4, vec3(0), default_triangle),
     Hittable(vec3(-0.4, -0.2, 0), MATERIAL_WHITE, PRIMITIVE_SPHERE, 0.4, vec3(0), default_triangle)
