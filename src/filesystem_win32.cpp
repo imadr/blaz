@@ -1,11 +1,6 @@
-#include <array>
-#include <iostream>
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <windowsx.h>
-
-#include <locale>
 
 #include "filesystem.h"
 #include "utils_win32.h"
@@ -42,8 +37,7 @@ Error FileWatcher::init(const str& path, std::function<void(const str&)> callbac
 
         win32_file_watch->overlapped_buffer.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-        std::array<HANDLE, 2> handles{win32_file_watch->close_event,
-                                      win32_file_watch->overlapped_buffer.hEvent};
+        HANDLE handles[2] = {win32_file_watch->close_event, win32_file_watch->overlapped_buffer.hEvent};
         bool exit = false;
 
         do {
@@ -52,7 +46,7 @@ Error FileWatcher::init(const str& path, std::function<void(const str&)> callbac
                                   FILE_NOTIFY_CHANGE_LAST_WRITE, &bytes_returned,
                                   &win32_file_watch->overlapped_buffer, NULL);
 
-            DWORD waited_event = WaitForMultipleObjects(2, handles.data(), FALSE, INFINITE);
+            DWORD waited_event = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 
             switch (waited_event) {
                 case WAIT_OBJECT_0: {

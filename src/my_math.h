@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-
 #include "types.h"
 
 namespace blaz {
@@ -62,7 +60,6 @@ struct Vec2I {
     str to_str();
 };
 
-Vec2I operator*(f32 s, Vec2I v);
 Vec2I operator+(Vec2I a, Vec2I b);
 Vec2I operator-(Vec2I a, Vec2I b);
 
@@ -125,7 +122,6 @@ struct Vec3I {
     str to_str();
 };
 
-Vec3I operator*(f32 s, Vec3I v);
 Vec3I operator+(Vec3I a, Vec3I b);
 Vec3I operator-(Vec3I a, Vec3I b);
 
@@ -273,7 +269,6 @@ struct Vec4 {
 };
 
 Vec4 vec4_lerp(Vec4 a, Vec4 b, f32 t);
-Vec4 vec4_cross(Vec4 a, Vec4 b);
 f32 vec4_dot(Vec4 a, Vec4 b);
 Vec4 operator/(Vec4 v, f32 s);
 Vec4 operator*(Vec4 a, Vec4 b);
@@ -480,5 +475,7 @@ Mat4 orthographic_projection(f32 left, f32 right, f32 bottom, f32 top, f32 z_nea
 Mat4 rotate_3d(Quat q);
 Mat4 scale_3d(Vec3 s);
 Mat4 translate_3d(Vec3 t);
+
+float clamp(float value, float low, float high);
 
 }  // namespace blaz

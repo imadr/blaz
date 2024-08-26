@@ -4,8 +4,6 @@
 #include "types.h"
 
 #include <sstream>
-#include <string>
-#include <vector>
 #include <windows.h>
 #include <GL/gl.h>
 // clang-format on

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <unordered_map>
-
 #include "my_math.h"
 #include "types.h"
 

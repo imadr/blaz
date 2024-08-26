@@ -1,6 +1,3 @@
-#include <unordered_map>
-#include <utility>
-
 #include "color.h"
 #include "error.h"
 #include "game.h"

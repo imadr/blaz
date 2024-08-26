@@ -1,7 +1,5 @@
 #include "camera.h"
 
-#include <algorithm>
-
 #include "node.h"
 #include "renderer.h"
 
@@ -95,7 +93,7 @@ void Camera::orbit_mouse_move(Vec2I delta) {
         m_orbit_spherical_angles += Vec2(f32(delta.x()) * m_orbit_rotate_sensitivity,
                                          f32(delta.y()) * m_orbit_rotate_sensitivity);
         m_orbit_spherical_angles[1] =
-            std::clamp(m_orbit_spherical_angles[1], f32(-PI_HALF) + 0.1f, f32(PI_HALF) - 0.1f);
+            clamp(m_orbit_spherical_angles[1], f32(-PI_HALF) + 0.1f, f32(PI_HALF) - 0.1f);
     }
 
     if (m_mouse_right_pressed) {
