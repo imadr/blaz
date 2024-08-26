@@ -1,8 +1,5 @@
 #pragma once
 
-#include <map>
-#include <variant>
-
 #include "error.h"
 #include "my_math.h"
 #include "types.h"
@@ -12,7 +9,7 @@ namespace blaz {
 enum class CfgNodeType { MAP, ARRAY, STR, FLOAT, VEC4, VEC3, BUFFER_F32, BUFFER_U32, BOOL, NONE };
 
 struct CfgNode {
-    std::map<str, CfgNode> map_value;
+    std::unordered_map<str, CfgNode> map_value;
     vec<CfgNode> array_value;
     str str_value = "";
     float float_value = 0;
@@ -63,9 +60,9 @@ struct CfgNode {
     };
 
     struct MapIterator {
-        std::map<std::string, CfgNode>::iterator current;
+        std::unordered_map<std::string, CfgNode>::iterator current;
 
-        MapIterator(std::map<std::string, CfgNode>::iterator iter) : current(iter) {
+        MapIterator(std::unordered_map<std::string, CfgNode>::iterator iter) : current(iter) {
         }
 
         bool operator!=(const MapIterator& other) const {

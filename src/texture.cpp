@@ -1,9 +1,5 @@
 #include "texture.h"
 
-#include <cstdio>
-#include <fstream>
-#include <iosfwd>
-
 #include "error.h"
 #include "filesystem.h"
 #include "renderer.h"

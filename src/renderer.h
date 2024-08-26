@@ -1,8 +1,5 @@
 #pragma once
 
-#include <unordered_map>
-#include <variant>
-
 #include "camera.h"
 #include "color.h"
 #include "error.h"

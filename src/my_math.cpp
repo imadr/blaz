@@ -1,8 +1,6 @@
 #include "my_math.h"
 
 #include <iomanip>
-#include <iostream>
-#include <ostream>
 #include <sstream>
 
 namespace blaz {
@@ -485,6 +483,10 @@ Quat Quat::look_at(Vec3 source, Vec3 target, Vec3 up) {
     }
 
     return q.normalize();
+}
+
+float clamp(float value, float low, float high) {
+    return (value < low) ? low : (value > high) ? high : value;
 }
 
 }  // namespace blaz

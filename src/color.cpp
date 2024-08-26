@@ -1,8 +1,5 @@
 #include "color.h"
 
-#include <algorithm>
-#include <cmath>
-
 #include "logger.h"
 
 namespace blaz {
