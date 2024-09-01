@@ -28,12 +28,13 @@ struct Ray {
     vec3 direction;
 };
 
-#define METAL true
-#define NON_METAL false
+#define LAMBERTIAN 0
+#define METALLIC 1
+#define DIELECTRIC 2
 
 struct Material {
     vec3 albedo;
-    bool metal;
+    uint type;
     float roughness;
     vec3 emissive;
 };
@@ -141,7 +142,7 @@ void ray_triangle_intersection(Ray ray, float ray_min, float ray_max, Hittable t
 #define RAY_MIN 0.0001
 #define RAY_MAX 999999
 #define SAMPLE_PER_RAY 1
-#define MAX_BOUNCES 40
+#define MAX_BOUNCES 50
 
 uint next_random(inout uint rng_state) {
     rng_state = rng_state * 747796405 + 2891336453;
@@ -185,55 +186,50 @@ bool near_zero(vec3 v) {
 #define PRIMITIVE_SPHERE 0
 #define PRIMITIVE_TRIANGLE 1
 
-const uint num_materials = 5;
+const uint num_materials = 6;
 const Material materials[num_materials] = Material[](
-    Material(vec3(0), NON_METAL, 0, vec3(20)), Material(vec3(0, 1, 0), NON_METAL, 0, vec3(0)),
-    Material(vec3(1, 0, 0), NON_METAL, 0, vec3(0)), Material(vec3(1), NON_METAL, 0, vec3(0)),
-    Material(vec3(1), METAL, 0, vec3(0)));
-#define MATERIAL_WHITE_EMISSIVE 0
-#define MATERIAL_GREEN 1
-#define MATERIAL_RED 2
-#define MATERIAL_WHITE 3
-#define MATERIAL_MIRROR 4
+    Material(vec3(0.5), LAMBERTIAN, 0, vec3(0)), Material(vec3(1, 0, 0), LAMBERTIAN, 0, vec3(0)),
+    Material(vec3(1), METALLIC, 1.0, vec3(0)), Material(vec3(1), METALLIC, 0.5, vec3(0)),
+    Material(vec3(1), METALLIC, 0, vec3(0)), Material(vec3(1), DIELECTRIC, 0, vec3(0)));
+#define MATERIAL_WHITE 0
+#define MATERIAL_LAMBERTIAN 1
+#define MATERIAL_MIRROR1 2
+#define MATERIAL_MIRROR2 3
+#define MATERIAL_MIRROR3 4
+#define MATERIAL_DIELECTRIC 5
 
 const Triangle default_triangle = Triangle(vec3(0), vec3(0), vec3(0));
 
-const uint num_hittables = 14;
-const Hittable hittables[num_hittables] = Hittable[](
-    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 1, 0),
-             Triangle(vec3(1, -0.5, 1.5), vec3(1, -0.5, -0.5), vec3(-1, -0.5, -0.5))),
-    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 1, 0),
-             Triangle(vec3(-1.0, -0.5, -0.5), vec3(-1, -0.5, 1.5), vec3(1, -0.5, 1.5))),
+const uint num_hittables = 7;
+const Hittable hittables[num_hittables] =
+    Hittable[](Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 1, 0),
+                        Triangle(vec3(10, 0, 10), vec3(10, 0, -10), vec3(-10, 0, -10))),
+               Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 1, 0),
+                        Triangle(vec3(-10.0, 0, -10), vec3(-10, 0, 10), vec3(10, 0, 10))),
 
-    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 0, 1),
-             Triangle(vec3(-1, -0.5, -0.5), vec3(1, -0.5, -0.5), vec3(-1, 1.5, -0.5))),
-    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, 0, 1),
-             Triangle(vec3(-1, 1.5, -0.5), vec3(1, -0.5, -0.5), vec3(1, 1.5, -0.5))),
+               Hittable(vec3(2 * 1.2 - 3, 0.5, 0), MATERIAL_LAMBERTIAN, PRIMITIVE_SPHERE, 0.5,
+                        vec3(0), default_triangle),
+               Hittable(vec3(1 * 1.2 - 3, 0.5, 0), MATERIAL_MIRROR1, PRIMITIVE_SPHERE, 0.5, vec3(0),
+                        default_triangle),
+               Hittable(vec3(0 * 1.2 - 3, 0.5, 0), MATERIAL_MIRROR2, PRIMITIVE_SPHERE, 0.5, vec3(0),
+                        default_triangle),
+               Hittable(vec3(3 * 1.2 - 3, 0.5, 0), MATERIAL_MIRROR3, PRIMITIVE_SPHERE, 0.5, vec3(0),
+                        default_triangle),
+               Hittable(vec3(4 * 1.2 - 3, 0.5, 0), MATERIAL_DIELECTRIC, PRIMITIVE_SPHERE, 0.5,
+                        vec3(0), default_triangle));
 
-    Hittable(vec3(0, 0, 0), MATERIAL_RED, PRIMITIVE_TRIANGLE, 0, vec3(1, 0, 0),
-             Triangle(vec3(-1, 1.5, -0.5), vec3(-1, -0.5, 1.5), vec3(-1, -0.5, -0.5))),
-    Hittable(vec3(0, 0, 0), MATERIAL_RED, PRIMITIVE_TRIANGLE, 0, vec3(1, 0, 0),
-             Triangle(vec3(-1, 1.5, 1.5), vec3(-1, -0.5, 1.5), vec3(-1, 1.5, -0.5))),
+vec3 sky(vec3 dir) {
+    vec3 sky_gradient =
+        mix(vec3(1.0, 1.0, 1.0), vec3(0.08, 0.37, 0.73), pow(smoothstep(-0.3, 0.4, dir.y), 0.55));
+    float sun = pow(max(0.0, dot(dir, normalize(vec3(1.0, 2.0, 3.0)))), 600.0) * 3000.0;
+    return sky_gradient + sun;
+}
 
-    Hittable(vec3(0, 0, 0), MATERIAL_GREEN, PRIMITIVE_TRIANGLE, 0, vec3(-1, 0, 0),
-             Triangle(vec3(1, -0.5, -0.5), vec3(1, -0.5, 1.5), vec3(1, 1.5, -0.5))),
-    Hittable(vec3(0, 0, 0), MATERIAL_GREEN, PRIMITIVE_TRIANGLE, 0, vec3(-1, 0, 0),
-             Triangle(vec3(1, 1.5, -0.5), vec3(1, -0.5, 1.5), vec3(1, 1.5, 1.5))),
-
-    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
-             Triangle(vec3(-1, 1.5, -0.5), vec3(1, 1.5, -0.5), vec3(-1, 1.5, 1.5))),
-    Hittable(vec3(0, 0, 0), MATERIAL_WHITE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
-             Triangle(vec3(-1, 1.5, 1.5), vec3(1, 1.5, -0.5), vec3(1, 1.5, 1.5))),
-
-    Hittable(vec3(0, 0.5, 0), MATERIAL_WHITE_EMISSIVE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
-             Triangle(vec3(-0.5, 0.99, 0), vec3(0.5, 0.99, 0), vec3(-0.5, 0.99, 1))),
-    Hittable(vec3(0, 0.5, 0), MATERIAL_WHITE_EMISSIVE, PRIMITIVE_TRIANGLE, 0, vec3(0, -1, 0),
-             Triangle(vec3(-0.5, 0.99, 1), vec3(0.5, 0.99, 0), vec3(0.5, 0.99, 1))),
-
-    Hittable(vec3(0.4, -0.2, 0), MATERIAL_MIRROR, PRIMITIVE_SPHERE, 0.4, vec3(0), default_triangle),
-    Hittable(vec3(-0.4, -0.2, 0), MATERIAL_WHITE, PRIMITIVE_SPHERE, 0.4, vec3(0), default_triangle)
-
-);
+float reflectance(float cosine, float refraction_index) {
+    float r0 = (1 - refraction_index) / (1 + refraction_index);
+    r0 = r0 * r0;
+    return r0 + (1 - r0) * pow((1 - cosine), 5);
+}
 
 void main() {
     ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
@@ -277,31 +273,47 @@ void main() {
 
             if (hit.did_hit) {
                 Material hit_material = materials[hit.material_id];
+                vec3 bounce_direction;
 
-                vec3 material_color;
-                if (hit_material.metal) {
-                    vec3 reflected_direction =
-                        normalize(reflect(ray.direction, hit.normal)) +
-                        hit_material.roughness * random_unit_vector(rng_state);
-                    ray = Ray(hit.point, reflected_direction);
+                if (hit_material.type == LAMBERTIAN) {
+                    bounce_direction = normalize(hit.normal + random_unit_vector(rng_state));
 
-                    if (dot(ray.direction, hit.normal) > 0) {
-                        material_color = hit_material.albedo;
+                } else if (hit_material.type == METALLIC) {
+                    bounce_direction =
+                        normalize(reflect(ray.direction, hit.normal) +
+                                  hit_material.roughness * random_unit_vector(rng_state));
+
+                    if (dot(bounce_direction, hit.normal) <= 0) {
+                        break;
                     }
-                } else {
-                    vec3 scatter_direction = hit.normal + random_unit_vector(rng_state);
-
-                    if (near_zero(scatter_direction)) {
-                        scatter_direction = hit.normal;
+                } else if (hit_material.type == DIELECTRIC) {
+                    vec3 normalized_direction = normalize(ray.direction);
+                    float refraction_index = 0.5;
+                    if (dot(ray.direction, hit.normal) > 0.0) {
+                        refraction_index = 1 / refraction_index;
+                        hit.normal = -hit.normal;
                     }
 
-                    ray = Ray(hit.point, scatter_direction);
-                    material_color = hit_material.albedo;
+                    float cos_theta = min(dot(-normalized_direction, hit.normal), 1.0);
+                    float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
+
+                    bool cannot_refract = refraction_index * sin_theta > 1.0;
+                    vec3 direction;
+
+                    if (cannot_refract ||
+                        reflectance(cos_theta, refraction_index) > random(rng_state)) {
+                        bounce_direction = reflect(normalized_direction, hit.normal);
+                    } else {
+                        bounce_direction =
+                            refract(normalized_direction, hit.normal, refraction_index);
+                    }
                 }
 
+                ray = Ray(hit.point, bounce_direction);
+                ray_color *= hit_material.albedo;
                 incoming_light += hit_material.emissive * ray_color;
-                ray_color *= material_color;
             } else {
+                incoming_light += sky(ray.direction) * ray_color;
                 break;
             }
         }
