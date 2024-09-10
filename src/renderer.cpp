@@ -347,7 +347,7 @@ Error Renderer::create_mesh(Mesh mesh) {
 
 Error Renderer::reload_mesh(str mesh_id) {
     if (m_meshes[mesh_id].m_path != "") {
-        Error err = load_mesh_from_obj_file(&m_meshes[mesh_id]);
+        Error err = load_mesh_from_file(&m_meshes[mesh_id]);
         if (err) {
             return err;
         }

@@ -1,7 +1,8 @@
 #include "mesh.h"
 
-#include "logger.h"
 #include "filesystem.h"
+#include "logger.h"
+#include "memory.h"
 #include "my_math.h"
 #include "renderer.h"
 
@@ -31,7 +32,6 @@ Error make_cube(Mesh* mesh) {
         {"normal", 3},
         {"texcoord", 2},
     };
-    mesh->m_vertex_stride = 8;
     mesh->m_primitive = MeshPrimitive::TRIANGLES;
     return Error();
 }
@@ -49,7 +49,6 @@ Error make_cube_wireframe(Mesh* mesh) {
     mesh->m_attribs = {
         {"position", 3},
     };
-    mesh->m_vertex_stride = 3;
     mesh->m_primitive = MeshPrimitive::LINES;
     return Error();
 }
@@ -67,7 +66,6 @@ Error make_plane(Mesh* mesh) {
         {"normal", 3},
         {"texcoord", 2},
     };
-    mesh->m_vertex_stride = 8;
     mesh->m_primitive = MeshPrimitive::TRIANGLES;
     return Error();
 }
@@ -84,27 +82,31 @@ Error generate_tangent(Mesh* mesh) {
         return Error("Mesh doesn't have tangent attrib");
     }
 
-    for (u32 i = 0; i < mesh->m_indices.size() / 3; i++) {
-        u32 vertex_0 = mesh->m_indices[i * 3 + 0];
-        u32 vertex_1 = mesh->m_indices[i * 3 + 1];
-        u32 vertex_2 = mesh->m_indices[i * 3 + 2];
+    u32 vertex_stride = 0;
+    for (auto& attrib : mesh->m_attribs) {
+        vertex_stride += attrib.second;
+    }
+    for (u64 i = 0; i < mesh->m_indices.size() / 3; i++) {
+        u64 vertex_0 = mesh->m_indices[i * 3 + 0];
+        u64 vertex_1 = mesh->m_indices[i * 3 + 1];
+        u64 vertex_2 = mesh->m_indices[i * 3 + 2];
 
-        Vec3 pos_0 = Vec3(mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 0],
-                          mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 1],
-                          mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 2]);
-        Vec3 pos_1 = Vec3(mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 0],
-                          mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 1],
-                          mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 2]);
-        Vec3 pos_2 = Vec3(mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 0],
-                          mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 1],
-                          mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 2]);
+        Vec3 pos_0 = Vec3(mesh->m_vertices[vertex_0 * vertex_stride + 0],
+                          mesh->m_vertices[vertex_0 * vertex_stride + 1],
+                          mesh->m_vertices[vertex_0 * vertex_stride + 2]);
+        Vec3 pos_1 = Vec3(mesh->m_vertices[vertex_1 * vertex_stride + 0],
+                          mesh->m_vertices[vertex_1 * vertex_stride + 1],
+                          mesh->m_vertices[vertex_1 * vertex_stride + 2]);
+        Vec3 pos_2 = Vec3(mesh->m_vertices[vertex_2 * vertex_stride + 0],
+                          mesh->m_vertices[vertex_2 * vertex_stride + 1],
+                          mesh->m_vertices[vertex_2 * vertex_stride + 2]);
 
-        Vec2 texcoord_0 = Vec2(mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 9],
-                               mesh->m_vertices[vertex_0 * mesh->m_vertex_stride + 10]);
-        Vec2 texcoord_1 = Vec2(mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 9],
-                               mesh->m_vertices[vertex_1 * mesh->m_vertex_stride + 10]);
-        Vec2 texcoord_2 = Vec2(mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 9],
-                               mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 10]);
+        Vec2 texcoord_0 = Vec2(mesh->m_vertices[vertex_0 * vertex_stride + 9],
+                               mesh->m_vertices[vertex_0 * vertex_stride + 10]);
+        Vec2 texcoord_1 = Vec2(mesh->m_vertices[vertex_1 * vertex_stride + 9],
+                               mesh->m_vertices[vertex_1 * vertex_stride + 10]);
+        Vec2 texcoord_2 = Vec2(mesh->m_vertices[vertex_2 * vertex_stride + 9],
+                               mesh->m_vertices[vertex_2 * vertex_stride + 10]);
 
         Vec3 edge_1 = pos_1 - pos_0;
         Vec3 edge_2 = pos_2 - pos_0;
@@ -120,23 +122,23 @@ Error generate_tangent(Mesh* mesh) {
         f32 tangent_y = f * (delta_v_2 * edge_1.y() - delta_v_1 * edge_2.y());
         f32 tangent_z = f * (delta_v_2 * edge_1.z() - delta_v_1 * edge_2.z());
 
-        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 6] += tangent_x;
-        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 7] += tangent_y;
-        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 8] += tangent_z;
+        mesh->m_vertices[vertex_2 * vertex_stride + 6] += tangent_x;
+        mesh->m_vertices[vertex_2 * vertex_stride + 7] += tangent_y;
+        mesh->m_vertices[vertex_2 * vertex_stride + 8] += tangent_z;
     }
 
-    for (u32 i = 0; i < mesh->m_indices.size() / 3; i++) {
-        u32 vertex_0 = mesh->m_indices[i * 3 + 0];
-        u32 vertex_1 = mesh->m_indices[i * 3 + 1];
-        u32 vertex_2 = mesh->m_indices[i * 3 + 2];
+    for (u64 i = 0; i < mesh->m_indices.size() / 3; i++) {
+        u64 vertex_0 = mesh->m_indices[i * 3 + 0];
+        u64 vertex_1 = mesh->m_indices[i * 3 + 1];
+        u64 vertex_2 = mesh->m_indices[i * 3 + 2];
 
-        Vec3 tangent = Vec3(mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 6],
-                            mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 7],
-                            mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 8]);
+        Vec3 tangent = Vec3(mesh->m_vertices[vertex_2 * vertex_stride + 6],
+                            mesh->m_vertices[vertex_2 * vertex_stride + 7],
+                            mesh->m_vertices[vertex_2 * vertex_stride + 8]);
         tangent = tangent.normalize();
-        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 6] = tangent.x();
-        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 7] = tangent.y();
-        mesh->m_vertices[vertex_2 * mesh->m_vertex_stride + 8] = tangent.z();
+        mesh->m_vertices[vertex_2 * vertex_stride + 6] = tangent.x();
+        mesh->m_vertices[vertex_2 * vertex_stride + 7] = tangent.y();
+        mesh->m_vertices[vertex_2 * vertex_stride + 8] = tangent.z();
     }
     return Error();
 }
@@ -148,7 +150,6 @@ Error make_uv_sphere(Mesh* mesh, u32 slices, u32 stacks) {
         {"tangent", 3},
         {"texcoord", 2},
     };
-    mesh->m_vertex_stride = 11;
     mesh->m_primitive = MeshPrimitive::TRIANGLES;
 
     mesh->m_vertices = {0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0};
@@ -171,6 +172,10 @@ Error make_uv_sphere(Mesh* mesh, u32 slices, u32 stacks) {
     }
     mesh->m_vertices.insert(mesh->m_vertices.end(), {0, -1, 0, 0, -1, 0, 1, 1, 1, 0, 0});
 
+    u32 vertex_stride = 0;
+    for (auto& attrib : mesh->m_attribs) {
+        vertex_stride += attrib.second;
+    }
     for (u32 i = 0; i < slices; i++) {
         u32 i0 = i + 1;
         u32 i1 = (i + 1) % slices + 1;
@@ -178,7 +183,7 @@ Error make_uv_sphere(Mesh* mesh, u32 slices, u32 stacks) {
         i0 = i + slices * (stacks - 2) + 1;
         i1 = (i + 1) % slices + slices * (stacks - 2) + 1;
         mesh->m_indices.insert(mesh->m_indices.end(),
-                               {i0, i1, u32(mesh->m_vertices.size() / mesh->m_vertex_stride) - 1});
+                               {i0, i1, u32(mesh->m_vertices.size() / vertex_stride) - 1});
     }
 
     for (u32 j = 0; j < stacks - 2; j++) {
@@ -201,7 +206,6 @@ Error make_wireframe_sphere(Mesh* mesh, u32 vertices) {
     mesh->m_attribs = {
         {"position", 3},
     };
-    mesh->m_vertex_stride = 3;
     mesh->m_primitive = MeshPrimitive::LINES;
 
     for (u32 side = 0; side < 3; side++) {
@@ -220,6 +224,120 @@ Error make_wireframe_sphere(Mesh* mesh, u32 vertices) {
         }
         mesh->m_indices.insert(mesh->m_indices.end(), {index, side * vertices});
     }
+
+    return Error();
+}
+
+Error export_mesh_file(const str& path, Mesh* mesh) {
+    size_t buffer_size = sizeof(size_t) +                     // mesh name size
+                         sizeof(char) * mesh->m_name.size();  // mesh name
+    for (auto& attrib : mesh->m_attribs) {
+        buffer_size += sizeof(size_t);                      // attrib name size
+        buffer_size += sizeof(char) * attrib.first.size();  // attrib name
+        buffer_size += sizeof(u32);                         // attrib size
+    }
+    buffer_size += sizeof(size_t);                         // vertices size
+    buffer_size += mesh->m_vertices.size() * sizeof(f32);  // vertices
+    buffer_size += sizeof(size_t);                         // indices size
+    buffer_size += mesh->m_indices.size() * sizeof(u32);   // vertices
+
+    u8* buffer = (u8*)alloc(buffer_size);
+    u8* ptr = buffer;
+
+    size_t name_size = mesh->m_name.size();
+    memcopy(ptr, &name_size, sizeof(size_t));
+    ptr += sizeof(size_t);
+
+    memcopy(ptr, mesh->m_name.data(), name_size * sizeof(char));
+    ptr += name_size * sizeof(char);
+
+    size_t n_attribs = mesh->m_attribs.size();
+    memcopy(ptr, &n_attribs, sizeof(size_t));
+    ptr += sizeof(size_t);
+
+    for (auto& attrib : mesh->m_attribs) {
+        size_t attrib_name_size = attrib.first.size();
+        memcopy(ptr, &attrib_name_size, sizeof(size_t));
+        ptr += sizeof(size_t);
+
+        memcopy(ptr, attrib.first.data(), attrib_name_size * sizeof(char));
+        ptr += attrib_name_size * sizeof(char);
+
+        memcopy(ptr, &attrib.second, sizeof(u32));
+        ptr += sizeof(u32);
+    }
+
+    size_t vertices_size = mesh->m_vertices.size();
+    memcopy(ptr, &vertices_size, sizeof(size_t));
+    ptr += sizeof(size_t);
+    memcopy(ptr, mesh->m_vertices.data(), vertices_size * sizeof(f32));
+    ptr += vertices_size * sizeof(f32);
+
+    size_t indices_size = mesh->m_indices.size();
+    memcopy(ptr, &indices_size, sizeof(size_t));
+    ptr += sizeof(size_t);
+    memcopy(ptr, mesh->m_indices.data(), indices_size * sizeof(i32));
+    ptr += indices_size * sizeof(i32);
+
+    Error err = write_to_file(path, buffer, buffer_size);
+    dealloc(buffer);
+    return err;
+}
+
+Error load_mesh_from_file(Mesh* mesh) {
+    pair<Error, vec<u8>> file_content = read_whole_file_binary(mesh->m_path);
+    if (file_content.first) {
+        return file_content.first;
+    }
+
+    u8* ptr = file_content.second.data();
+
+    size_t name_size;
+    memcpy(&name_size, ptr, sizeof(size_t));
+    ptr += sizeof(size_t);
+
+    mesh->m_name.resize(name_size);
+    memcpy(mesh->m_name.data(), ptr, name_size * sizeof(char));
+    ptr += name_size * sizeof(char);
+
+    size_t n_attribs;
+    memcpy(&n_attribs, ptr, sizeof(size_t));
+    ptr += sizeof(size_t);
+
+    for (size_t i = 0; i < n_attribs; i++) {
+        size_t attrib_name_size;
+        memcpy(&attrib_name_size, ptr, sizeof(size_t));
+        ptr += sizeof(size_t);
+
+        std::string attrib_name;
+        attrib_name.resize(attrib_name_size);
+        memcpy(attrib_name.data(), ptr, attrib_name_size * sizeof(char));
+        ptr += attrib_name_size * sizeof(char);
+
+        u32 attrib_size;
+        memcpy(&attrib_size, ptr, sizeof(u32));
+        ptr += sizeof(u32);
+
+        mesh->m_attribs.push_back(std::make_pair(attrib_name, attrib_size));
+    }
+
+    size_t vertices_size;
+    memcpy(&vertices_size, ptr, sizeof(size_t));
+    ptr += sizeof(size_t);
+
+    mesh->m_vertices.resize(vertices_size);
+    memcpy(mesh->m_vertices.data(), ptr, vertices_size * sizeof(f32));
+    ptr += vertices_size * sizeof(f32);
+
+    size_t indices_size;
+    memcpy(&indices_size, ptr, sizeof(size_t));
+    ptr += sizeof(size_t);
+
+    mesh->m_indices.resize(indices_size);
+    memcpy(mesh->m_indices.data(), ptr, indices_size * sizeof(u32));
+    ptr += indices_size * sizeof(u32);
+
+    mesh->m_primitive = MeshPrimitive::TRIANGLES;
 
     return Error();
 }
@@ -349,7 +467,6 @@ Error load_mesh_from_obj_file(Mesh* mesh) {
         {"tangent", 3},
         {"texcoord", 2},
     };
-    mesh->m_vertex_stride = 11;
     mesh->m_primitive = MeshPrimitive::TRIANGLES;
 
     generate_tangent(mesh);
