@@ -175,7 +175,6 @@ struct Mesh {
     vec<f32> m_vertices;
     vec<u32> m_indices;
     vec<pair<str, u32>> m_attribs;
-    u32 m_vertex_stride = 0;
     MeshPrimitive m_primitive = MeshPrimitive::TRIANGLES;
     void* m_api_data = NULL;
     bool m_should_reload = true;

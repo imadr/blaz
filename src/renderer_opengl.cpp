@@ -1,6 +1,7 @@
 #include "color.h"
 #include "error.h"
 #include "game.h"
+#include "memory.h"
 #include "opengl_loader/opengl_loader.h"
 #include "platform.h"
 #include "renderer.h"
@@ -331,59 +332,65 @@ Error Renderer::reload_shader_api(str shader_id) {
 
     GLint n_uniforms, max_len;
     gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORMS, &n_uniforms);
-    gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
-    GLchar* uniform_name = (GLchar*)malloc(max_len);
 
-    if (uniform_name == NULL) {
-        return Error("Renderer::compile_shader: Failed to allocate memory for uniform name");
-    }
+    if (n_uniforms > 0) {
+        gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_len);
+        GLchar* uniform_name = (GLchar*)alloc(max_len);
 
-    for (GLint i = 0; i < n_uniforms; i++) {
-        GLint size = -1;
-        GLenum type = -1;
-        gl->glGetActiveUniform(api_shader->m_program, i, max_len, NULL, &size, &type, uniform_name);
-
-        GLint binding_point;
-        if (type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE || type == GL_SAMPLER_2D_ARRAY ||
-            type == GL_SAMPLER_3D) {
-            GLint location = gl->glGetUniformLocation(api_shader->m_program, uniform_name);
-            gl->glGetUniformiv(api_shader->m_program, location, &binding_point);
-            shader->m_uniform_bindings[uniform_name] =
-                UniformBinding(binding_point, UniformBindingType::SAMPLER);
-        } else if (type == GL_IMAGE_2D) {
-            GLint location = gl->glGetUniformLocation(api_shader->m_program, uniform_name);
-            gl->glGetUniformiv(api_shader->m_program, location, &binding_point);
-            shader->m_uniform_bindings[uniform_name] =
-                UniformBinding(binding_point, UniformBindingType::IMAGE);
+        if (uniform_name == NULL) {
+            return Error("Renderer::compile_shader: Failed to allocate memory for uniform name");
         }
+
+        for (GLint i = 0; i < n_uniforms; i++) {
+            GLint size = -1;
+            GLenum type = -1;
+            gl->glGetActiveUniform(api_shader->m_program, i, max_len, NULL, &size, &type,
+                                   uniform_name);
+
+            GLint binding_point;
+            if (type == GL_SAMPLER_2D || type == GL_SAMPLER_CUBE || type == GL_SAMPLER_2D_ARRAY ||
+                type == GL_SAMPLER_3D) {
+                GLint location = gl->glGetUniformLocation(api_shader->m_program, uniform_name);
+                gl->glGetUniformiv(api_shader->m_program, location, &binding_point);
+                shader->m_uniform_bindings[uniform_name] =
+                    UniformBinding(binding_point, UniformBindingType::SAMPLER);
+            } else if (type == GL_IMAGE_2D) {
+                GLint location = gl->glGetUniformLocation(api_shader->m_program, uniform_name);
+                gl->glGetUniformiv(api_shader->m_program, location, &binding_point);
+                shader->m_uniform_bindings[uniform_name] =
+                    UniformBinding(binding_point, UniformBindingType::IMAGE);
+            }
+        }
+
+        dealloc(uniform_name);
+
+        GLint n_uniform_blocks;
+        gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_BLOCKS, &n_uniform_blocks);
+        gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH,
+                           &max_len);
+        GLchar* uniform_block_name = (GLchar*)alloc(max_len);
+
+        if (uniform_block_name == NULL) {
+            return Error(
+                "Renderer::compile_shader: Failed to allocate memory for uniform block name");
+        }
+
+        for (GLint i = 0; i < n_uniform_blocks; i++) {
+            GLint name_len;
+            GLint binding_point;
+            gl->glGetActiveUniformBlockName(api_shader->m_program, i, max_len, &name_len,
+                                            uniform_block_name);
+            uniform_block_name[name_len] = '\0';
+
+            gl->glGetActiveUniformBlockiv(api_shader->m_program, i, GL_UNIFORM_BLOCK_BINDING,
+                                          &binding_point);
+
+            shader->m_uniform_bindings[str(uniform_block_name)] =
+                UniformBinding(binding_point, UniformBindingType::BLOCK);
+        }
+
+        dealloc(uniform_block_name);
     }
-
-    free(uniform_name);
-
-    GLint n_uniform_blocks;
-    gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_BLOCKS, &n_uniform_blocks);
-    gl->glGetProgramiv(api_shader->m_program, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &max_len);
-    GLchar* uniform_block_name = (GLchar*)malloc(max_len);
-
-    if (uniform_block_name == NULL) {
-        return Error("Renderer::compile_shader: Failed to allocate memory for uniform block name");
-    }
-
-    for (GLint i = 0; i < n_uniform_blocks; i++) {
-        GLint name_len;
-        GLint binding_point;
-        gl->glGetActiveUniformBlockName(api_shader->m_program, i, max_len, &name_len,
-                                        uniform_block_name);
-        uniform_block_name[name_len] = '\0';
-
-        gl->glGetActiveUniformBlockiv(api_shader->m_program, i, GL_UNIFORM_BLOCK_BINDING,
-                                      &binding_point);
-
-        shader->m_uniform_bindings[str(uniform_block_name)] =
-            UniformBinding(binding_point, UniformBindingType::BLOCK);
-    }
-
-    free(uniform_block_name);
 
     shader->m_should_reload = false;
     return Error();

@@ -37,7 +37,8 @@ Error FileWatcher::init(const str& path, std::function<void(const str&)> callbac
 
         win32_file_watch->overlapped_buffer.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-        HANDLE handles[2] = {win32_file_watch->close_event, win32_file_watch->overlapped_buffer.hEvent};
+        HANDLE handles[2] = {win32_file_watch->close_event,
+                             win32_file_watch->overlapped_buffer.hEvent};
         bool exit = false;
 
         do {
@@ -149,6 +150,27 @@ pair<Error, vec<u8>> read_whole_file_binary(const str& path) {
     file_content.resize(static_cast<size_t>(bytes_read));
 
     return std::make_pair(Error(), file_content);
+}
+
+Error write_to_file(const str& path, const void* buffer, size_t buffer_size) {
+    std::wstring path_wstr = narrow_to_wide_str(path);
+    HANDLE file_handle = CreateFileW(path_wstr.c_str(), GENERIC_WRITE, 0, NULL,
+                                     CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (file_handle == INVALID_HANDLE_VALUE) {
+        return Error("Failed to open file '" + path + "' : " + win32_get_last_error());
+    }
+
+    DWORD bytes_written;
+    BOOL success = WriteFile(file_handle, buffer, DWORD(buffer_size), &bytes_written, NULL);
+
+    if (!success) {
+        CloseHandle(file_handle);
+        return Error("Failed to write to file '" + path + "' : " + win32_get_last_error());
+    }
+
+    CloseHandle(file_handle);
+    return Error();
 }
 
 str get_current_directory() {

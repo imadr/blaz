@@ -60,6 +60,7 @@ set(COMMON_SOURCES
     src/mesh.h
     src/physics.cpp
     src/physics.h
+    src/memory.h
 )
 
 if (EMSCRIPTEN)
@@ -94,6 +95,7 @@ elseif (OS_WINDOWS)
         src/utils_win32.h
         src/platform_win32.cpp
         src/my_time_win32.cpp
+        src/memory_win32.cpp
     )
 
     if (GRAPHICS_API STREQUAL "OpenGL")
@@ -143,4 +145,13 @@ endif()
 foreach(SAMPLE ${SAMPLES})
     get_filename_component(SAMPLE_DIR ${SAMPLE} DIRECTORY)
     add_subdirectory(${SAMPLE_DIR})
+endforeach()
+
+file(GLOB TOOL_SOURCES tools/*.cpp)
+
+foreach(TOOL_SOURCE ${TOOL_SOURCES})
+    get_filename_component(TOOL_NAME ${TOOL_SOURCE} NAME_WE)
+    add_executable(${TOOL_NAME} ${TOOL_SOURCE})
+    target_include_directories(${TOOL_NAME} PRIVATE src)
+    target_link_libraries(${TOOL_NAME} blaz)
 endforeach()
