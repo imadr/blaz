@@ -247,9 +247,72 @@ struct Pass {
 
 using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool, u32, i32>;
 
+enum class ImDrawCommandType { RECT };
+
+struct {
+    ImDrawCommandType m_type;
+    Vec2 m_pos;
+    Vec2 m_size;
+    RGB m_col;
+};
+
+struct ImDraw {
+    vec<ImDrawCommand> m_commands;
+
+    void start() {
+        m_commands.clear();
+    }
+
+    void draw_rect(Vec2 pos, Vec2 size, RGB col) {
+        m_commands.push_back(ImDrawCommand(.m_type = ImDrawCommandType::RECT, .m_pos = pos,
+                                           .m_size = size, .m_col = col));
+    }
+
+    void end() {
+        u32 counter = 0;
+        for (auto& command : m_commands) {
+            if (command.m_type == ImDrawCommandType::RECT) {
+                Mesh mesh;
+                float x = cmd.m_pos.x;
+                float y = cmd.m_pos.y;
+                float w = cmd.m_size.x;
+                float h = cmd.m_size.y;
+
+                mesh->m_vertices.insert(mesh->m_vertices.end(),
+                                        {{x, y, cmd.m_col.r, cmd.m_col.g, cmd.m_col.b},
+                                         {x + w, y, cmd.m_col.r, cmd.m_col.g, cmd.m_col.b},
+                                         {x + w, y + h, cmd.m_col.r, cmd.m_col.g, cmd.m_col.b},
+                                         {x, y + h, cmd.m_col.r, cmd.m_col.g, cmd.m_col.b}});
+
+                mesh->m_indices.insert(mesh->m_indices.end(),
+                                       {index, index + 1, index + 2, index, index + 2, index + 3});
+
+                mesh->m_attribs = {
+                    {"position", 2},
+                    {"color", 3},
+                };
+                mesh->m_primitive = MeshPrimitive::TRIANGLES;
+                mesh->m_name = "IMDRAW_RECT_" + str(counter) + "_MESH";
+
+                Node node;
+                node.m_name = "IMDRAW_RECT_" + str(counter) + "_NODE";
+                node.m_parent = "root_node";
+
+                Renderable renderable;
+                renderable.m_name = "IMDRAW_RECT_" + str(counter) + "_RENDERABLE";
+                renderable.m_tag = "imdraw";
+                renderable.m_mesh = mesh->m_name;
+                renderable.m_node = node->m_name;
+            }
+        }
+    }
+};
+
 struct Renderer {
     Window* m_window = NULL;
     Scene* m_current_scene = NULL;
+
+    ImDraw imdraw;
 
     u32 m_frame_number = 1;
 
