@@ -1,7 +1,6 @@
 #pragma once
 
 #include "color.h"
-#include "error.h"
 #include "types.h"
 
 namespace blaz {

@@ -1,7 +1,6 @@
-#include "error.h"
 #include "logger.h"
-#include "renderer.h"
 #include "mesh.h"
+#include "renderer.h"
 #include "types.h"
 
 using namespace blaz;

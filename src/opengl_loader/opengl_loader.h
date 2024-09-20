@@ -1,6 +1,5 @@
 #pragma once
 
-#include "error.h"
 #include "logger.h"
 #include "platform.h"
 #include "types.h"

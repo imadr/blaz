@@ -3,7 +3,6 @@
 #include <functional>
 #include <map>
 
-#include "error.h"
 #include "my_math.h"
 #include "types.h"
 

@@ -2,7 +2,6 @@
 
 #include "camera.h"
 #include "cfgreader.h"
-#include "error.h"
 #include "filesystem.h"
 #include "logger.h"
 #include "types.h"

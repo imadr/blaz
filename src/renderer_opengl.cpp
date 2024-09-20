@@ -1,5 +1,4 @@
 #include "color.h"
-#include "error.h"
 #include "game.h"
 #include "memory.h"
 #include "opengl_loader/opengl_loader.h"

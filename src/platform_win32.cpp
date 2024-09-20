@@ -19,8 +19,6 @@
 
 #include <map>
 
-#include "error.h"
-
 namespace blaz {
 
 struct Window_WIN32 {

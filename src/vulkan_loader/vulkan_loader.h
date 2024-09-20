@@ -1,6 +1,5 @@
 #pragma once
 
-#include "error.h"
 #include "types.h"
 #include "vulkan_loader/vulkan_header.h"
 

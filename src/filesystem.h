@@ -3,7 +3,6 @@
 #include <functional>
 #include <thread>
 
-#include "error.h"
 #include "types.h"
 
 namespace blaz {

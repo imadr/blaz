@@ -2,7 +2,6 @@
 
 #include "camera.h"
 #include "color.h"
-#include "error.h"
 #include "mesh.h"
 #include "platform.h"
 #include "texture.h"
@@ -178,6 +177,8 @@ struct Mesh {
     MeshPrimitive m_primitive = MeshPrimitive::TRIANGLES;
     void* m_api_data = NULL;
     bool m_should_reload = true;
+
+    u32 ref_count;
 };
 
 struct Texture {

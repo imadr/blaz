@@ -1,6 +1,5 @@
 #include "texture.h"
 
-#include "error.h"
 #include "filesystem.h"
 #include "renderer.h"
 #include "types.h"

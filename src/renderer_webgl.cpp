@@ -7,7 +7,6 @@
 #include <utility>
 
 #include "color.h"
-#include "error.h"
 #include "game.h"
 #include "platform.h"
 #include "renderer.h"

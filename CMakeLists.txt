@@ -37,7 +37,6 @@ set(COMMON_SOURCES
     src/cfgreader.h
     src/game.cpp
     src/game.h
-    src/error.h
     src/filesystem.h
     src/logger.cpp
     src/logger.h
