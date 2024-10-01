@@ -14,14 +14,15 @@
 ## Samples
 
 
-| <b>Sample</b>                      |<b>Screenshot</b>                                                                               |
-|-----------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| 01-triangle           | <img src="/samples/tests/01-hellotriangle.png" width="300"/><br>                       |
-| 02-cubes              | <img src="/samples/tests/02-cubes.png" width="300"/><br>                               |
-| 03-pbr                | <img src="/samples/tests/03-pbr.png" width="300"/><br>                                 |
-| 04-raymarching        | <img src="/samples/tests/04-raymarching.png" width="300"/><br>                         |
-| 05-raytracing         | <img src="/samples/tests/05-raytracing.png" width="300"/><br>                          |
-| 06-shadow             | <img src="/samples/tests/06-shadow.png" width="300"/><br>                          |
+| <b>Sample</b>         | <b>Screenshot</b>                                                |
+|------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| 01-triangle           | <img src="/samples/tests/01-hellotriangle.png" width="300"/><br> |
+| 02-cubes              | <img src="/samples/tests/02-cubes.png" width="300"/><br>         |
+| 03-pbr                | <img src="/samples/tests/03-pbr.png" width="300"/><br>           |
+| 04-raymarching        | <img src="/samples/tests/04-raymarching.png" width="300"/><br>   |
+| 05-raytracing         | <img src="/samples/tests/05-raytracing.png" width="300"/><br>    |
+| 06-shadow             | <img src="/samples/tests/06-shadow.png" width="300"/><br>        |
+| 07-ao                 | <img src="/samples/tests/07-ao.png" width="300"/><br>            |
 
 ## Building for web
 
