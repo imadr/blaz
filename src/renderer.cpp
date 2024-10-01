@@ -156,7 +156,7 @@ void Renderer::update() {
                 }
 
                 if (texture != NULL) {
-                    framebuffer_aspect_ratio = f32(texture->m_height) / f32(texture->m_width);
+                    framebuffer_aspect_ratio = f32(texture->m_width) / f32(texture->m_height);
                     set_viewport(0, 0, texture->m_width, texture->m_height);
                 } else {
                     logger.error("Framebuffer " + framebuffer->m_name +
