@@ -2,7 +2,7 @@
 
 precision highp float;
 
-layout(location = 0) in vec4 v_view_position;
+layout(location = 0) in vec4 v_clip_position;
 layout(location = 1) in vec3 v_world_position;
 layout(location = 2) in vec3 v_world_normal;
 layout(location = 3) in vec3 v_world_tangent;
@@ -58,13 +58,16 @@ float linearize_depth(float depth) {
 }
 
 #define NUM_SAMPLES 64
-#define SSAO_BIAS 0.001
-#define SSAO_RADIUS 0.3
+#define SSAO_BIAS 0.0001
+#define SSAO_RADIUS 0.05
 
 void main() {
     uint rng_state = uint(gl_FragCoord.x) * 984894 + uint(gl_FragCoord.y) * 184147;
 
     vec3 normal = normalize(v_world_normal);
+
+    vec3 clip_position = v_clip_position.xyz / v_clip_position.w;
+    clip_position.xyz = clip_position.xyz * 0.5 + 0.5;
 
 
     float occlusion = 0.0;
@@ -79,10 +82,12 @@ void main() {
         clip_space_rand.xyz = clip_space_rand.xyz * 0.5 + 0.5;
 
         float sample_depth = texture(u_sampler_depth, clip_space_rand.xy).x;
-    o_color = vec4(vec3(1.0-linearize_depth(sample_depth)*100.0), 1.0);
-    return;
 
-        occlusion += clip_space_rand.z > sample_depth + SSAO_BIAS ? 1.0 : 0.0;
+
+float range_check = (abs(clip_position.z - sample_depth) < 0.003) ? 1.0 : 0.0;
+        o_color = vec4(vec3(range_check), 1.0);
+return;
+        occlusion += (clip_space_rand.z > sample_depth + SSAO_BIAS ? 1.0 : 0.0);
     }
     occlusion /= NUM_SAMPLES;
 

@@ -10,7 +10,7 @@ layout(std140, binding = 0) uniform u_mat {
     mat4 u_projection_mat;
 };
 
-layout(location = 0) out vec3 v_view_position;
+layout(location = 0) out vec4 v_clip_position;
 layout(location = 1) out vec3 v_world_position;
 layout(location = 2) out vec3 v_world_normal;
 layout(location = 3) out vec3 v_world_tangent;
@@ -22,7 +22,7 @@ void main() {
 
     gl_Position = clip_position;
 
-    v_view_position = view_position.xyz;
+    v_clip_position = clip_position;
     v_world_position = world_position.xyz;
 
     mat3 inv_model = mat3(transpose(inverse(u_model_mat)));
