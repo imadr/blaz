@@ -2,6 +2,12 @@
 
 3D engine with no dependencies, all code is written from scratch
 
+<p align="center">
+<img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/imadr/blaz">
+<img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/w/imadr/blaz">
+<img alt="GitHub contributors" src="https://img.shields.io/github/contributors/imadr/blaz">
+</p>
+
 ## Building
 
 - [Install CMake >= 3.12](https://cmake.org/download/)
