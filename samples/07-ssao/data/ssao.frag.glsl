@@ -15,7 +15,7 @@ layout(std140, binding = 0) uniform u_mat {
     mat4 u_projection_mat;
 };
 
-layout(binding = 1) uniform sampler2D u_sampler_depth;
+layout(binding = 1) uniform sampler2D u_sampler_gbuffer;
 
 uint next_random(inout uint rng_state) {
     rng_state = rng_state * 747796405 + 2891336453;
@@ -59,44 +59,48 @@ float linearize_depth(float depth) {
 
 #define NUM_SAMPLES 64
 #define SSAO_BIAS 0.000001
-#define SSAO_RADIUS 0.1
+#define SSAO_RADIUS 0.001
 
 void main() {
     uint rng_state = uint(gl_FragCoord.x) * 984894 + uint(gl_FragCoord.y) * 184147;
 
-    // vec3 normal = normalize(v_world_normal);
+    vec3 normal = normalize(v_world_normal);
 
-    // vec4 view_space = (u_view_mat * vec4(v_world_position, 1.0));
+    vec4 view_space = (u_view_mat * vec4(v_world_position, 1.0));
 
-    // float occlusion = 0.0;
-    // for (int i = 0; i < NUM_SAMPLES; i++) {
-    //     vec3 random_direction = random_unit_vector_on_hemisphere(rng_state, normal);
+    float occlusion = 0.0;
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        vec3 random_direction = random_unit_vector_on_hemisphere(rng_state, normal);
 
-    //     vec3 world_space_rand = v_world_position + random_direction * SSAO_RADIUS;
+        vec3 world_space_rand = v_world_position + random_direction * SSAO_RADIUS;
 
-    //     vec4 view_space_rand = (u_view_mat * vec4(world_space_rand, 1.0));
-    //     vec4 clip_space_rand = u_projection_mat * view_space_rand;
-    //     clip_space_rand.xyz /= clip_space_rand.w;
-    //     clip_space_rand.xyz = clip_space_rand.xyz * 0.5 + 0.5;
+        vec4 view_space_rand = (u_view_mat * vec4(world_space_rand, 1.0));
+        vec4 clip_space_rand = u_projection_mat * view_space_rand;
+        clip_space_rand.xyz /= clip_space_rand.w;
+        clip_space_rand.xyz = clip_space_rand.xyz * 0.5 + 0.5;
 
-    //     float sample_depth = texture(u_sampler_depth, clip_space_rand.xy).x;
+        float sample_depth = texture(u_sampler_gbuffer, clip_space_rand.xy).x;
 
-    //     float range_check =
-    //         smoothstep(0.0, 1.0, SSAO_RADIUS / abs(clip_space_rand.z - sample_depth));
-    //     // o_color = vec4(vec3(linearize_depth(sample_depth) * 50.0), 1.0);
-    //     // return;
+        float range_check =
+            smoothstep(0.0, 1.0, SSAO_RADIUS / abs(clip_space_rand.z - sample_depth));
+        // o_color = vec4(vec3(linearize_depth(sample_depth) * 50.0), 1.0);
+        // return;
 
-    //     occlusion += (clip_space_rand.z > sample_depth + SSAO_BIAS ? 1.0 : 0.0);
-    // }
-    // occlusion /= NUM_SAMPLES;
-    // o_color = vec4(vec3(1.0 - occlusion), 1.0);
+        occlusion += (clip_space_rand.z > sample_depth + SSAO_BIAS ? 1.0 : 0.0);
 
-    vec4 pos = vec4(v_position, 1.0);
-    pos = u_model_mat * vec4(pos.xyz, 1.0);
-    pos = u_view_mat * vec4(pos.xyz, 1.0);
+    o_color = vec4(-view_space_rand.zzz/10.0, 1.0);
+    // o_color = vec4(linearize_depth(sample_depth).xxx*50.0, 1.0);
+    return;
+    }
+    occlusion /= NUM_SAMPLES;
+    o_color = vec4(vec3(1.0 - occlusion), 1.0);
+
+    // vec4 pos = vec4(v_position, 1.0);
+    // pos = u_model_mat * vec4(pos.xyz, 1.0);
+    // pos = u_view_mat * vec4(pos.xyz, 1.0);
     // pos = u_projection_mat * vec4(pos.xyz, 1.0);
     // pos.xyz /= pos.w;
     // pos.xyz = pos.xyz * 0.5 + 0.5;
 
-    o_color = vec4(vec3(linearize_depth(pos.z)), 1.0);
+    // o_color = vec4(vec3(-pos.z/10.0), 1.0);
 }

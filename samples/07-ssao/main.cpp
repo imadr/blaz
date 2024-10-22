@@ -32,8 +32,6 @@ int main() {
         logger.error(err);
     }
 
-    make_cube(&renderer.m_meshes["cube_mesh"]);
-    make_plane(&renderer.m_meshes["plane_mesh"]);
 
     // game.main_camera->m_orbit_zoom_sensitivity = 0.01f;
     // game.main_camera->m_orbit_pan_sensitivity = 0.05f;
