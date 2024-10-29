@@ -6,6 +6,12 @@
 using namespace blaz;
 
 int main() {
+    Mesh obj;
+	obj.m_name = "corner_mesh";
+    obj.m_path = "data/corner.obj";
+	load_mesh_from_obj_file(&obj);
+	export_mesh_file( "data/corner.mesh", &obj);
+
     Window window;
     Error err = window.init("07-ssao");
     if (err) {
@@ -36,8 +42,8 @@ int main() {
     // game.main_camera->m_orbit_zoom_sensitivity = 0.01f;
     // game.main_camera->m_orbit_pan_sensitivity = 0.05f;
     game.main_camera->m_orbit_target = Vec3(0, 0, 0);
-    game.main_camera->m_orbit_spherical_angles = Vec2(3.14, 0.0);
-    game.main_camera->m_orbit_zoom = 1.7f;
+    game.main_camera->m_orbit_spherical_angles = Vec2(f32(PI)*2.0f, f32(PI_HALF) / 3.0);
+    game.main_camera->m_orbit_zoom = 4.0f;
 
     window.m_mouse_click_callback = [&game](Vec2I mouse_position, ButtonState left_button,
                                             ButtonState right_button) {

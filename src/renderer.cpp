@@ -220,6 +220,9 @@ void Renderer::update() {
 
                         if (mesh->m_should_reload) {
                             Error err = reload_mesh(renderable->m_mesh);
+							if(err){
+								logger.error(err);
+							}
                         }
 
                         set_current_mesh(renderable->m_mesh);

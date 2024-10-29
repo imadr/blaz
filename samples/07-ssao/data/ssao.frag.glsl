@@ -15,7 +15,7 @@ layout(std140, binding = 0) uniform u_mat {
     mat4 u_projection_mat;
 };
 
-layout(binding = 1) uniform sampler2D u_sampler_gbuffer;
+layout(binding = 1) uniform sampler2D u_sampler_gbuffer_position;
 
 uint next_random(inout uint rng_state) {
     rng_state = rng_state * 747796405 + 2891336453;
@@ -79,7 +79,7 @@ void main() {
         clip_space_rand.xyz /= clip_space_rand.w;
         clip_space_rand.xyz = clip_space_rand.xyz * 0.5 + 0.5;
 
-        float sample_depth = texture(u_sampler_gbuffer, clip_space_rand.xy).x;
+        float sample_depth = texture(u_sampler_gbuffer_position, clip_space_rand.xy).x;
 
         float range_check =
             smoothstep(0.0, 1.0, SSAO_RADIUS / abs(clip_space_rand.z - sample_depth));
@@ -90,10 +90,11 @@ void main() {
 
     o_color = vec4(-view_space_rand.zzz/10.0, 1.0);
     // o_color = vec4(linearize_depth(sample_depth).xxx*50.0, 1.0);
-    return;
+    // return;
     }
     occlusion /= NUM_SAMPLES;
     o_color = vec4(vec3(1.0 - occlusion), 1.0);
+    o_color = vec4(normal, 1.0);
 
     // vec4 pos = vec4(v_position, 1.0);
     // pos = u_model_mat * vec4(pos.xyz, 1.0);
