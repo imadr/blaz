@@ -1,11 +1,11 @@
 # Roadmap
 
-- add error compute shader
+- ibl
+- fuzzing https://github.com/antonio-morales/Fuzzing101/tree/main/Exercise%201
 - ui / stats / text rendering
 - add a grid https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
 - gizmos / grid
 - materials
-- ibl
 - replace stl with something like https://github.com/mendsley/tinystl
 - terrain pbr sample
   - perlin noise lib
