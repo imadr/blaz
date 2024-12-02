@@ -56,8 +56,8 @@ int main() {
     });
 
     Camera* light_camera = &renderer.m_cameras["light_camera"];
-    Vec3 light_pos = Vec3(0, 4, 0);
-    light_camera->m_z_far = 5.0;
+    Vec3 light_pos = Vec3(3, 4, 6);
+    light_camera->m_z_far = 100.0;
     scene.m_nodes["light_camera_node"].set_position(light_pos);
     scene.m_nodes["light_camera_node"].set_rotation(
         Quat::look_at(light_pos, Vec3(0, 0, 0), Vec3(0, 1, 0)));
