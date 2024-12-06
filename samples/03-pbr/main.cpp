@@ -1,13 +1,16 @@
 #include "error.h"
 #include "game.h"
 #include "logger.h"
-#include "mesh.h"
-#include "my_time.h"
 #include "texture.h"
 
 using namespace blaz;
 
 int main() {
+    Texture tmp_texture;
+    tmp_texture.m_path = "data/lilienstein_2k.hdr";
+    Error err1 = load_texture_data_from_hdr_file(&tmp_texture);
+    return 0;
+
     Window window;
     Error err = window.init("03-pbr");
     if (err) {
