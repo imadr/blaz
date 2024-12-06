@@ -40,6 +40,7 @@ static std::unordered_map<TextureFormat, std::tuple<GLint, GLenum, GLenum>> open
         {TextureFormat::RG8, {GL_RG8, GL_RG, GL_UNSIGNED_BYTE}},
         {TextureFormat::RGB8, {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE}},
         {TextureFormat::RGBA8, {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE}},
+        {TextureFormat::RGB16F, {GL_RGB16F, GL_RGB, GL_FLOAT}},
         {TextureFormat::RGB32F, {GL_RGB32F, GL_RGB, GL_FLOAT}},
         {TextureFormat::RGBA32F, {GL_RGBA32F, GL_RGBA, GL_FLOAT}},
         {TextureFormat::DEPTH32, {GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT}},
@@ -612,8 +613,17 @@ Error Renderer::reload_texture_api(str texture_id) {
 
     gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
     auto& texture_type = opengl_texture_formats[texture->m_texture_params.m_format];
-    gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width, texture->m_height, 0,
-                     get<1>(texture_type), get<2>(texture_type), texture->m_data.data());
+
+    if (get<2>(texture_type) == GL_FLOAT) {
+        gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width,
+                         texture->m_height, 0, get<1>(texture_type), get<2>(texture_type),
+                         texture->m_float_data.data());
+    } else {
+        gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width,
+                         texture->m_height, 0, get<1>(texture_type), get<2>(texture_type),
+                         texture->m_data.data());
+    }
+
     gl->glGenerateMipmap(GL_TEXTURE_2D);
 
     texture->m_should_reload = false;
