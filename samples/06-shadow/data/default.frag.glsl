@@ -85,4 +85,6 @@ void main() {
     o_color = vec4(color * (1.0 - shadow), 1.0);
 
     // o_color = vec4(vec3(calculate_shadow_pcss(projected_light_coords)), 1.0);
+    // o_color = vec4(vec3(pow(texture(u_sampler_shadowmap, projected_light_coords.xy).r, 30.0)), 1.0);
+    // o_color = vec4(vec3(pow(projected_light_coords.z, 30.0)), 1.0);
 }
