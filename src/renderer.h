@@ -57,6 +57,7 @@ enum class TextureFormat {
     RG8,
     RGB8,
     RGBA8,
+    RGB16F,
     RGB32F,
     RGBA32F,
     DEPTH32,
@@ -64,10 +65,15 @@ enum class TextureFormat {
 };
 
 static std::unordered_map<str, TextureFormat> TextureFormatStr = {
-    {"R8", TextureFormat::R8},           {"RG8", TextureFormat::RG8},
-    {"RGB8", TextureFormat::RGB8},       {"RGBA8", TextureFormat::RGBA8},
-    {"RGB32F", TextureFormat::RGB32F},   {"RGBA32F", TextureFormat::RGBA32F},
-    {"DEPTH32", TextureFormat::DEPTH32}, {"DEPTH32F", TextureFormat::DEPTH32F},
+    {"R8", TextureFormat::R8},
+    {"RG8", TextureFormat::RG8},
+    {"RGB8", TextureFormat::RGB8},
+    {"RGBA8", TextureFormat::RGBA8},
+    {"RGB16F", TextureFormat::RGB16F},
+    {"RGB32F", TextureFormat::RGB32F},
+    {"RGBA32F", TextureFormat::RGBA32F},
+    {"DEPTH32", TextureFormat::DEPTH32},
+    {"DEPTH32F", TextureFormat::DEPTH32F},
 };
 
 enum class TextureWrapMode {
@@ -184,6 +190,7 @@ struct Texture {
     str m_name;
     str m_path;
     vec<u8> m_data;
+    vec<f32> m_float_data;
     u32 m_width = 0;
     u32 m_height = 0;
     u8 m_depth = 0;
