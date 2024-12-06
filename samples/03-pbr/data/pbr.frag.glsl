@@ -1,10 +1,9 @@
 #version 450
 
-layout(location = 0) in vec3 v_position;
-layout(location = 1) in vec3 v_world_position;
-layout(location = 2) in vec3 v_world_normal;
-layout(location = 3) in vec3 v_world_tangent;
-layout(location = 4) in vec2 v_texcoord;
+layout(location = 0) in vec3 v_world_position;
+layout(location = 1) in vec3 v_world_normal;
+layout(location = 2) in vec3 v_world_tangent;
+layout(location = 3) in vec2 v_texcoord;
 
 layout(location = 0) out vec4 o_color;
 
@@ -16,6 +15,7 @@ layout(binding = 2) uniform sampler2D u_sampler_albedo;
 layout(binding = 3) uniform sampler2D u_sampler_metalroughness;
 layout(binding = 4) uniform sampler2D u_sampler_normals;
 layout(binding = 5) uniform sampler2D u_sampler_emissive;
+layout(binding = 6) uniform sampler2D u_sampler_envmap;
 
 const float PI = 3.14159265359;
 
