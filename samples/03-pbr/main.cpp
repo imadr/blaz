@@ -32,6 +32,8 @@ int main() {
         logger.error(err);
     }
 
+    make_cube(&renderer.m_meshes["cube_mesh"]);
+
     game.main_camera->m_orbit_pan_sensitivity = 0.005f;
 
     window.m_mouse_click_callback = [&game](Vec2I mouse_position, ButtonState left_button,
