@@ -1,8 +1,6 @@
 #include "error.h"
 #include "game.h"
 #include "logger.h"
-#include "mesh.h"
-#include "my_time.h"
 #include "texture.h"
 
 using namespace blaz;
