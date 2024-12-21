@@ -80,6 +80,10 @@ Error Renderer::init(Window* window) {
         .m_should_reload = true,
     });
 
+    for (Pass& pass : m_passes_do_once) {
+        do_pass(pass);
+    }
+
     return Error();
 }
 
@@ -93,147 +97,148 @@ u32 Renderer::special_value(const str& name) {
     }
 }
 
-void Renderer::update() {
-    u64 frame_start_cpu_time = get_timestamp_microsecond();
-    for (Pass& pass : m_passes) {
-        if (!pass.m_enabled) continue;
+void Renderer::do_pass(Pass& pass) {
+    if (!pass.m_enabled) return;
 
-        u64 pass_start_cpu_time = get_timestamp_microsecond();
+    u64 pass_start_cpu_time = get_timestamp_microsecond();
 
 #ifdef DEBUG_RENDERER
-        debug_marker_start(pass.m_name);
+    debug_marker_start(pass.m_name);
 #endif
 
-        if (pass.m_type == PassType::COPY) {
-            copy_texture(pass.m_copy_src_texture, pass.m_copy_dst_texture, Vec3I(0, 0, 0),
-                         Vec2I(m_textures[pass.m_copy_src_texture].m_width,
-                               m_textures[pass.m_copy_src_texture].m_height),
-                         Vec3I(0, 0, 0));
+    if (pass.m_type == PassType::COPY) {
+        copy_texture(pass.m_copy_src_texture, pass.m_copy_dst_texture, Vec3I(0, 0, 0),
+                     Vec2I(m_textures[pass.m_copy_src_texture].m_width,
+                           m_textures[pass.m_copy_src_texture].m_height),
+                     Vec3I(0, 0, 0));
 
-        } else if (pass.m_type == PassType::COMPUTE) {
-            Shader pass_shader = m_shaders[pass.m_shader];
-            if (pass_shader.m_should_reload) {
-                Error err = reload_shader(pass.m_shader);
-                if (err) {
-                    logger.error(err);
-                }
-            }
-
-            str shader_to_use = pass.m_shader;
-
-            set_current_shader(shader_to_use);
-
-            set_uniform_buffer_data("u_time", {{"u_frame_number", m_frame_number}});
-
-            bind_uniforms(&pass, shader_to_use);
-
-            u32 work_groups[3];
-            for (u32 i = 0; i < 3; i++) {
-                if (std::holds_alternative<u32>(pass.m_compute_work_groups[i])) {
-                    work_groups[i] = std::get<u32>(pass.m_compute_work_groups[i]);
-                } else if (std::holds_alternative<str>(pass.m_compute_work_groups[i])) {
-                    work_groups[i] = special_value(std::get<str>(pass.m_compute_work_groups[i]));
-                }
-            }
-            dispatch_compute(work_groups[0], work_groups[1], work_groups[2]);
-
-        } else if (pass.m_type == PassType::RENDER) {
-            f32 framebuffer_aspect_ratio = 1.0;
-            if (pass.m_use_default_framebuffer) {
-                set_default_framebuffer();
-                framebuffer_aspect_ratio =
-                    f32(m_window->m_size.width) / f32(m_window->m_size.height);
-                set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
-            } else {
-                set_current_framebuffer(pass.m_framebuffer);
-
-                Texture* texture = NULL;
-                Framebuffer* framebuffer = &m_framebuffers[pass.m_framebuffer];
-                if (framebuffer->m_color_attachment_texture != "") {
-                    texture = &m_textures[framebuffer->m_color_attachment_texture];
-                } else if (framebuffer->m_depth_attachment_texture != "") {
-                    texture = &m_textures[framebuffer->m_depth_attachment_texture];
-                }
-
-                if (texture != NULL) {
-                    framebuffer_aspect_ratio = f32(texture->m_width) / f32(texture->m_height);
-                    set_viewport(0, 0, texture->m_width, texture->m_height);
-                } else {
-                    logger.error("Framebuffer " + framebuffer->m_name +
-                                 " doesn't have any attachment");
-                }
-            }
-
-            if (pass.m_enable_depth_test) {
-                set_depth_test(true);
-            } else {
-                set_depth_test(false);
-            }
-
-            set_face_culling(pass.m_enable_face_culling, pass.m_culling_mode, pass.m_culling_order);
-
-            clear(pass.m_clear_flag, pass.m_clear_color, pass.m_clear_depth);
-
-            Shader pass_shader = m_shaders[pass.m_shader];
-            if (pass_shader.m_should_reload) {
-                Error err = reload_shader(pass.m_shader);
-                if (err) {
-                    logger.error(err);
-                }
-            }
-
-            str shader_to_use = pass.m_shader;
-            if (pass_shader.m_is_error) {
-                shader_to_use = "internal_error_shader";
-            }
-
-            set_current_shader(shader_to_use);
-
-            if (pass.m_camera != "") {
-                Camera* camera = &m_cameras[pass.m_camera];
-                camera->set_aspect_ratio(framebuffer_aspect_ratio);
-                camera->update_projection_matrix();
-                camera->update_view_matrix();
-                set_uniform_buffer_data("u_mat", {{"u_projection_mat", camera->m_projection_matrix},
-                                                  {"u_view_mat", camera->m_view_matrix}});
-                set_uniform_buffer_data(
-                    "u_view",
-                    {{"u_camera_position", camera->m_scene->m_nodes[camera->m_node].m_position}});
-            }
-
-            set_uniform_buffer_data("u_time", {{"u_frame_number", m_frame_number}});
-
-            bind_uniforms(&pass, shader_to_use);
-
-            if (pass.m_bufferless_draw) {
-                set_bufferless_mesh();
-                draw(MeshPrimitive::TRIANGLES, pass.m_bufferless_draw_count);
-            } else {
-                for (const str tag : pass.m_tags) {
-                    for (const u32 id : m_tagged_renderables[tag]) {
-                        Renderable* renderable = &m_renderables[id];
-                        set_uniform_buffer_data(
-                            "u_mat",
-                            {{"u_model_mat",
-                              m_current_scene->m_nodes[renderable->m_node].m_global_matrix}});
-                        Mesh* mesh = &m_meshes[renderable->m_mesh];
-
-                        if (mesh->m_should_reload) {
-                            Error err = reload_mesh(renderable->m_mesh);
-                        }
-
-                        set_current_mesh(renderable->m_mesh);
-                        draw_indexed(mesh->m_primitive, mesh->m_indices.size());
-                    }
-                }
+    } else if (pass.m_type == PassType::COMPUTE) {
+        Shader pass_shader = m_shaders[pass.m_shader];
+        if (pass_shader.m_should_reload) {
+            Error err = reload_shader(pass.m_shader);
+            if (err) {
+                logger.error(err);
             }
         }
 
+        str shader_to_use = pass.m_shader;
+
+        set_current_shader(shader_to_use);
+
+        set_uniform_buffer_data("u_time", {{"u_frame_number", m_frame_number}});
+
+        bind_uniforms(&pass, shader_to_use);
+
+        u32 work_groups[3];
+        for (u32 i = 0; i < 3; i++) {
+            if (std::holds_alternative<u32>(pass.m_compute_work_groups[i])) {
+                work_groups[i] = std::get<u32>(pass.m_compute_work_groups[i]);
+            } else if (std::holds_alternative<str>(pass.m_compute_work_groups[i])) {
+                work_groups[i] = special_value(std::get<str>(pass.m_compute_work_groups[i]));
+            }
+        }
+        dispatch_compute(work_groups[0], work_groups[1], work_groups[2]);
+
+    } else if (pass.m_type == PassType::RENDER) {
+        f32 framebuffer_aspect_ratio = 1.0;
+        if (pass.m_use_default_framebuffer) {
+            set_default_framebuffer();
+            framebuffer_aspect_ratio = f32(m_window->m_size.width) / f32(m_window->m_size.height);
+            set_viewport(0, 0, m_window->m_size.width, m_window->m_size.height);
+        } else {
+            set_current_framebuffer(pass.m_framebuffer);
+
+            Texture* texture = NULL;
+            Framebuffer* framebuffer = &m_framebuffers[pass.m_framebuffer];
+            if (framebuffer->m_color_attachment_texture != "") {
+                texture = &m_textures[framebuffer->m_color_attachment_texture];
+            } else if (framebuffer->m_depth_attachment_texture != "") {
+                texture = &m_textures[framebuffer->m_depth_attachment_texture];
+            }
+
+            if (texture != NULL) {
+                framebuffer_aspect_ratio = f32(texture->m_width) / f32(texture->m_height);
+                set_viewport(0, 0, texture->m_width, texture->m_height);
+            } else {
+                logger.error("Framebuffer " + framebuffer->m_name + " doesn't have any attachment");
+            }
+        }
+
+        if (pass.m_enable_depth_test) {
+            set_depth_test(true);
+        } else {
+            set_depth_test(false);
+        }
+
+        set_face_culling(pass.m_enable_face_culling, pass.m_culling_mode, pass.m_culling_order);
+
+        clear(pass.m_clear_flag, pass.m_clear_color, pass.m_clear_depth);
+
+        Shader pass_shader = m_shaders[pass.m_shader];
+        if (pass_shader.m_should_reload) {
+            Error err = reload_shader(pass.m_shader);
+            if (err) {
+                logger.error(err);
+            }
+        }
+
+        str shader_to_use = pass.m_shader;
+        if (pass_shader.m_is_error) {
+            shader_to_use = "internal_error_shader";
+        }
+
+        set_current_shader(shader_to_use);
+
+        if (pass.m_camera != "") {
+            Camera* camera = &m_cameras[pass.m_camera];
+            camera->set_aspect_ratio(framebuffer_aspect_ratio);
+            camera->update_projection_matrix();
+            camera->update_view_matrix();
+            set_uniform_buffer_data("u_mat", {{"u_projection_mat", camera->m_projection_matrix},
+                                              {"u_view_mat", camera->m_view_matrix}});
+            set_uniform_buffer_data(
+                "u_view",
+                {{"u_camera_position", camera->m_scene->m_nodes[camera->m_node].m_position}});
+        }
+
+        set_uniform_buffer_data("u_time", {{"u_frame_number", m_frame_number}});
+
+        bind_uniforms(&pass, shader_to_use);
+
+        if (pass.m_bufferless_draw) {
+            set_bufferless_mesh();
+            draw(MeshPrimitive::TRIANGLES, pass.m_bufferless_draw_count);
+        } else {
+            for (const str tag : pass.m_tags) {
+                for (const u32 id : m_tagged_renderables[tag]) {
+                    Renderable* renderable = &m_renderables[id];
+                    set_uniform_buffer_data(
+                        "u_mat", {{"u_model_mat",
+                                   m_current_scene->m_nodes[renderable->m_node].m_global_matrix}});
+                    Mesh* mesh = &m_meshes[renderable->m_mesh];
+
+                    if (mesh->m_should_reload) {
+                        Error err = reload_mesh(renderable->m_mesh);
+                    }
+
+                    set_current_mesh(renderable->m_mesh);
+                    draw_indexed(mesh->m_primitive, mesh->m_indices.size());
+                }
+            }
+        }
+    }
+
 #ifdef DEBUG_RENDERER
-        debug_marker_end();
+    debug_marker_end();
 #endif
 
-        u64 pass_cpu_time = get_timestamp_microsecond() - pass_start_cpu_time;
+    u64 pass_cpu_time = get_timestamp_microsecond() - pass_start_cpu_time;
+}
+
+void Renderer::update() {
+    u64 frame_start_cpu_time = get_timestamp_microsecond();
+    for (Pass& pass : m_passes) {
+        do_pass(pass);
     }
 
     u64 frame_cpu_time = get_timestamp_microsecond() - frame_start_cpu_time;

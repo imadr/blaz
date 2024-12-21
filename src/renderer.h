@@ -76,6 +76,16 @@ static std::unordered_map<str, TextureFormat> TextureFormatStr = {
     {"DEPTH32F", TextureFormat::DEPTH32F},
 };
 
+enum class TextureTarget {
+    TEXTURE_2D,
+    TEXTURE_CUBE_MAP,
+};
+
+static std::unordered_map<str, TextureTarget> TextureTargetStr = {
+    {"TEXTURE_2D", TextureTarget::TEXTURE_2D},
+    {"TEXTURE_CUBE_MAP", TextureTarget::TEXTURE_CUBE_MAP},
+};
+
 enum class TextureWrapMode {
     REPEAT,
     MIRRORED_REPEAT,
@@ -121,6 +131,7 @@ static std::unordered_map<UniformType, u32> UniformTypeSize = {
 
 struct TextureParams {
     TextureFormat m_format = TextureFormat::RGBA8;
+    TextureTarget m_target = TextureTarget::TEXTURE_2D;
     TextureWrapMode m_wrap_mode_s = TextureWrapMode::REPEAT;
     TextureWrapMode m_wrap_mode_t = TextureWrapMode::REPEAT;
     TextureFilteringMode m_filter_mode_min = TextureFilteringMode::LINEAR;
@@ -196,6 +207,7 @@ struct Texture {
     u8 m_depth = 0;
     u8 m_channels = 0;
     TextureParams m_texture_params;
+    TextureTarget m_texture_target;
     void* m_api_data = NULL;
     bool m_should_reload = true;
     bool m_resize_to_viewport = false;
@@ -262,6 +274,7 @@ struct Renderer {
 
     Error init(Window* window);
     Error init_api();
+    void do_pass(Pass& pass);
     void update();
     void clear(u32 clear_flag, RGBA clear_color, float clear_depth);
     void present();
@@ -278,6 +291,7 @@ struct Renderer {
     void set_depth_test(bool enabled);
     void set_face_culling(bool enabled, CullingMode mode, CullingOrder order);
 
+    vec<Pass> m_passes_do_once;
     vec<Pass> m_passes;
 
     ArrayMap<Shader> m_shaders;

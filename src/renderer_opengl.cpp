@@ -69,6 +69,11 @@ static std::unordered_map<AccessType, GLenum> opengl_access_types = {
     {AccessType::READ_WRITE, GL_READ_WRITE},
 };
 
+static std::unordered_map<TextureTarget, GLenum> opengl_texture_targets = {
+    {TextureTarget::TEXTURE_2D, GL_TEXTURE_2D},
+    {TextureTarget::TEXTURE_CUBE_MAP, GL_TEXTURE_CUBE_MAP},
+};
+
 OpenglLoader* gl;
 GLuint dummy_vao;
 
@@ -372,7 +377,7 @@ Error Renderer::reload_shader_api(str shader_id) {
         GLchar* uniform_block_name = (GLchar*)alloc(max_len);
 
         if (uniform_block_name == NULL) {
-            return Error(
+            logger.error(
                 "Renderer::compile_shader: Failed to allocate memory for uniform block name");
         }
 
@@ -579,22 +584,38 @@ Error Renderer::create_texture_api(str texture_id) {
 
     u32 texture_name;
     gl->glGenTextures(1, &texture_name);
-    gl->glBindTexture(GL_TEXTURE_2D, texture_name);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+
+    GLenum texture_target = opengl_texture_targets[texture->m_texture_params.m_target];
+
+    gl->glBindTexture(texture_target, texture_name);
+
+    auto& texture_format = opengl_texture_formats[texture->m_texture_params.m_format];
+
+    if (texture_target == GL_TEXTURE_2D) {
+        gl->glTexImage2D(texture_target, 0, get<0>(texture_format), texture->m_width,
+                         texture->m_height, 0, get<1>(texture_format), get<2>(texture_format),
+                         NULL);
+    } else if (texture_target == GL_TEXTURE_CUBE_MAP) {
+        for (u32 i = 0; i < 6; i++) {
+            gl->glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, get<0>(texture_format),
+                             texture->m_width, texture->m_height, 0, get<1>(texture_format),
+                             get<2>(texture_format), NULL);
+        }
+    }
+    gl->glGenerateMipmap(texture_target);
+
+    gl->glTexParameteri(texture_target, GL_TEXTURE_WRAP_S,
                         opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_s]);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+    gl->glTexParameteri(texture_target, GL_TEXTURE_WRAP_T,
                         opengl_texture_wrap_modes[texture->m_texture_params.m_wrap_mode_t]);
+    gl->glTexParameteri(texture_target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
     gl->glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+        texture_target, GL_TEXTURE_MIN_FILTER,
         opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_min]);
     gl->glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+        texture_target, GL_TEXTURE_MAG_FILTER,
         opengl_texture_filtering_modes[texture->m_texture_params.m_filter_mode_mag]);
-
-    auto& texture_type = opengl_texture_formats[texture->m_texture_params.m_format];
-    gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width, texture->m_height, 0,
-                     get<1>(texture_type), get<2>(texture_type), NULL);
-    gl->glGenerateMipmap(GL_TEXTURE_2D);
 
     Texture_OPENGL* api_texture = new Texture_OPENGL;
     api_texture->m_texture_name = texture_name;
@@ -611,20 +632,24 @@ Error Renderer::reload_texture_api(str texture_id) {
     Texture* texture = &m_textures[texture_id];
     Texture_OPENGL* api_texture = (Texture_OPENGL*)texture->m_api_data;
 
-    gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
-    auto& texture_type = opengl_texture_formats[texture->m_texture_params.m_format];
+    GLenum texture_target = opengl_texture_targets[texture->m_texture_params.m_target];
 
-    if (get<2>(texture_type) == GL_FLOAT) {
-        gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width,
-                         texture->m_height, 0, get<1>(texture_type), get<2>(texture_type),
-                         texture->m_float_data.data());
-    } else {
-        gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width,
-                         texture->m_height, 0, get<1>(texture_type), get<2>(texture_type),
-                         texture->m_data.data());
+    if (texture_target == GL_TEXTURE_2D) {
+        gl->glBindTexture(GL_TEXTURE_2D, ((Texture_OPENGL*)texture->m_api_data)->m_texture_name);
+        auto& texture_type = opengl_texture_formats[texture->m_texture_params.m_format];
+
+        if (get<2>(texture_type) == GL_FLOAT) {
+            gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width,
+                             texture->m_height, 0, get<1>(texture_type), get<2>(texture_type),
+                             texture->m_float_data.data());
+        } else {
+            gl->glTexImage2D(GL_TEXTURE_2D, 0, get<0>(texture_type), texture->m_width,
+                             texture->m_height, 0, get<1>(texture_type), get<2>(texture_type),
+                             texture->m_data.data());
+        }
+
+        gl->glGenerateMipmap(GL_TEXTURE_2D);
     }
-
-    gl->glGenerateMipmap(GL_TEXTURE_2D);
 
     texture->m_should_reload = false;
 

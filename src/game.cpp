@@ -87,6 +87,13 @@ Error Game::load_game(const str& path) {
         }
         texture.m_texture_params.m_format = TextureFormatStr.at(texture_cfg["format"].str_value);
 
+        if (texture_cfg["target"]) {
+            texture.m_texture_params.m_target =
+                TextureTargetStr.at(texture_cfg["target"].str_value);
+        } else {
+            texture.m_texture_params.m_target = TextureTarget::TEXTURE_2D;
+        }
+
         if (texture_cfg["wrap_mode_s"]) {
             texture.m_texture_params.m_wrap_mode_s =
                 TextureWrapModeStr.at(texture_cfg["wrap_mode_s"].str_value);
