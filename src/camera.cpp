@@ -80,6 +80,31 @@ void Camera::update_orbit_camera() {
     camera_node->set_rotation(q);
 }
 
+void Camera::update_fps_camera() {
+    Node* camera_node = &m_scene->m_nodes[m_node];
+
+    Vec3 forward = Vec3(cos(m_fps_pitch) * cos(m_fps_yaw), sin(m_fps_pitch),
+                        cos(m_fps_pitch) * sin(m_fps_yaw));
+    forward = forward.normalize();
+
+    Vec3 right = vec3_cross(Vec3(0, 1, 0), forward).normalize();
+    Vec3 up = vec3_cross(forward, right).normalize();
+
+    Mat4 mat = Mat4(right.x(), up.x(), forward.x(), 0.0f, right.y(), up.y(), forward.y(), 0.0f,
+                    right.z(), up.z(), forward.z(), 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    camera_node->set_rotation(Quat::from_rotation_matrix(mat));
+}
+
+void Camera::fps_mouse_move(Vec2I delta) {
+    if (m_camera_mode != CameraMode::FPS) return;
+
+        m_fps_yaw += f32(delta.x()) * m_fps_mouse_sensitivity;
+        m_fps_pitch += f32(delta.y()) * m_fps_mouse_sensitivity;
+
+        m_fps_pitch = clamp(m_fps_pitch, f32(-PI_HALF) + 0.1f, f32(PI_HALF) - 0.1f);
+        update_fps_camera();
+}
+
 void Camera::orbit_mouse_wheel(i16 delta) {
     m_orbit_zoom -= f32(delta) / 200.0f;
     m_orbit_zoom = std::max(0.1f, m_orbit_zoom);

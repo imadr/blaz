@@ -188,6 +188,8 @@ static LRESULT CALLBACK window_procedure(HWND window_handle, UINT message, WPARA
 
             } break;
             case WM_MOUSEMOVE: {
+                ShowCursor(window->m_cursor_visible);
+
                 if (window->m_mouse_move_callback == NULL) break;
                 window->m_mouse_move_callback(
                     Vec2I(i32(GET_X_LPARAM(l_param)), i32(GET_Y_LPARAM(l_param))));
@@ -278,6 +280,10 @@ Error Window::init(const str& title) {
 }
 
 bool Window::event_loop() {
+    if (m_cursor_locked) {
+        SetCursorPos(GetSystemMetrics(SM_CXSCREEN) / 2, GetSystemMetrics(SM_CYSCREEN) / 2);
+    }
+
     MSG message;
     while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) {
         if (message.message != WM_QUIT) {

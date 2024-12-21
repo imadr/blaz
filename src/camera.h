@@ -12,7 +12,7 @@ struct Scene;
 
 enum class Projection { PERSPECTIVE, ORTHOGRAPHIC };
 
-enum class CameraMode { ORBIT };
+enum class CameraMode { ORBIT, FPS };
 
 struct Camera {
     str m_name;
@@ -39,14 +39,23 @@ struct Camera {
     Mat4 m_view_matrix = Mat4();
     void update_view_matrix();
     CameraMode m_camera_mode = CameraMode::ORBIT;
+
     Vec3 m_orbit_target = Vec3(0, 0, 0);
     f32 m_orbit_rotate_sensitivity = 0.006f;
     f32 m_orbit_pan_sensitivity = 0.02f;
     f32 m_orbit_zoom = 5.0f;
     Vec2 m_orbit_spherical_angles = Vec2(f32(PI_HALF), 0);
+
+    f32 m_fps_yaw = 0.0f;
+    f32 m_fps_pitch = 0.0f;
+    f32 m_fps_mouse_sensitivity = 0.003f;
+
     bool m_mouse_left_pressed = false;
     bool m_mouse_right_pressed = false;
+
+    void update_fps_camera();
     void update_orbit_camera();
+    void fps_mouse_move(Vec2I delta);
     void orbit_mouse_move(Vec2I delta);
     void orbit_mouse_wheel(i16 delta);
 };

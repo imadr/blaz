@@ -19,6 +19,9 @@ struct Window {
     bool event_loop();
     void screenshot(str filename);
 
+    bool m_cursor_locked = false;
+    bool m_cursor_visible = true;
+
     struct Size {
         u32 width;
         u32 height;
