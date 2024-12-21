@@ -19,7 +19,7 @@ layout(binding = 2) uniform sampler2D u_sampler_shadowmap;
 float calculate_shadow_pcf(vec3 projected_light_coords, vec3 normal, vec3 light_direction,
                            sampler2D shadow_map) {
     vec2 texel_size = 1.0 / textureSize(u_sampler_shadowmap, 0);
-    float slope = abs(dot(normalize(v_normal), light_direction));
+    float slope = abs(dot(normalize(normal), light_direction));
     float bias = 0.00005 * slope + 0.00002;
     float shadow = 0.0;
 
@@ -85,6 +85,7 @@ void main() {
     o_color = vec4(color * (1.0 - shadow), 1.0);
 
     // o_color = vec4(vec3(calculate_shadow_pcss(projected_light_coords)), 1.0);
-    // o_color = vec4(vec3(pow(texture(u_sampler_shadowmap, projected_light_coords.xy).r, 30.0)), 1.0);
-    // o_color = vec4(vec3(pow(projected_light_coords.z, 30.0)), 1.0);
+    // o_color = vec4(vec3(pow(texture(u_sampler_shadowmap,
+    // projected_light_coords.xy).r, 30.0)), 1.0); o_color =
+    // vec4(vec3(pow(projected_light_coords.z, 30.0)), 1.0);
 }
