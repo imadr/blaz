@@ -1,3 +1,3 @@
-set(SAMPLE_NAME 07-fps)
+set(SAMPLE_NAME 08-fps)
 
 include(../Common.cmake)
