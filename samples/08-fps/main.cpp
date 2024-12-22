@@ -37,6 +37,7 @@ int main() {
 
     make_cube(&renderer.m_meshes["cube_mesh"]);
     make_plane(&renderer.m_meshes["plane_mesh"]);
+    make_uv_sphere(&renderer.m_meshes["sphere_mesh"], 32, 32);
 
     renderer.create_uniform_buffer(UniformBuffer{
         .m_name = "u_light",
@@ -75,7 +76,7 @@ int main() {
     });
 
     Camera* light_camera = &renderer.m_cameras["light_camera"];
-    Vec3 light_pos = Vec3(3, 4, 6);
+    Vec3 light_pos = Vec3(-2, 4, -1);
     light_camera->m_z_far = 100.0;
     scene.m_nodes["light_camera_node"].set_position(light_pos);
     scene.m_nodes["light_camera_node"].set_rotation(
@@ -96,8 +97,29 @@ int main() {
         game.main_camera->fps_mouse_move(delta);
     };
 
+    renderer.create_uniform_buffer(UniformBuffer{
+        .m_name = "u_camera",
+        .m_uniforms =
+            {
+                Uniform{
+                    .m_name = "u_camera_position",
+                    .m_type = UNIFORM_VEC3,
+                },
+                Uniform{
+                    .m_name = "u_skydome_position",
+                    .m_type = UNIFORM_VEC3,
+                },
+            },
+        .m_should_reload = true,
+    });
+
     game.m_main_loop = [&game]() {
         if (game.m_window->event_loop()) {
+            game.m_renderer->set_uniform_buffer_data(
+                "u_camera",
+                {{"u_camera_position", game.m_scene->m_nodes[game.main_camera->m_node].m_position},
+                 {"u_skydome_position", game.m_scene->m_nodes["skydome_node"].m_position}});
+
             Vec3 forward(-cos(game.main_camera->m_fps_yaw), 0, -sin(game.main_camera->m_fps_yaw));
             Vec3 right(sin(game.main_camera->m_fps_yaw), 0, -cos(game.main_camera->m_fps_yaw));
 
