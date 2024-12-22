@@ -19,7 +19,7 @@ void add_node(Scene* scene, Node node, str parent) {
         scene->m_nodes[parent].m_children.push_back(node.m_name);
         node.update_matrix();
     } else {
-        logger.error("Parent node \"%s\" not found", parent);
+        logger.error("Parent node \"" + parent + "\" not found");
     }
 }
 
