@@ -7,7 +7,7 @@ using namespace blaz;
 
 int main() {
     Window window;
-    Error err = window.init("07-fps");
+    Error err = window.init("08-fps");
     // window.m_cursor_visible = false;
     // window.m_cursor_locked = true;
 
