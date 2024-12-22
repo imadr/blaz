@@ -152,6 +152,37 @@ Error Game::load_game(const str& path) {
         m_renderer->create_framebuffer(framebuffer);
     }
 
+    for (auto& material_cfg : game_cfg["materials"]) {
+        Material material;
+        material.m_name = material_cfg["name"].str_value;
+        material.m_shader = material_cfg["shader"].str_value;
+
+        for (auto& uniform_group : material_cfg["uniforms"].map_value) {
+            for (auto& uniform : uniform_group.second.map_value) {
+                switch (uniform.second.type) {
+                    case CfgNodeType::FLOAT: {
+                        material.m_uniforms[uniform_group.first][uniform.first] =
+                            UniformValue(uniform.second.float_value);
+                    } break;
+                    case CfgNodeType::VEC3: {
+                        material.m_uniforms[uniform_group.first][uniform.first] =
+                            UniformValue(uniform.second.vec3_value);
+                    } break;
+                    case CfgNodeType::VEC4: {
+                        material.m_uniforms[uniform_group.first][uniform.first] =
+                            UniformValue(uniform.second.vec4_value);
+                    } break;
+                    case CfgNodeType::BOOL: {
+                        material.m_uniforms[uniform_group.first][uniform.first] =
+                            UniformValue(uniform.second.bool_value);
+                    } break;
+                }
+            }
+        }
+
+        m_renderer->create_material(material);
+    }
+
     for (auto& node_cfg : game_cfg["nodes"]) {
         Node node;
         node.m_name = node_cfg["name"].str_value;
@@ -170,6 +201,7 @@ Error Game::load_game(const str& path) {
         }
         renderable.m_mesh = renderable_cfg["mesh"].str_value;
         renderable.m_node = renderable_cfg["node"].str_value;
+        renderable.m_material = renderable_cfg["material"].str_value;
 
         m_renderer->m_renderables.push_back(renderable);
         u32 id = u32(m_renderer->m_renderables.size()) - 1;

@@ -16,9 +16,14 @@ layout(std140, binding = 2) uniform u_light {
     vec3 u_light_position;
     mat4 u_light_view_mat;
     mat4 u_light_projection_mat;
+    vec3 u_light_color;
 };
 
 layout(binding = 3) uniform sampler2D u_sampler_shadowmap;
+
+layout(std140, binding = 4) uniform u_material {
+    vec3 u_albedo;
+};
 
 const float PI = 3.14159265359;
 
@@ -93,17 +98,10 @@ void main() {
                                       u_sampler_shadowmap);
     }
 
-    vec3 light_color = vec3(10);
-
+    vec3 albedo = u_albedo;
     float metalness = 0.0;
-
     float roughness = 1.0;
-
     vec3 emissive = vec3(0.0);
-
-    float ambient_occlusion = 1.0;
-
-    vec3 albedo = vec3(1.0, 0.0, 0.0);
 
     vec3 normal = normalize(v_world_normal);
     vec3 tangent = normalize(v_world_tangent);
@@ -124,7 +122,7 @@ void main() {
     float dist = distance(u_light_position, v_world_position);
     float attenuation = 1.0 / (dist * dist);
     attenuation = 1.0;
-    vec3 radiance = light_color * attenuation;
+    vec3 radiance = u_light_color * attenuation;
 
     radiance *= (1.0 - shadow);
     radiance += 0.3;

@@ -54,6 +54,22 @@ int main() {
                     .m_name = "u_light_projection_mat",
                     .m_type = UNIFORM_MAT4,
                 },
+                Uniform{
+                    .m_name = "u_light_color",
+                    .m_type = UNIFORM_VEC3,
+                },
+            },
+        .m_should_reload = true,
+    });
+
+    renderer.create_uniform_buffer(UniformBuffer{
+        .m_name = "u_material",
+        .m_uniforms =
+            {
+                Uniform{
+                    .m_name = "u_albedo",
+                    .m_type = UNIFORM_VEC3,
+                },
             },
         .m_should_reload = true,
     });
@@ -69,7 +85,8 @@ int main() {
     renderer.set_uniform_buffer_data(
         "u_light", {{"u_light_position", scene.m_nodes[light_camera->m_node].m_position},
                     {"u_light_view_mat", light_camera->m_view_matrix},
-                    {"u_light_projection_mat", light_camera->m_projection_matrix}});
+                    {"u_light_projection_mat", light_camera->m_projection_matrix},
+                    {"u_light_color", Vec3(50, 50, 50)}});
 
     game.main_camera->m_fps_yaw = f32(PI_HALF);
     game.main_camera->m_fps_pitch = 0.0f;

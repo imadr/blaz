@@ -15,6 +15,7 @@ layout(std140, binding = 2) uniform u_light {
     vec3 u_light_position;
     mat4 u_light_view_mat;
     mat4 u_light_projection_mat;
+    vec3 u_light_color;
 };
 
 layout(location = 0) out vec3 v_world_position;
