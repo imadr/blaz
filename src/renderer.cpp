@@ -212,6 +212,23 @@ void Renderer::do_pass(Pass& pass) {
             for (const str tag : pass.m_tags) {
                 for (const u32 id : m_tagged_renderables[tag]) {
                     Renderable* renderable = &m_renderables[id];
+
+					if(renderable->m_material != ""){
+						Material* material = &m_materials[renderable->m_material];
+
+						for (const auto& uniform_block : material->m_uniforms) {
+							const str& block_name = uniform_block.first;
+							const auto& uniforms = uniform_block.second;
+
+							vec<pair<str, UniformValue>> uniform_data;
+							for (const auto& uniform : uniforms) {
+								uniform_data.push_back(std::make_pair(uniform.first, uniform.second));
+							}
+
+							set_uniform_buffer_data(block_name, uniform_data);
+						}
+					}
+
                     set_uniform_buffer_data(
                         "u_mat", {{"u_model_mat",
                                    m_current_scene->m_nodes[renderable->m_node].m_global_matrix}});
@@ -273,6 +290,10 @@ void Renderer::create_renderable(Renderable renderable) {
     for (auto& tag : renderable.m_tags) {
         m_tagged_renderables[tag].push_back(id);
     }
+}
+
+void Renderer::create_material(Material material) {
+    m_materials.add(material);
 }
 
 Error Renderer::create_shader(Shader shader) {

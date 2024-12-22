@@ -52,7 +52,7 @@ if len(os.listdir(bin_dir)) == 0:
     print(Fore.RED + f"bin dir empty" + Style.RESET_ALL)
     exit()
 
-sleep_time = [1, 1, 1, 1, 10, 1]
+sleep_time = [1, 1, 1, 1, 10, 1, 1, 1]
 i = 0
 for subdir in os.listdir(bin_dir):
     if(subdir == "tests"):

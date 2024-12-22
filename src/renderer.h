@@ -266,6 +266,12 @@ struct Pass {
 
 using UniformValue = std::variant<Mat4, Vec4, Vec3, Vec2, f32, bool, u32, i32>;
 
+struct Material {
+    str m_name;
+    str m_shader;
+    std::unordered_map<str, std::unordered_map<str, UniformValue>> m_uniforms;
+};
+
 struct Renderer {
     Window* m_window = NULL;
     Scene* m_current_scene = NULL;
@@ -334,6 +340,9 @@ struct Renderer {
     Error create_uniform_buffer_api(str uniform_buffer_id);
     Error set_uniform_buffer_data(str uniform_buffer_id,
                                   vec<pair<str, UniformValue>> uniform_values);
+
+    ArrayMap<Material> m_materials;
+    void create_material(Material material);
 
     void bind_uniforms(Pass* pass, str shader_id);
 

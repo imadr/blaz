@@ -549,7 +549,7 @@ void Renderer::set_default_framebuffer() {
 }
 
 Error Renderer::create_uniform_buffer_api(str uniform_buffer_id) {
-    UniformBuffer* uniform_buffer = &m_uniform_buffers[uniform_buffer_id];
+UniformBuffer* uniform_buffer = &m_uniform_buffers[uniform_buffer_id];
     GLuint ubo;
     gl->glGenBuffers(1, &ubo);
     gl->glBindBuffer(GL_UNIFORM_BUFFER, ubo);
