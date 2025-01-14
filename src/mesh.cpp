@@ -233,6 +233,8 @@ Error make_wireframe_sphere(Mesh* mesh, u32 vertices) {
 Error export_mesh_file(const str& path, Mesh* mesh) {
     size_t buffer_size = sizeof(size_t) +                     // mesh name size
                          sizeof(char) * mesh->m_name.size();  // mesh name
+
+    buffer_size += sizeof(size_t);  // number of attribs
     for (auto& attrib : mesh->m_attribs) {
         buffer_size += sizeof(size_t);                      // attrib name size
         buffer_size += sizeof(char) * attrib.first.size();  // attrib name
@@ -241,7 +243,7 @@ Error export_mesh_file(const str& path, Mesh* mesh) {
     buffer_size += sizeof(size_t);                         // vertices size
     buffer_size += mesh->m_vertices.size() * sizeof(f32);  // vertices
     buffer_size += sizeof(size_t);                         // indices size
-    buffer_size += mesh->m_indices.size() * sizeof(u32);   // vertices
+    buffer_size += mesh->m_indices.size() * sizeof(u32);   // indices
 
     u8* buffer = (u8*)alloc(buffer_size);
     u8* ptr = buffer;
@@ -278,8 +280,8 @@ Error export_mesh_file(const str& path, Mesh* mesh) {
     size_t indices_size = mesh->m_indices.size();
     memcopy(ptr, &indices_size, sizeof(size_t));
     ptr += sizeof(size_t);
-    memcopy(ptr, mesh->m_indices.data(), indices_size * sizeof(i32));
-    ptr += indices_size * sizeof(i32);
+    memcopy(ptr, mesh->m_indices.data(), indices_size * sizeof(u32));
+    ptr += indices_size * sizeof(u32);
 
     Error err = write_to_file(path, buffer, buffer_size);
     dealloc(buffer);
@@ -295,48 +297,48 @@ Error load_mesh_from_file(Mesh* mesh) {
     u8* ptr = file_content.second.data();
 
     size_t name_size;
-    memcpy(&name_size, ptr, sizeof(size_t));
+    memcopy(&name_size, ptr, sizeof(size_t));
     ptr += sizeof(size_t);
 
     mesh->m_name.resize(name_size);
-    memcpy(mesh->m_name.data(), ptr, name_size * sizeof(char));
+    memcopy(mesh->m_name.data(), ptr, name_size * sizeof(char));
     ptr += name_size * sizeof(char);
 
     size_t n_attribs;
-    memcpy(&n_attribs, ptr, sizeof(size_t));
+    memcopy(&n_attribs, ptr, sizeof(size_t));
     ptr += sizeof(size_t);
 
     for (size_t i = 0; i < n_attribs; i++) {
         size_t attrib_name_size;
-        memcpy(&attrib_name_size, ptr, sizeof(size_t));
+        memcopy(&attrib_name_size, ptr, sizeof(size_t));
         ptr += sizeof(size_t);
 
         std::string attrib_name;
         attrib_name.resize(attrib_name_size);
-        memcpy(attrib_name.data(), ptr, attrib_name_size * sizeof(char));
+        memcopy(attrib_name.data(), ptr, attrib_name_size * sizeof(char));
         ptr += attrib_name_size * sizeof(char);
 
         u32 attrib_size;
-        memcpy(&attrib_size, ptr, sizeof(u32));
+        memcopy(&attrib_size, ptr, sizeof(u32));
         ptr += sizeof(u32);
 
         mesh->m_attribs.push_back(std::make_pair(attrib_name, attrib_size));
     }
 
     size_t vertices_size;
-    memcpy(&vertices_size, ptr, sizeof(size_t));
+    memcopy(&vertices_size, ptr, sizeof(size_t));
     ptr += sizeof(size_t);
 
     mesh->m_vertices.resize(vertices_size);
-    memcpy(mesh->m_vertices.data(), ptr, vertices_size * sizeof(f32));
+    memcopy(mesh->m_vertices.data(), ptr, vertices_size * sizeof(f32));
     ptr += vertices_size * sizeof(f32);
 
     size_t indices_size;
-    memcpy(&indices_size, ptr, sizeof(size_t));
+    memcopy(&indices_size, ptr, sizeof(size_t));
     ptr += sizeof(size_t);
 
     mesh->m_indices.resize(indices_size);
-    memcpy(mesh->m_indices.data(), ptr, indices_size * sizeof(u32));
+    memcopy(mesh->m_indices.data(), ptr, indices_size * sizeof(u32));
     ptr += indices_size * sizeof(u32);
 
     mesh->m_primitive = MeshPrimitive::TRIANGLES;
@@ -445,7 +447,19 @@ Error load_mesh_from_obj_file(Mesh* mesh) {
         token.push_back(obj[i]);
     }
 
-    mesh->m_vertices.reserve(unique_faces.size() * 8);
+    mesh->m_attribs = {
+        {"position", 3},
+        {"normal", 3},
+        {"tangent", 3},
+        {"texcoord", 2},
+    };
+
+    u32 size_attribs = 0;
+    for (u32 i = 0; i < mesh->m_attribs.size(); i++) {
+        size_attribs += mesh->m_attribs[i].second;
+    }
+
+    mesh->m_vertices.reserve(unique_faces.size() * size_attribs);
     for (u32 i = 0; i < vertex_indices.size(); i++) {
         u32 position_index = std::get<0>(vertex_indices[i]);
         u32 texcoord_index = std::get<1>(vertex_indices[i]);
@@ -463,12 +477,6 @@ Error load_mesh_from_obj_file(Mesh* mesh) {
         mesh->m_vertices.push_back(texcoords[texcoord_index].y());
     }
 
-    mesh->m_attribs = {
-        {"position", 3},
-        {"normal", 3},
-        {"tangent", 3},
-        {"texcoord", 2},
-    };
     mesh->m_primitive = MeshPrimitive::TRIANGLES;
 
     generate_tangent(mesh);
