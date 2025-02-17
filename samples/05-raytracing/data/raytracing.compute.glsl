@@ -145,8 +145,8 @@ void ray_triangle_intersection(Ray ray, float ray_min, float ray_max, Hittable t
 #define MAX_BOUNCES 50
 
 uint next_random(inout uint rng_state) {
-    rng_state = rng_state * 747796405 + 2891336453;
-    uint result = ((rng_state >> ((rng_state >> 28) + 4)) ^ rng_state) * 277803737;
+    rng_state = rng_state * 747796405u + 2891336453u;
+    uint result = ((rng_state >> ((rng_state >> 28) + 4u)) ^ rng_state) * 277803737u;
     result = (result >> 22) ^ result;
     return result;
 }

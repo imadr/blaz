@@ -18,8 +18,8 @@ layout(std140, binding = 0) uniform u_mat {
 layout(binding = 1) uniform sampler2D u_sampler_gbuffer_position;
 
 uint next_random(inout uint rng_state) {
-    rng_state = rng_state * 747796405 + 2891336453;
-    uint result = ((rng_state >> ((rng_state >> 28) + 4)) ^ rng_state) * 277803737;
+    rng_state = rng_state * 747796405u + 2891336453u;
+    uint result = ((rng_state >> ((rng_state >> 28) + 4u)) ^ rng_state) * 277803737u;
     result = (result >> 22) ^ result;
     return result;
 }
