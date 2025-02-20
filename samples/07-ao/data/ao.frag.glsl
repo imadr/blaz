@@ -7,7 +7,7 @@ layout(location = 1) in vec3 v_world_position;
 layout(location = 2) in vec3 v_world_normal;
 layout(location = 3) in vec3 v_position;
 
-layout(location = 0) out float o_color;
+layout(location = 0) out vec3 o_color;
 
 layout(std140, binding = 0) uniform u_mat {
     mat4 u_model_mat;
@@ -51,34 +51,84 @@ vec3 random_unit_vector_on_hemisphere(inout uint rng_state, vec3 normal) {
     }
 }
 
-#define SSAO_NUM_SAMPLES 16
+#define SSAO 1
+#define HBAO 2
+
+#define AO_TYPE 2
+
+#define SSAO_NUM_SAMPLES 64
 #define SSAO_BIAS 0.2
-#define SSAO_RADIUS 0.6
-#define SSAO_INTENSITY 2.0
+#define SSAO_RADIUS 2.0
+
+#define HBAO_NUMBER_OF_DIRECTIONS 8
+#define HBAO_NUMBER_OF_STEPS 8
+#define HBAO_STEP_SIZE 0.01
+#define HBAO_MAXIMUM_OCCLUSION_RADIUS 4.0
+
+#define AO_INTENSITY 1.0
 
 void main() {
     uint rng_state = uint(gl_FragCoord.x) * 984894 + uint(gl_FragCoord.y) * 184147;
 
-    vec3 normal = normalize(v_world_normal);
-
-    vec4 view_space = (u_view_mat * vec4(v_world_position, 1.0));
+    vec3 world_normal = normalize(v_world_normal);
+    vec3 view_normal = normalize((u_view_mat * vec4(v_world_normal, 0.0)).xyz);
+    vec3 view_position = (u_view_mat * vec4(v_world_position, 1.0)).xyz;
+    vec4 clip_position = u_projection_mat * vec4(view_position, 1.0);
+    vec2 screen_position = (clip_position.xy / clip_position.w) * 0.5 + 0.5;
 
     float occlusion = 0.0;
+
+#if AO_TYPE == SSAO
+
     for (int i = 0; i < SSAO_NUM_SAMPLES; i++) {
-        vec3 random_direction = random_unit_vector_on_hemisphere(rng_state, normal);
+        vec3 random_direction = random_unit_vector_on_hemisphere(rng_state, world_normal);
 
-        vec3 world_space_rand = v_world_position + random_direction * SSAO_RADIUS;
+        vec3 world_position_rand = v_world_position + random_direction * SSAO_RADIUS;
 
-        vec4 view_space_rand = (u_view_mat * vec4(world_space_rand, 1.0));
-        vec4 clip_space_rand = u_projection_mat * view_space_rand;
-        vec3 screen_space_rand = clip_space_rand.xyz / clip_space_rand.w;
-        screen_space_rand.xyz = screen_space_rand.xyz * 0.5 + 0.5;
+        vec4 view_position_rand = (u_view_mat * vec4(world_position_rand, 1.0));
+        vec4 clip_position_rand = u_projection_mat * view_position_rand;
+        vec3 screen_position_rand = clip_position_rand.xyz / clip_position_rand.w;
+        screen_position_rand.xyz = screen_position_rand.xyz * 0.5 + 0.5;
 
-        float sample_depth = texture(u_sampler_gbuffer_position, screen_space_rand.xy).z;
+        float sample_depth = texture(u_sampler_gbuffer_position, screen_position_rand.xy).z;
 
-        float range_check = smoothstep(0.0, 1.0, SSAO_RADIUS / abs(view_space.z - sample_depth));
-        occlusion += (sample_depth >= view_space_rand.z + SSAO_BIAS ? 1.0 : 0.0) * range_check;
+        float range_check = smoothstep(0.0, 1.0, SSAO_RADIUS / abs(view_position.z - sample_depth));
+        occlusion += (sample_depth >= view_position_rand.z + SSAO_BIAS ? 1.0 : 0.0) * range_check;
     }
     occlusion /= SSAO_NUM_SAMPLES;
-    o_color = clamp(1.0 - occlusion * SSAO_INTENSITY, 0.0, 1.0);
+
+#elif AO_TYPE == HBAO
+
+    float random_angle = random(rng_state) * 2.0 * 3.14159;
+    for (int i = 0; i < HBAO_NUMBER_OF_DIRECTIONS; i++) {
+        float angle = (float(i) / float(HBAO_NUMBER_OF_DIRECTIONS)) * 2.0 * 3.14159 + random_angle;
+        vec2 direction = vec2(cos(angle), sin(angle));
+
+        float maximum_sine_elevation_angle = 0.0;
+
+        for (int j = 1; j <= HBAO_NUMBER_OF_STEPS; j++) {
+            vec2 offset = direction * HBAO_STEP_SIZE * float(j);
+            vec2 sample_uv_coordinates = clamp(screen_position + offset, 0.0, 1.0);
+
+            vec3 sample_view_position = texture(u_sampler_gbuffer_position, sample_uv_coordinates).xyz;
+
+            vec3 sample_to_position_vector = sample_view_position - view_position;
+            float sample_to_position_distance = length(sample_to_position_vector);
+
+            if (sample_to_position_distance > 0.001 && dot(sample_to_position_vector, view_normal) > 0.0 && sample_to_position_distance < HBAO_MAXIMUM_OCCLUSION_RADIUS) {
+                float sine_elevation_angle = dot(sample_to_position_vector, view_normal) / sample_to_position_distance;
+                if (sine_elevation_angle > maximum_sine_elevation_angle) {
+                    maximum_sine_elevation_angle = sine_elevation_angle;
+                }
+            }
+        }
+
+        occlusion += maximum_sine_elevation_angle * maximum_sine_elevation_angle;
+    }
+
+    occlusion /= float(HBAO_NUMBER_OF_DIRECTIONS);
+
+#endif
+
+    o_color = vec3(clamp(1.0 - occlusion * AO_INTENSITY, 0.0, 1.0));
 }
