@@ -15,7 +15,7 @@
 
 
 | <b>Sample</b>         | <b>Screenshot</b>                                                |
-|------------------------------------------------------------------------------------------|
+|-----------------------|------------------------------------------------------------------|
 | 01-triangle           | <img src="/samples/tests/01-hellotriangle.png" width="300"/><br> |
 | 02-cubes              | <img src="/samples/tests/02-cubes.png" width="300"/><br>         |
 | 03-pbr                | <img src="/samples/tests/03-pbr.png" width="300"/><br>           |
