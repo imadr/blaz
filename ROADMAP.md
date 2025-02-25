@@ -5,7 +5,6 @@
 - ui / stats / text rendering
 - add a grid https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
 - gizmos / grid
-- materials
 - replace stl with something like https://github.com/mendsley/tinystl
 - terrain pbr sample
   - perlin noise lib
