@@ -45,6 +45,8 @@ static std::unordered_map<TextureFormat, std::tuple<GLint, GLenum, GLenum>> open
         {TextureFormat::RGBA32F, {GL_RGBA32F, GL_RGBA, GL_FLOAT}},
         {TextureFormat::DEPTH32, {GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT}},
         {TextureFormat::DEPTH32F, {GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT}},
+        {TextureFormat::R32F, {GL_R32F, GL_RED, GL_FLOAT}},
+        {TextureFormat::RG32F, {GL_RG32F, GL_RG, GL_FLOAT}},
 };
 
 static std::unordered_map<TextureWrapMode, GLenum> opengl_texture_wrap_modes = {

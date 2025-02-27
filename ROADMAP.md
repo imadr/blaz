@@ -1,5 +1,6 @@
 # Roadmap
 
+- common shaders
 - ibl
 - fuzzing https://github.com/antonio-morales/Fuzzing101/tree/main/Exercise%201
 - ui / stats / text rendering
