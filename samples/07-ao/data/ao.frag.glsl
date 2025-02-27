@@ -7,7 +7,7 @@ layout(location = 1) in vec3 v_world_position;
 layout(location = 2) in vec3 v_world_normal;
 layout(location = 3) in vec3 v_position;
 
-layout(location = 0) out vec3 o_color;
+layout(location = 0) out vec2 o_color;
 
 layout(std140, binding = 0) uniform u_mat {
     mat4 u_model_mat;
@@ -15,7 +15,17 @@ layout(std140, binding = 0) uniform u_mat {
     mat4 u_projection_mat;
 };
 
+layout(std140, binding = 1) uniform u_info {
+    vec2 u_resolution;
+    float u_reset_accumulation;
+};
+
+layout(std140, binding = 2) uniform u_time {
+    uint u_frame_number;
+};
+
 layout(binding = 1) uniform sampler2D u_sampler_gbuffer_position;
+layout(binding = 2) uniform sampler2D u_sampler_old_ao;
 
 uint next_random(inout uint rng_state) {
     rng_state = rng_state * 747796405u + 2891336453u;
@@ -54,9 +64,9 @@ vec3 random_unit_vector_on_hemisphere(inout uint rng_state, vec3 normal) {
 #define SSAO 1
 #define HBAO 2
 
-#define AO_TYPE 2
+#define AO_TYPE 1
 
-#define SSAO_NUM_SAMPLES 64
+#define SSAO_NUM_SAMPLES 8
 #define SSAO_BIAS 0.2
 #define SSAO_RADIUS 2.0
 
@@ -68,7 +78,7 @@ vec3 random_unit_vector_on_hemisphere(inout uint rng_state, vec3 normal) {
 #define AO_INTENSITY 1.0
 
 void main() {
-    uint rng_state = uint(gl_FragCoord.x) * 984894 + uint(gl_FragCoord.y) * 184147;
+    uint rng_state = uint(gl_FragCoord.x) * 984894 + uint(gl_FragCoord.y) * u_frame_number * 184147;
 
     vec3 world_normal = normalize(v_world_normal);
     vec3 view_normal = normalize((u_view_mat * vec4(v_world_normal, 0.0)).xyz);
@@ -130,5 +140,11 @@ void main() {
 
 #endif
 
-    o_color = vec3(clamp(1.0 - occlusion * AO_INTENSITY, 0.0, 1.0));
+    vec2 uv = gl_FragCoord.xy / u_resolution;
+    vec2 old_ao = texture(u_sampler_old_ao, uv).rg;
+    if (u_reset_accumulation == 1.0) {
+        old_ao = vec2(0.0);
+    }
+    vec2 new_ao = vec2(clamp(1.0 - occlusion * AO_INTENSITY, 0.0, 1.0), 1.0);
+    o_color = new_ao + old_ao;
 }

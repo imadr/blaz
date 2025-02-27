@@ -54,7 +54,9 @@ static std::unordered_map<str, MeshPrimitive> MeshPrimitiveStr = {
 
 enum class TextureFormat {
     R8,
+	R32F,
     RG8,
+	RG32F,
     RGB8,
     RGBA8,
     RGB16F,
@@ -66,7 +68,9 @@ enum class TextureFormat {
 
 static std::unordered_map<str, TextureFormat> TextureFormatStr = {
     {"R8", TextureFormat::R8},
+    {"R32F", TextureFormat::R32F},
     {"RG8", TextureFormat::RG8},
+    {"RG32F", TextureFormat::RG32F},
     {"RGB8", TextureFormat::RGB8},
     {"RGBA8", TextureFormat::RGBA8},
     {"RGB16F", TextureFormat::RGB16F},
