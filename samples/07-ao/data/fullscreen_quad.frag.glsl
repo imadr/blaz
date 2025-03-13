@@ -11,6 +11,6 @@ layout(std140, binding = 1) uniform u_time {
 };
 
 void main() {
-    vec2 accumulated = texture2D(u_sampler_render, v_texcoord).rg;
-    o_color = vec4(vec3(accumulated.x/accumulated.y), 1.0);
+    vec4 accumulated = texture2D(u_sampler_render, v_texcoord);
+    o_color = vec4(vec3(accumulated.x/accumulated.w), 1.0);
 }

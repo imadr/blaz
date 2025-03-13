@@ -7,7 +7,7 @@ layout(location = 1) in vec3 v_world_position;
 layout(location = 2) in vec3 v_world_normal;
 layout(location = 3) in vec3 v_position;
 
-layout(location = 0) out vec2 o_color;
+layout(location = 0) out vec4 o_color;
 
 layout(std140, binding = 0) uniform u_mat {
     mat4 u_model_mat;
@@ -61,21 +61,25 @@ vec3 random_unit_vector_on_hemisphere(inout uint rng_state, vec3 normal) {
     }
 }
 
+const float PI = 3.14159265359;
+
+
 #define SSAO 1
 #define HBAO 2
 
-#define AO_TYPE 1
+#define AO_TYPE 2
 
 #define SSAO_NUM_SAMPLES 8
 #define SSAO_BIAS 0.2
-#define SSAO_RADIUS 2.0
+#define SSAO_RADIUS 1.0
 
-#define HBAO_NUMBER_OF_DIRECTIONS 8
-#define HBAO_NUMBER_OF_STEPS 8
-#define HBAO_STEP_SIZE 0.01
-#define HBAO_MAXIMUM_OCCLUSION_RADIUS 4.0
+#define HBAO_NUMBER_OF_DIRECTIONS 2
+#define HBAO_NUMBER_OF_STEPS 2
+#define HBAO_STEP_SIZE 0.05
+#define HBAO_MAXIMUM_OCCLUSION_RADIUS 2
 
-#define AO_INTENSITY 1.0
+
+#define AO_INTENSITY 2.0
 
 void main() {
     uint rng_state = uint(gl_FragCoord.x) * 984894 + uint(gl_FragCoord.y) * u_frame_number * 184147;
@@ -117,15 +121,14 @@ void main() {
         float maximum_sine_elevation_angle = 0.0;
 
         for (int j = 1; j <= HBAO_NUMBER_OF_STEPS; j++) {
-            vec2 offset = direction * HBAO_STEP_SIZE * float(j);
+            vec2 offset = direction * HBAO_STEP_SIZE * float(j) * random(rng_state);
             vec2 sample_uv_coordinates = clamp(screen_position + offset, 0.0, 1.0);
 
             vec3 sample_view_position = texture(u_sampler_gbuffer_position, sample_uv_coordinates).xyz;
 
             vec3 sample_to_position_vector = sample_view_position - view_position;
             float sample_to_position_distance = length(sample_to_position_vector);
-
-            if (sample_to_position_distance > 0.001 && dot(sample_to_position_vector, view_normal) > 0.0 && sample_to_position_distance < HBAO_MAXIMUM_OCCLUSION_RADIUS) {
+            if (dot(sample_to_position_vector, view_normal) > 0.0 && sample_to_position_distance < HBAO_MAXIMUM_OCCLUSION_RADIUS) {
                 float sine_elevation_angle = dot(sample_to_position_vector, view_normal) / sample_to_position_distance;
                 if (sine_elevation_angle > maximum_sine_elevation_angle) {
                     maximum_sine_elevation_angle = sine_elevation_angle;
@@ -141,10 +144,10 @@ void main() {
 #endif
 
     vec2 uv = gl_FragCoord.xy / u_resolution;
-    vec2 old_ao = texture(u_sampler_old_ao, uv).rg;
+    vec4 old_ao = texture(u_sampler_old_ao, uv);
     if (u_reset_accumulation == 1.0) {
-        old_ao = vec2(0.0);
+        old_ao = vec4(0.0);
     }
-    vec2 new_ao = vec2(clamp(1.0 - occlusion * AO_INTENSITY, 0.0, 1.0), 1.0);
+    vec4 new_ao = vec4(clamp(1.0 - occlusion * AO_INTENSITY, 0.0, 1.0), 0, 0, 1.0);
     o_color = new_ao + old_ao;
 }
